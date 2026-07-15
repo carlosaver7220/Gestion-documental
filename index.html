@@ -1,430 +1,2398 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fase 0 · Banco de Pruebas de Persistencia</title>
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<meta name="theme-color" content="#1e293b">
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  body { font-family: 'Inter', sans-serif; background:#0f172a; }
-  .mono { font-family: 'JetBrains Mono', monospace; }
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-  .glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); }
-  .pulse-dot { animation: pulse 1.6s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-  .fade-in { animation: fadeIn .25s ease; }
-  @keyframes fadeIn { from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:translateY(0)} }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Energy | Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Desactivar warnings de Tailwind en desarrollo
+        if (typeof window !== 'undefined') {
+            window.TAILWIND_DISABLE_WARNINGS = true;
+        }
+    </script>
+    <!--
+        INSTRUCCIONES PARA GOOGLE MAPS:
+        1. Ve a https://console.cloud.google.com/
+        2. Crea un nuevo proyecto o selecciona uno existente
+        3. Habilita la "Maps JavaScript API"
+        4. Crea una API key en "Credentials"
+        5. Reemplaza "YOUR_GOOGLE_MAPS_API_KEY" con tu API key real
+        6. Opcionalmente, restringe la API key a tu dominio para mayor seguridad
+    -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="libs/pizzip.min.js"></script>
+    <script src="libs/docxtemplater.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-wrapper {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .sidebar-bg { 
+            background-color: #020617; 
+            border-right: 1px solid #1e293b; 
+        }
+
+        .project-card { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background-color: rgba(255, 255, 255, 0.03);
+            margin-bottom: 8px;
+        }
+        .project-card:hover { 
+            background-color: rgba(59, 130, 246, 0.1);
+            transform: translateX(4px);
+        }
+        .project-card.active { 
+            background: linear-gradient(135deg, #1e40af, #1e3a8a);
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-card {
+            background: #ffffff;
+            border-radius: 1.25rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-hub-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .nav-hub-card:hover {
+            transform: translateY(-8px);
+            border-color: #3b82f6;
+            box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.2);
+        }
+
+        .ing-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+
+        .btn-action {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .btn-view { background-color: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        .btn-view:hover { background-color: #2563eb; color: white; }
+
+        .btn-upload { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+        .btn-upload:hover { background-color: #1e293b; color: white; }
+
+        .view-transition {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .history-badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
 </head>
-<body class="min-h-screen text-slate-200 p-6 md:p-10">
+<body class="antialiased">
 
-<div class="max-w-6xl mx-auto space-y-6">
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="w-80 sidebar-bg flex flex-col overflow-hidden shrink-0">
+            <div class="p-8 flex items-center gap-4 border-b border-white/5">
+                <div class="bg-blue-600 p-2 rounded-lg shadow-lg shadow-blue-500/20">
+                    <img src="https://raw.githubusercontent.com/Jairluna16/AUDIOS/refs/heads/main/jjj.png" alt="Logo" class="w-6 h-6 brightness-0 invert">
+                </div>
+                <div>
+                    <span class="font-black text-xl tracking-tight text-white block leading-none">SMART<span class="text-blue-500">ENERGY</span></span>
+                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">Engineering Hub</span>
+                </div>
+            </div>
 
-  <!-- Header -->
-  <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-    <div>
-      <p class="text-[10px] font-black tracking-[0.3em] text-blue-400 uppercase mb-1">Fase 0 · Fundación técnica</p>
-      <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight">Banco de pruebas de persistencia</h1>
-      <p class="text-slate-400 text-sm mt-1">Verifica que <span class="mono text-slate-300">_empresa.json</span>, <span class="mono text-slate-300">_index.json</span> y <span class="mono text-slate-300">_data.json</span> sobreviven a cerrar el navegador.</p>
+            <div class="p-6">
+                <button id="btnSettings" class="w-full flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:border-blue-500/50 transition-all group">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-[8px] font-black text-slate-500 uppercase">Ruta Maestra</p>
+                            <p id="pathDisplay" class="text-xs font-bold text-slate-200 truncate w-36">Sin Conexión</p>
+                        </div>
+                    </div>
+                </button>
+                <button id="btnReactivate" class="hidden w-full mt-3 py-3 bg-blue-600 text-white text-[10px] font-black uppercase rounded-lg shadow-lg shadow-blue-900/40 hover:bg-blue-500 active:scale-95 transition-all">Reconectar</button>
+                <button onclick="switchView('employees')" class="hidden w-full mt-3 py-3 bg-purple-600 text-white text-[10px] font-black uppercase rounded-lg shadow-lg shadow-purple-900/40 hover:bg-purple-500 active:scale-95 transition-all">Empleados</button>
+            </div>
+
+            <!-- Buscador de Proyectos (fijo, no se oculta al hacer scroll) -->
+            <div class="px-6 pb-4 shrink-0 flex items-center gap-2">
+                <input type="text" id="projectSearch" placeholder="Buscar proyecto..." class="flex-1 p-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <div class="relative group shrink-0">
+                    <button onclick="abrirModalNuevoProyecto()" class="w-11 h-11 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-colors active:scale-95">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                    </button>
+                    <div class="pointer-events-none absolute right-0 top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-xl z-10">Nuevo Proyecto</div>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto px-6 space-y-1 pb-8">
+                <div id="projectList" class="space-y-2"></div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-hidden flex flex-col relative">
+            
+            <!-- 0. Estado Vacío -->
+            <div id="emptyState" class="flex-1 flex flex-col items-center justify-center view-transition">
+                <div class="text-center p-12 glass-card max-w-sm">
+                    <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <img src="https://raw.githubusercontent.com/Jairluna16/AUDIOS/refs/heads/main/jjj.png" alt="Logo" class="h-8 w-8 opacity-20">
+                    </div>
+                    <h3 class="text-slate-900 font-black text-sm uppercase tracking-widest">Esperando Selección</h3>
+                    <p class="text-slate-500 text-xs mt-2">Elija un proyecto del panel lateral para gestionar sus módulos</p>
+                </div>
+            </div>
+
+            <!-- 1. Menu de Navegación del Proyecto (Hub) -->
+            <div id="projectHub" class="hidden flex-1 p-12 overflow-y-auto view-transition">
+                <div class="max-w-5xl mx-auto h-full flex flex-col">
+                    <header class="mb-12">
+                        <div class="flex items-center gap-3">
+                            <h2 id="hubProjectName" class="text-5xl font-black text-slate-900 tracking-tighter uppercase leading-none">---</h2>
+                            <span id="hubProjectYear" class="px-3 py-1.5 bg-slate-900 text-white text-xs font-black rounded-lg">----</span>
+                        </div>
+                        <p class="text-blue-600 font-bold uppercase tracking-[0.3em] text-xs mt-4">Panel Central de Operaciones</p>
+                    </header>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1 content-center max-w-3xl mx-auto w-full">
+                        <div onclick="switchView('documentation')" class="nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
+                            <div class="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/40 mb-8 group-hover:scale-110 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Documentación</h3>
+                            <p class="text-slate-500 text-sm mt-3 leading-relaxed">Bóveda Técnica, RETIE, OR, Actas y Archivos.</p>
+                            <div class="mt-8 px-6 py-2 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:bg-blue-600 group-hover:text-white transition-colors">Ingresar Módulo</div>
+                        </div>
+
+                        <div onclick="switchView('development')" class="hidden nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
+                            <div class="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center shadow-2xl shadow-slate-900/40 mb-8 group-hover:scale-110 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Desarrollo</h3>
+                            <p class="text-slate-500 text-sm mt-3 leading-relaxed">Hitos, Cronogramas y Estado de Obra.</p>
+                            <div class="mt-8 px-6 py-2 bg-emerald-500 rounded-full text-[10px] font-black text-white uppercase tracking-widest group-hover:bg-emerald-600 transition-colors">En Construcción</div>
+                        </div>
+
+                        <div onclick="switchView('preliminar')" class="nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
+                            <div class="w-20 h-20 bg-amber-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-amber-500/40 mb-8 group-hover:scale-110 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Preeliminar</h3>
+                            <p class="text-slate-500 text-sm mt-3 leading-relaxed">Kick-Off, Visitas Técnicas y Contratos.</p>
+                            <div class="mt-8 px-6 py-2 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:bg-amber-600 group-hover:text-white transition-colors">Ingresar Módulo</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Interfaz de Documentación -->
+            <div id="documentationView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
+                <header class="px-10 py-6 bg-white border-b border-slate-200 flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        </button>
+                        <div>
+                            <h2 id="docProjectName" class="text-xl font-black text-slate-900 uppercase">---</h2>
+                            <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Módulo de Documentación</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-8">
+                        <div class="text-right">
+                            <p class="text-[10px] font-black text-slate-400 uppercase">Progreso Docs</p>
+                            <p id="headProgIng" class="text-lg font-black text-blue-600">0%</p>
+                        </div>
+                    </div>
+                </header>
+                
+                <div class="flex-1 overflow-y-auto p-10 bg-slate-50/50">
+                    <div class="grid grid-cols-12 gap-8 max-w-7xl mx-auto">
+                        <!-- Columna Izquierda: Trámites y Actas -->
+                        <div class="col-span-4 space-y-6">
+                            <!-- SECCIÓN DATOS DEL PROYECTO (para copiar/pegar en la inscripción OR) -->
+                            <div class="glass-card overflow-hidden">
+                                <div class="bg-slate-900 p-4 flex justify-between items-center">
+                                    <h3 class="text-[11px] font-black text-white uppercase tracking-[0.2em]">Datos del Proyecto</h3>
+                                    <button onclick="abrirModalEditarInfo()" class="text-[9px] font-black text-blue-300 hover:text-blue-200 uppercase">Editar</button>
+                                </div>
+                                <div id="infoProyectoList" class="p-4 space-y-2 text-xs">
+                                    <!-- Generado dinámicamente -->
+                                </div>
+                            </div>
+
+                            <!-- SECCIÓN TRÁMITES -->
+                            <div class="glass-card overflow-hidden">
+                                <div class="bg-slate-900 p-4">
+                                    <h3 class="text-[11px] font-black text-white uppercase tracking-[0.2em]">Gestión de Trámites</h3>
+                                </div>
+                                <div id="tramitesList" class="p-4 space-y-4">
+                                    <!-- OR Trámite -->
+                                    <div onclick="openTramiteModal('or')" class="p-4 rounded-xl border border-slate-100 bg-white hover:border-blue-500 cursor-pointer transition-all shadow-sm">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <p class="text-[10px] font-black text-blue-600 uppercase">Operador Red (OR)</p>
+                                                <h4 id="status-or" class="text-sm font-bold text-slate-800">Cargando...</h4>
+                                            </div>
+                                            <div class="p-2 bg-blue-50 rounded-lg"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                        </div>
+                                        <div class="mt-3 flex items-center gap-2">
+                                            <span id="date-or" class="text-[9px] text-slate-400 font-medium">Última act: --/--</span>
+                                        </div>
+                                        <div id="badge-or" class="hidden mt-2 px-2 py-1 bg-red-50 border border-red-200 rounded-lg text-[9px] font-black text-red-600 uppercase w-fit">⚠ Requiere reinscripción</div>
+                                        <div class="mt-2 flex items-center justify-end">
+                                            <button onclick="event.stopPropagation(); verConformidad('or')" class="p-1.5 hover:bg-slate-100 rounded-lg flex items-center gap-1.5" title="Ver archivos de conformidad">
+                                                <span class="text-[9px] font-bold text-slate-400 uppercase">Ver archivos</span>
+                                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!-- RETIE Trámite -->
+                                    <div onclick="openTramiteModal('retie')" class="p-4 rounded-xl border border-slate-100 bg-white hover:border-orange-500 cursor-pointer transition-all shadow-sm">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <p class="text-[10px] font-black text-orange-600 uppercase">Inspección RETIE</p>
+                                                <h4 id="status-retie" class="text-sm font-bold text-slate-800">Cargando...</h4>
+                                            </div>
+                                            <div class="p-2 bg-orange-50 rounded-lg"><svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                        </div>
+                                        <div class="mt-3 flex items-center gap-2">
+                                            <span id="date-retie" class="text-[9px] text-slate-400 font-medium">Última act: --/--</span>
+                                        </div>
+                                        <div class="mt-2 flex items-center justify-end">
+                                            <button onclick="event.stopPropagation(); verConformidad('retie')" class="p-1.5 hover:bg-slate-100 rounded-lg flex items-center gap-1.5" title="Ver archivos de conformidad">
+                                                <span class="text-[9px] font-bold text-slate-400 uppercase">Ver archivos</span>
+                                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-card p-6">
+                                <h3 class="text-[11px] font-black text-slate-500 uppercase mb-4 tracking-widest">Actas de Proyecto</h3>
+                                <div id="listAct" class="space-y-2"></div>
+                            </div>
+                        </div>
+
+                        <!-- Columna Derecha: Ingeniería -->
+                        <div class="col-span-8">
+                            <div class="glass-card p-8">
+                                <div class="flex items-center justify-between mb-8">
+                                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Bóveda Técnica (Ingeniería)</h3>
+                                    <span class="px-3 py-1 bg-blue-600 text-[10px] text-white font-bold rounded-full">PDF OBLIGATORIOS</span>
+                                </div>
+                                <div id="listIng" class="ing-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Trámites (Historial y Gestión) -->
+            <div id="tramiteModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex justify-end">
+                <div class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col view-transition">
+                    <div class="p-8 border-b border-slate-100 flex justify-between items-center">
+                        <div>
+                            <p id="modalTramiteType" class="text-[10px] font-black text-blue-600 uppercase tracking-widest">TRÁMITE</p>
+                            <h3 class="text-xl font-black text-slate-900">Historial y Avance</h3>
+                        </div>
+                        <button onclick="closeTramiteModal()" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto p-8 space-y-8">
+                        <!-- Cambio de Estado -->
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Estado Actual</label>
+                            <select id="modalStateSelect" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                                <!-- Opciones generadas dinámicamente según el trámite (OR o RETIE) -->
+                            </select>
+                        </div>
+
+                        <!-- Nuevo Comentario -->
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Añadir Comentario / Hito</label>
+                            <textarea id="modalCommentInput" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm min-h-[100px] outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Visita programada para el lunes..."></textarea>
+                            <div id="tramiteRequirementFields" class="space-y-3"></div>
+                            <button id="saveTramiteUpdateBtn" onclick="saveTramiteUpdate()" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Guardar Actualización</button>
+                        </div>
+
+                        <!-- Línea de Tiempo -->
+                        <div class="space-y-4">
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Trazabilidad</label>
+                            <div id="modalHistoryList" class="space-y-4 relative before:absolute before:left-[11px] before:top-2 before:bottom-0 before:w-0.5 before:bg-slate-100">
+                                <!-- Items de historial dinámicos -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para ver archivos de conformidad (detectados en 2. ESTADOS OR Y RETIE) -->
+            <div id="conformidadModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl flex flex-col max-h-[80vh]">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                        <div>
+                            <p id="conformidadModalType" class="text-[10px] font-black text-blue-600 uppercase tracking-widest">TRÁMITE</p>
+                            <h3 class="text-lg font-black text-slate-900">Archivos de Conformidad</h3>
+                        </div>
+                        <button onclick="document.getElementById('conformidadModal').classList.add('hidden')" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"/></svg>
+                        </button>
+                    </div>
+                    <div id="conformidadModalList" class="flex-1 overflow-y-auto p-6 space-y-2">
+                        <!-- Lista de archivos generada dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Nuevo Proyecto / Editar Datos del Proyecto (comparten el mismo formulario) -->
+            <div id="proyectoInfoModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Proyecto</p>
+                            <h3 id="proyectoInfoModalTitle" class="text-lg font-black text-slate-900">Nuevo Proyecto</h3>
+                        </div>
+                        <button onclick="document.getElementById('proyectoInfoModal').classList.add('hidden')" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"/></svg>
+                        </button>
+                    </div>
+                    <form id="proyectoInfoForm" class="flex-1 overflow-y-auto p-6 space-y-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Nombre del Proyecto <span class="text-red-500">*</span></label>
+                            <input id="infoNombreProyecto" required class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Choles Vivienda">
+                            <p id="infoNombreProyectoHint" class="text-[10px] text-slate-400 mt-1">Se usará para nombrar la carpeta principal y la carpeta DOSSIER.</p>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Nombre completo del dueño del proyecto</label>
+                            <input id="infoDueno" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Potencia AC (kW)</label>
+                                <input id="infoPotenciaAC" type="number" step="0.01" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Potencia DC (kWp)</label>
+                                <input id="infoPotenciaDC" type="number" step="0.01" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Teléfono</label>
+                                <input id="infoTelefono" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Correo</label>
+                                <input id="infoCorreo" type="email" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Dirección</label>
+                            <input id="infoDireccion" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <p class="text-[10px] text-slate-400">Solo el nombre del proyecto es obligatorio. El resto lo puedes completar después.</p>
+                        <button id="proyectoInfoSubmitBtn" type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Crear Proyecto</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Vista DESARROLLO (Presupuesto) -->
+            <div id="developmentView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
+                <header class="px-10 py-6 bg-white border-b flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-xl">
+                            <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2"/></svg>
+                        </button>
+                        <div>
+                            <h2 id="devProjectName" class="text-xl font-black text-slate-900 uppercase">---</h2>
+                            <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Módulo de Desarrollo</p>
+                            <div class="flex gap-2 mt-2">
+                                <button onclick="switchDevTab('budget')" id="devBudgetTab" class="px-4 py-1 bg-emerald-600 text-white text-[9px] font-black uppercase rounded-lg">Presupuesto</button>
+                                <button onclick="switchDevTab('activities')" id="devActivitiesTab" class="px-4 py-1 bg-slate-600 text-white text-[9px] font-black uppercase rounded-lg">Actividades</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right space-y-2">
+                        <div>
+                            <p class="text-[9px] font-black text-slate-400 uppercase">Presupuesto Proyecto</p>
+                            <input type="number" id="projectBudgetInput" placeholder="0" class="w-32 p-2 bg-slate-50 border rounded-lg text-sm font-black outline-none focus:ring-2 focus:ring-emerald-500 text-center" onchange="updateProjectBudget()">
+                        </div>
+                        <div class="flex gap-4">
+                            <div>
+                                <p class="text-[9px] font-black text-slate-400 uppercase">Total Gastos</p>
+                                <p id="totalDevBudget" class="text-lg font-black text-slate-900">$ 0.00</p>
+                            </div>
+                            <div>
+                                <p class="text-[9px] font-black text-slate-400 uppercase">Diferencia</p>
+                                <p id="budgetDifference" class="text-lg font-black text-slate-900">$ 0.00</p>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Sección Presupuesto -->
+                <div id="devBudgetSection" class="flex-1 overflow-y-auto p-8 space-y-8">
+                    <div class="max-w-6xl mx-auto grid grid-cols-12 gap-8">
+                        <div class="col-span-12 lg:col-span-4 space-y-6">
+                            <div class="glass-card p-6">
+                                <h4 class="text-[11px] font-black text-slate-900 uppercase mb-4 tracking-widest">Registrar Nuevo Gasto</h4>
+                                <form id="newDevExpenseForm" class="space-y-4">
+                                    <input type="text" id="devExpLabel" placeholder="Nombre del Item" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                    <input type="number" id="devExpValue" placeholder="Valor $" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                    <div class="relative group">
+                                        <input type="file" id="devExpFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10" required>
+                                        <div id="devFileName" class="p-4 border-2 border-dashed border-slate-200 rounded-xl text-center text-[10px] font-bold text-slate-400 group-hover:border-emerald-500">ADJUNTAR FACTURA (PDF)</div>
+                                    </div>
+                                    <button type="submit" class="w-full py-3 bg-slate-900 text-white font-black text-[10px] uppercase rounded-xl hover:bg-emerald-600 transition-colors">Guardar Documento</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-span-12 lg:col-span-8 space-y-8">
+                            <div id="pendingFilesSection" class="glass-card p-6 hidden">
+                                <h4 class="text-[11px] font-black text-amber-600 uppercase mb-4 tracking-widest">Documentos sin Valor</h4>
+                                <div id="pendingFilesList" class="space-y-3"></div>
+                            </div>
+                            <div class="glass-card overflow-hidden">
+                                <div id="devHistoryList" class="divide-y"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección Actividades -->
+                <div id="devActivitiesSection" class="hidden flex-1 overflow-y-auto p-8 space-y-8">
+                    <div class="max-w-6xl mx-auto">
+                        <div class="grid grid-cols-12 gap-8">
+                            <div class="col-span-12 lg:col-span-4 space-y-6">
+                                <div class="glass-card p-6">
+                                    <h4 class="text-[11px] font-black text-slate-900 uppercase mb-4 tracking-widest">Crear Nueva Actividad</h4>
+                                    <form id="newActivityForm" class="space-y-4">
+                                        <input type="text" id="activityName" placeholder="Nombre de la actividad" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" required>
+                                        <div class="space-y-2">
+                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Seleccionar técnico</label>
+                                            <div class="flex gap-2 items-center">
+                                                <select id="activityPersonnelSelect" title="Selecciona personal técnico" class="flex-1 p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                                                    <!-- Opciones se cargarán dinámicamente -->
+                                                </select>
+                                                <button type="button" id="addPersonnelBtn" class="w-10 h-10 bg-amber-600 text-white font-black text-lg rounded-xl hover:bg-amber-700 transition-colors flex items-center justify-center">+</button>
+                                            </div>
+                                            <div class="space-y-2">
+                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Fecha de actividad</label>
+                                            <input type="date" id="activityDate" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" required>
+                                        </div>
+                                        <div id="selectedPersonnelChips" class="flex flex-wrap gap-2 mt-2"></div>
+                                        </div>
+                                        <button type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-[10px] uppercase rounded-xl hover:bg-blue-700 transition-colors">Crear Actividad</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="col-span-12 lg:col-span-8 space-y-6">
+                                <div class="glass-card p-6">
+                                    <h4 class="text-[11px] font-black text-slate-900 uppercase mb-4 tracking-widest">Actividades del Proyecto</h4>
+                                    <div class="mb-3 border border-slate-100 rounded-xl p-3 bg-slate-50">
+                                        <div class="flex flex-wrap gap-3 text-[10px] text-slate-600">
+                                            <div>Inicio: <span id="activityStartDate">--</span></div>
+                                            <div>Último: <span id="activityEndDate">--</span></div>
+                                            <div>Días trabajados: <span id="activityDaysWorked">0</span></div>
+                                        </div>
+                                    </div>
+                                    <div id="activitiesList" class="space-y-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para asignar valor -->
+            <div id="assignValueModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
+                    <h3 class="text-xl font-black text-slate-900 uppercase mb-2">Asignar Valor</h3>
+                    <p id="assignFileName" class="text-xs text-slate-500 mb-6 truncate font-mono"></p>
+                    <div class="space-y-4">
+                        <input type="number" id="assignInput" placeholder="Valor $" class="w-full p-4 bg-slate-50 border rounded-2xl text-lg font-black outline-none focus:ring-2 focus:ring-emerald-500">
+                        <div class="flex gap-2">
+                            <button onclick="closeAssignModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-xs uppercase">Cancelar</button>
+                            <button onclick="confirmAssignValue()" class="flex-1 py-3 bg-emerald-600 text-white font-black rounded-xl text-xs uppercase shadow-lg shadow-emerald-500/20">Asignar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Interfaz de Preeliminar -->
+            <div id="preliminarView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
+                <header class="px-10 py-6 bg-white border-b flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-xl">
+                            <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2"/></svg>
+                        </button>
+                        <div>
+                            <h2 id="preliminarProjectName" class="text-xl font-black text-slate-900 uppercase">---</h2>
+                            <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Módulo Preeliminar</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[9px] font-black text-slate-400 uppercase">Módulo Activo</p>
+                        <p id="headProgIng" class="text-lg font-black text-slate-900">0%</p>
+                    </div>
+                </header>
+
+                <div class="flex-1 overflow-y-auto p-8 space-y-8">
+                    <div class="max-w-6xl mx-auto grid grid-cols-12 gap-8">
+                        <!-- Documentos Preeliminares -->
+                        <div class="col-span-12 lg:col-span-8 space-y-6">
+                            <div class="glass-card p-6">
+                                <h4 class="text-[11px] font-black text-slate-900 uppercase mb-6 tracking-widest">Documentos Preeliminares</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Kick-Off -->
+                                    <div class="p-4 border border-slate-200 rounded-xl">
+                                        <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Kick-Off</h5>
+                                        <div class="relative group">
+                                            <input type="file" id="kickoffFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                                            <div id="kickoffFileName" class="p-3 border-2 border-dashed border-slate-200 rounded-lg text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR KICK-OFF (PDF)</div>
+                                        </div>
+                                        <div class="mt-3 flex gap-2">
+                                            <button onclick="uploadPreliminarFile('kickoff')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded-lg">Subir</button>
+                                            <button onclick="viewPreliminarFile('kickoff')" id="kickoffViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Acta Visita Técnica -->
+                                    <div class="p-4 border border-slate-200 rounded-xl">
+                                        <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Acta Visita Técnica</h5>
+                                        <div class="relative group">
+                                            <input type="file" id="visitaFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                                            <div id="visitaFileName" class="p-3 border-2 border-dashed border-slate-200 rounded-lg text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR ACTA VISITA (PDF)</div>
+                                        </div>
+                                        <div class="mt-3 flex gap-2">
+                                            <button onclick="uploadPreliminarFile('visita')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded-lg">Subir</button>
+                                            <button onclick="viewPreliminarFile('visita')" id="visitaViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Lista de Material -->
+                                    <div class="p-4 border border-slate-200 rounded-xl">
+                                        <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Lista de Material</h5>
+                                        <div class="relative group">
+                                            <input type="file" id="materialFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                                            <div id="materialFileName" class="p-3 border-2 border-dashed border-slate-200 rounded-lg text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR LISTA MATERIAL (PDF)</div>
+                                        </div>
+                                        <div class="mt-3 flex gap-2">
+                                            <button onclick="uploadPreliminarFile('material')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded-lg">Subir</button>
+                                            <button onclick="viewPreliminarFile('material')" id="materialViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Recibo -->
+                                    <div class="p-4 border border-slate-200 rounded-xl">
+                                        <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Recibo</h5>
+                                        <div class="relative group">
+                                            <input type="file" id="reciboFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                                            <div id="reciboFileName" class="p-3 border-2 border-dashed border-slate-200 rounded-lg text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR RECIBO (PDF)</div>
+                                        </div>
+                                        <div class="mt-3 flex gap-2">
+                                            <button onclick="uploadPreliminarFile('recibo')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded-lg">Subir</button>
+                                            <button onclick="viewPreliminarFile('recibo')" id="reciboViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Contrato -->
+                                    <div class="p-4 border border-slate-200 rounded-xl">
+                                        <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Contrato</h5>
+                                        <div class="relative group">
+                                            <input type="file" id="contratoFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                                            <div id="contratoFileName" class="p-3 border-2 border-dashed border-slate-200 rounded-lg text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR CONTRATO (PDF)</div>
+                                        </div>
+                                        <div class="mt-3 flex gap-2">
+                                            <button onclick="uploadPreliminarFile('contrato')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded-lg">Subir</button>
+                                            <button onclick="viewPreliminarFile('contrato')" id="contratoViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Google Maps -->
+                        <div class="col-span-12 lg:col-span-4 space-y-6">
+                            <div class="glass-card p-6">
+                                <h4 class="text-[11px] font-black text-slate-900 uppercase mb-4 tracking-widest flex items-center">
+                                    <i class="fa-solid fa-map-location-dot text-amber-500 mr-2"></i>
+                                    Ubicación del Proyecto
+                                </h4>
+
+                                <!-- Controles de Coordenadas -->
+                                <div class="space-y-4 mb-4">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Latitud</label>
+                                            <input type="text" id="mapLat" placeholder="Ej: 4.6097"
+                                                class="w-full p-2 bg-slate-50 border rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500 text-center font-mono">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Longitud</label>
+                                            <input type="text" id="mapLng" placeholder="Ej: -74.0817"
+                                                class="w-full p-2 bg-slate-50 border rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500 text-center font-mono">
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-2">
+                                        <button onclick="saveCoordinates()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black text-[9px] uppercase rounded-lg transition-colors shadow-lg active:scale-95">Guardar</button>
+                                        <button onclick="searchCoordinates()" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-black text-[9px] uppercase rounded-lg transition-colors active:scale-95">
+                                            <i class="fa-solid fa-search"></i>
+                                        </button>
+                                        <button onclick="copyCoordinates()" class="px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white font-black text-[9px] uppercase rounded-lg transition-colors active:scale-95">
+                                            <i class="fa-solid fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Controles de Vista del Mapa -->
+                                <div class="space-y-3">
+                                    <button onclick="openInGoogleMaps()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase rounded-lg transition-colors flex items-center justify-center">
+                                        <i class="fa-solid fa-external-link-alt mr-2"></i> Abrir en Google Maps
+                                    </button>
+                                </div>
+
+                                <!-- Información de Dirección -->
+                                <div id="addressInfo" class="mt-4 pt-4 border-t border-slate-200 hidden">
+                                    <div class="flex items-start">
+                                        <i class="fa-solid fa-location-dot text-slate-400 mt-1 mr-2 text-xs"></i>
+                                        <div class="flex-1">
+                                            <p class="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Dirección:</p>
+                                            <p id="currentAddress" class="text-xs text-slate-600 italic">Obteniendo dirección...</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contenedor de Imagen del Proyecto -->
+                                <div id="imageContainer" class="w-full h-80 bg-slate-100 rounded-xl border mt-4 flex items-center justify-center relative overflow-hidden">
+                                    <img id="projectImage" src="" alt="Imagen del proyecto" class="max-w-full max-h-full object-contain hidden">
+                                    <div id="imagePlaceholder" class="text-center text-slate-500">
+                                        <i class="fa-solid fa-image text-4xl mb-2"></i>
+                                        <p class="text-sm">Selecciona una imagen del proyecto</p>
+                                        <input type="file" id="imageInput" accept="image/*" class="mt-2 text-xs">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista EMPLEADOS -->
+            <div id="employeesView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
+                <header class="px-10 py-6 bg-white border-b flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-xl">
+                            <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2"/></svg>
+                        </button>
+                        <div>
+                            <h2 class="text-xl font-black text-slate-900 uppercase">Empleados</h2>
+                            <p class="text-[10px] font-bold text-purple-600 uppercase tracking-widest">Gestión de Personal Técnico</p>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="flex-1 overflow-y-auto p-8 space-y-8">
+                    <div class="max-w-4xl mx-auto">
+                        <div class="grid grid-cols-12 gap-8">
+                            <div class="col-span-12 lg:col-span-4 space-y-6">
+                                <div class="glass-card p-6">
+                                    <h4 class="text-[11px] font-black text-slate-900 uppercase mb-4 tracking-widest">Agregar Empleado</h4>
+                                    <form id="newEmployeeForm" class="space-y-4">
+                                        <input type="text" id="employeeName" placeholder="Nombre completo" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-purple-500" required>
+                                        <input type="text" id="employeeRole" placeholder="Cargo/Rol" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-purple-500" required>
+                                        <button type="submit" class="w-full py-3 bg-purple-600 text-white font-black text-[10px] uppercase rounded-xl hover:bg-purple-700 transition-colors">Agregar Empleado</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="col-span-12 lg:col-span-8 space-y-6">
+                                <div class="glass-card p-6">
+                                    <h4 class="text-[11px] font-black text-slate-900 uppercase mb-4 tracking-widest">Lista de Empleados</h4>
+                                    <div id="employeesList" class="space-y-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-    <div id="connStatus" class="glass rounded-xl px-4 py-3 flex items-center gap-3 min-w-[220px]">
-      <div id="connDot" class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
-      <div>
-        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Estado de conexión</p>
-        <p id="connText" class="text-xs font-bold text-slate-300">Comprobando...</p>
-      </div>
+
+    <script>
+        // --- PREELIMINAR / COORDINATES ---
+        let googleMapsLoaded = false;
+
+        window.initGoogleMaps = function() {
+            googleMapsLoaded = true;
+            // Si estamos en la vista preliminar, inicializar el mapa
+            if (document.getElementById('preliminarView').classList.contains('hidden') === false) {
+                const p = projects.find(x => x.id === selectedProjectId);
+                if (p) renderPreliminar();
+            }
+        };
+
+        // Manejar selección de imagen
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('projectImage').src = e.target.result;
+                    document.getElementById('projectImage').classList.remove('hidden');
+                    document.getElementById('imagePlaceholder').classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function renderPreliminar() {
+            const p = projects.find(x => x.id === selectedProjectId);
+            if (!p) return;
+
+            document.getElementById('preliminarProjectName').innerText = p.name;
+
+            // Cargar coordenadas guardadas
+            const coords = await getCoordinates(selectedProjectId);
+            if (coords) {
+                document.getElementById('mapLat').value = coords.lat;
+                document.getElementById('mapLng').value = coords.lng;
+            } else {
+                // Bogotá por defecto
+                const defaultLat = 4.6097;
+                const defaultLng = -74.0817;
+                document.getElementById('mapLat').value = defaultLat.toFixed(6);
+                document.getElementById('mapLng').value = defaultLng.toFixed(6);
+            }
+
+            // Cargar estado de archivos
+            const preliminarData = await getPreliminarData(selectedProjectId);
+            const fileTypes = ['kickoff', 'visita', 'material', 'recibo', 'contrato'];
+
+            fileTypes.forEach(type => {
+                const fileData = preliminarData.find(f => f.type === type);
+                const viewBtn = document.getElementById(`${type}ViewBtn`);
+                const fileNameDiv = document.getElementById(`${type}FileName`);
+
+                if (fileData) {
+                    viewBtn.disabled = false;
+                    viewBtn.classList.remove('opacity-50');
+                    fileNameDiv.innerText = fileData.fileName;
+                } else {
+                    viewBtn.disabled = true;
+                    viewBtn.classList.add('opacity-50');
+                    fileNameDiv.innerText = `SUBIR ${type.toUpperCase().replace('VISITA', 'ACTA VISITA').replace('MATERIAL', 'LISTA MATERIAL')} (PDF)`;
+                }
+            });
+        }
+
+        async function getPreliminarData(projectId) {
+            return new Promise(r => {
+                const req = db.transaction(STORES.PRELIMINAR).objectStore(STORES.PRELIMINAR).get(projectId);
+                req.onsuccess = () => r(req.result || []);
+            });
+        }
+
+        async function savePreliminarData(projectId, data) {
+            return new Promise(r => {
+                const req = db.transaction(STORES.PRELIMINAR, 'readwrite').objectStore(STORES.PRELIMINAR).put(data, projectId);
+                req.onsuccess = () => r();
+            });
+        }
+
+        async function writeJson(folderHandle, fileName, obj) {
+            const fileHandle = await folderHandle.getFileHandle(fileName, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(JSON.stringify(obj, null, 2));
+            await writable.close();
+        }
+
+        async function intentarReconexionSilenciosa() {
+        return new Promise((resolve) => {
+            const rootReq = db.transaction(STORES.SETTINGS).objectStore(STORES.SETTINGS).get('root');
+            rootReq.onsuccess = async () => {
+            const saved = rootReq.result;
+            if (!saved) { resolve(); return; }
+            const permiso = await saved.queryPermission({ mode: 'readwrite' });
+            if (permiso === 'granted') {
+                currentHandle = saved;
+                document.getElementById('btnReactivate').classList.add('hidden');
+                await scan();
+            } else {
+                document.getElementById('btnReactivate').classList.remove('hidden');
+            }
+            resolve();
+            };
+        });
+        }
+
+        document.getElementById('btnReactivate').addEventListener('click', async () => {
+        const rootReq = db.transaction(STORES.SETTINGS).objectStore(STORES.SETTINGS).get('root');
+        rootReq.onsuccess = async () => {
+            const saved = rootReq.result;
+            if (!saved) return;
+            const req = await saved.requestPermission({ mode: 'readwrite' });
+            if (req === 'granted') {
+            currentHandle = saved;
+            document.getElementById('btnReactivate').classList.add('hidden');
+            await scan();
+            }
+        };
+        });
+
+        async function readJson(folderHandle, fileName) {
+            try {
+                const fileHandle = await folderHandle.getFileHandle(fileName);
+                const file = await fileHandle.getFile();
+                return JSON.parse(await file.text());
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function getOrCreateHiddenFolder(parentHandle, name) {
+            return parentHandle.getDirectoryHandle(name, { create: true });
+        }
+
+        async function getCoordinates(projectId) {
+            return new Promise(r => {
+                const req = db.transaction(STORES.COORDINATES).objectStore(STORES.COORDINATES).get(projectId);
+                req.onsuccess = () => r(req.result);
+            });
+        }
+
+        async function saveCoordinates() {
+            const lat = parseFloat(document.getElementById('mapLat').value);
+            const lng = parseFloat(document.getElementById('mapLng').value);
+
+            if (!lat || !lng || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                alert('Por favor ingrese coordenadas válidas');
+                return;
+            }
+
+            await new Promise(r => {
+                const req = db.transaction(STORES.COORDINATES, 'readwrite').objectStore(STORES.COORDINATES).put({ lat, lng }, selectedProjectId);
+                req.onsuccess = () => r();
+            });
+
+            // Actualizar inputs del mapa
+            document.getElementById('mapLat').value = lat.toFixed(6);
+            document.getElementById('mapLng').value = lng.toFixed(6);
+
+            if (googleMapsLoaded && map && marker) {
+                const pos = { lat, lng };
+                map.panTo(pos);
+                marker.setPosition(pos);
+                getReverseGeocoding(pos);
+            }
+
+            showToast('Coordenadas guardadas correctamente');
+        }
+
+        window.searchCoordinates = function() {
+            const lat = parseFloat(document.getElementById('mapLat').value);
+            const lng = parseFloat(document.getElementById('mapLng').value);
+
+            if (isNaN(lat) || isNaN(lng)) {
+                showToast("Introduce coordenadas válidas");
+                return;
+            }
+
+            // Generar enlace a Google Maps con las coordenadas
+            const zoom = 15; // Nivel de zoom por defecto
+            const url = `https://www.google.com/maps/@${lat},${lng},${zoom}z`;
+            window.open(url, '_blank');
+
+            showToast("Abriendo Google Maps con las coordenadas");
+        };
+
+        window.copyCoordinates = function() {
+            const lat = document.getElementById('mapLat').value;
+            const lng = document.getElementById('mapLng').value;
+            const text = `${lat}, ${lng}`;
+
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            showToast("Coordenadas copiadas al portapapeles");
+        };
+
+        window.openInGoogleMaps = function() {
+            const lat = document.getElementById('mapLat').value;
+            const lng = document.getElementById('mapLng').value;
+            if (lat && lng) {
+                window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
+            } else {
+                showToast("Ingresa coordenadas válidas primero");
+            }
+        };
+
+        function showToast(msg) {
+            // Crear toast si no existe
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none text-sm';
+                document.body.appendChild(toast);
+            }
+
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+        }
+
+        // Sincronizar inputs del mapa con el header y agregar event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const mapLatInput = document.getElementById('mapLat');
+            const mapLngInput = document.getElementById('mapLng');
+
+            if (mapLatInput && mapLngInput) {
+                // Buscar al presionar Enter
+                mapLatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') searchCoordinates();
+                });
+                mapLngInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') searchCoordinates();
+                });
+            }
+        });
+
+        window.uploadPreliminarFile = async (type) => {
+            const p = projects.find(x => x.id === selectedProjectId);
+            if (!p || !p.preliminarFolder) {
+                alert("Carpeta 1. Preeliminar no encontrada.");
+                return;
+            }
+
+            const input = document.getElementById(`${type}File`);
+            const file = input.files[0];
+            if (!file) {
+                alert('Por favor seleccione un archivo PDF');
+                return;
+            }
+
+            const fileName = `${type}_${Date.now()}.pdf`;
+
+            try {
+                const handle = await p.preliminarFolder.getFileHandle(fileName, { create: true });
+                const writable = await handle.createWritable();
+                await writable.write(file);
+                await writable.close();
+
+                // Guardar referencia en BD
+                const preliminarData = await getPreliminarData(selectedProjectId);
+                const existingIndex = preliminarData.findIndex(f => f.type === type);
+
+                const fileData = {
+                    type,
+                    fileName,
+                    originalName: file.name,
+                    uploadedAt: new Date().toISOString()
+                };
+
+                if (existingIndex >= 0) {
+                    preliminarData[existingIndex] = fileData;
+                } else {
+                    preliminarData.push(fileData);
+                }
+
+                await savePreliminarData(selectedProjectId, preliminarData);
+                renderPreliminar();
+
+                alert('Archivo subido correctamente');
+            } catch (e) {
+                alert('Error al subir el archivo: ' + e.message);
+            }
+        };
+
+        window.viewPreliminarFile = async (type) => {
+            const p = projects.find(x => x.id === selectedProjectId);
+            if (!p || !p.preliminarFolder) return alert("Carpeta 1. Preeliminar no encontrada.");
+
+            const preliminarData = await getPreliminarData(selectedProjectId);
+            const fileData = preliminarData.find(f => f.type === type);
+
+            if (!fileData) return alert("Archivo no encontrado");
+
+            try {
+                const handle = await p.preliminarFolder.getFileHandle(fileData.fileName);
+                window.open(URL.createObjectURL(await handle.getFile()), '_blank');
+            } catch (e) {
+                alert("Error al abrir el archivo");
+            }
+        };
+
+        window.generarActa = async (docId, projectId) => {
+        const p = projects.find(x => x.id === projectId);
+        if (!p || !p.actFolder) { alert('Carpeta 5. INFORME DE SEGUIMIENTO/1. ACTAS no encontrada.'); return; }
+
+        const info = await getProjectInfo(projectId);
+        if (!info || !info.dueno) {
+            alert('Faltan datos del proyecto (dueño, etc.) para generar el acta.');
+            return;
+        }
+
+        try {
+            const plantillasFolder = await currentHandle.getDirectoryHandle('plantillas');
+            const plantillaHandle = await plantillasFolder.getFileHandle(`plantilla_${docId}.docx`);
+            const arrayBuffer = await (await plantillaHandle.getFile()).arrayBuffer();
+
+            const zip = new PizZip(arrayBuffer);
+            const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+            doc.render({
+            proyecto: p.name,
+            item: docId,
+            fecha: new Date().toLocaleDateString('es-CO'),
+            dueno: info.dueno,
+            potencia_ac: info.potenciaAC || '',
+            responsable: 'Smart Energy'
+            });
+
+            const buf = doc.getZip().generate({ type: 'uint8array' });
+
+            const fileName = `${docId}_${p.name}.docx`;
+            const actaHandle = await p.actFolder.getFileHandle(fileName, { create: true });
+            const writable = await actaHandle.createWritable();
+            await writable.write(buf);
+            await writable.close();
+
+            await scan();
+            showToast('Acta generada correctamente');
+        } catch (e) {
+            alert('No se pudo generar el acta: ' + e.message);
+        }
+        };
+
+        // Actualizar nombres de archivos al seleccionar
+        ['kickoff', 'visita', 'material', 'recibo', 'contrato'].forEach(type => {
+            document.getElementById(`${type}File`).onchange = e => {
+                const file = e.target.files[0];
+                if (file) {
+                    document.getElementById(`${type}FileName`).innerText = file.name;
+                }
+            };
+        });
+
+        // Verificar si estamos en un entorno de archivo local
+        const isLocalFile = window.location.protocol === 'file:';
+        if (isLocalFile) {
+            console.warn('Aplicación ejecutándose desde archivo local. Algunas funcionalidades pueden estar limitadas.');
+        }
+        const DB_NAME = 'SolarBox_Dev_Core';
+        const STORES = { SETTINGS: 'settings', BUDGET: 'budget_data', STATES: 'states', HISTORY: 'history', PRELIMINAR: 'preliminar_files', COORDINATES: 'project_coordinates', EMPLOYEES: 'employees', ACTIVITIES: 'activities', PROJECT_INFO: 'project_info' };
+        let db, currentHandle, selectedProjectId, projects = [], activeTramiteType = null, currentPendingFile = null;
+        let currentTramiteExistingFiles = [];
+        let lastProjectView = 'hub'; // recuerda en qué sección (Documentación/Desarrollo/Preeliminar) estaba el usuario
+
+        // Estados posibles por tipo de trámite. OR: ciclo real de inscripción ante el Operador de Red.
+        // RETIE: proceso de inspección técnica, es un flujo distinto al de OR.
+        const TRAMITE_STATES = {
+            or: ['NO INSCRITO', 'INSCRITO', 'CONFORME', 'DE BAJA'],
+            retie: ['POR AGENDAR', 'EN TRÁMITE', 'AGENDADO', 'OBSERVACIONES', 'APROBADO']
+        };
+
+        const CONFIG = {
+            ing: [
+                { id: "1.", label: "Diagrama Unifilar" }, { id: "2.", label: "Certificación Inversor" },
+                { id: "3-4.", label: "Parametrización" }, { id: "5.", label: "RETIE Construcción" },
+                { id: "6.", label: "Cédula Catastral" }, { id: "7.", label: "Certificado Tradición" },
+                { id: "8.", label: "FT Inversor" }, { id: "9.", label: "FT Panel" },
+                { id: "10.", label: "Dispositivo Transferencia" }, { id: "11.", label: "Cuadro de Cargas" },
+                { id: "12.", label: "Certificación Experiencia" }, { id: "13.", label: "Espacios de Trabajo" },
+                { id: "14.", label: "Distancias Seguridad" }, { id: "15.", label: "Memoria de Cálculo" },
+                { id: "16.", label: "Conexión Paneles" }, { id: "17.", label: "Plan Mantenimiento" },
+                { id: "18.", label: "Plano Eléctrico" }
+            ],
+            act: [
+                { id: "1.", label: "Acta de Visita" }, { id: "2.", label: "Entrega Materiales" },
+                { id: "3.", label: "Acta de Inicio" }, { id: "4.", label: "Recibo Final" },
+                { id: "5.", label: "Capacitación" }
+            ]
+        };
+
+        async function init() {
+            db = await new Promise(res => {
+                const req = indexedDB.open(DB_NAME, 5);
+                req.onupgradeneeded = e => {
+                    const d = e.target.result;
+                    if (!d.objectStoreNames.contains(STORES.SETTINGS)) d.createObjectStore(STORES.SETTINGS);
+                    if (!d.objectStoreNames.contains(STORES.BUDGET)) d.createObjectStore(STORES.BUDGET);
+                    if (!d.objectStoreNames.contains(STORES.STATES)) d.createObjectStore(STORES.STATES);
+                    if (!d.objectStoreNames.contains(STORES.HISTORY)) d.createObjectStore(STORES.HISTORY);
+                    if (!d.objectStoreNames.contains(STORES.PRELIMINAR)) d.createObjectStore(STORES.PRELIMINAR);
+                    if (!d.objectStoreNames.contains(STORES.COORDINATES)) d.createObjectStore(STORES.COORDINATES);
+                    if (!d.objectStoreNames.contains(STORES.EMPLOYEES)) d.createObjectStore(STORES.EMPLOYEES, { keyPath: 'id', autoIncrement: true });
+                    if (!d.objectStoreNames.contains(STORES.ACTIVITIES)) d.createObjectStore(STORES.ACTIVITIES, { keyPath: 'id', autoIncrement: true });
+                    if (!d.objectStoreNames.contains(STORES.PROJECT_INFO)) d.createObjectStore(STORES.PROJECT_INFO);
+                };
+                req.onsuccess = () => res(req.result);
+            });
+
+            await intentarReconexionSilenciosa();
+
+            document.getElementById('devExpFile').onchange = e => {
+                document.getElementById('devFileName').innerText = e.target.files[0]?.name || "ADJUNTAR FACTURA (PDF)";
+            };
+
+            document.getElementById('newDevExpenseForm').onsubmit = e => {
+                e.preventDefault();
+                handleNewExpense();
+            };
+        }
+
+
+        // Navegación
+        window.switchView = (view) => {
+            ['emptyState', 'projectHub', 'documentationView', 'developmentView', 'preliminarView', 'employeesView'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            const viewsMap = { hub: 'projectHub', documentation: 'documentationView', development: 'developmentView', preliminar: 'preliminarView', employees: 'employeesView', empty: 'emptyState' };
+            document.getElementById(viewsMap[view]).classList.remove('hidden');
+            const p = projects.find(x => x.id === selectedProjectId);
+            if (view === 'development' && p) renderDevelopment();
+            if (view === 'preliminar' && p) renderPreliminar();
+            if (view === 'documentation' && p) renderDocModule(p);
+            if (view === 'employees') loadEmployees();
+
+            // Solo recordamos las secciones que viven "dentro" de un proyecto,
+            // no 'employees' (es una vista aparte, no una sección de proyecto).
+            if (['hub', 'documentation', 'development', 'preliminar'].includes(view)) {
+                lastProjectView = view;
+            }
+        };
+
+        // Escaneo y Lógica de Datos
+        async function scan() {
+            if (!currentHandle) return;
+            const temp = [];
+            try {
+                for await (const entry of currentHandle.values()) {
+                    // Generalizado a 0.N. (no solo 0.1/0.2/0.3) por si se crean más carpetas de año a futuro
+                    if (entry.kind === 'directory' && /^0\.\d+\./.test(entry.name)) {
+                        const yearMatch = entry.name.match(/(20\d{2})/);
+                        const year = yearMatch ? yearMatch[1] : '—';
+                        for await (const proj of entry.values()) {
+                            if (proj.kind === 'directory') {
+                                const analyzed = await analyze(proj);
+                                analyzed.year = year;
+                                temp.push(analyzed);
+                            }
+                        }
+                    }
+                }
+                projects = temp.sort((a,b) => b.id.localeCompare(a.id));
+                renderSidebar();
+                if (selectedProjectId) {
+                    const p = projects.find(x => x.id === selectedProjectId);
+                    if (p) {
+                        renderDocModule(p);
+                        if (!document.getElementById('developmentView').classList.contains('hidden')) renderDevelopment();
+                    }
+                }
+            } catch(e) {}
+        }
+
+        async function analyze(handle) {
+            const states = await getStates(handle.name);
+            let ingFolder, actFolder, budgetFolder, preliminarFolder, estadosFolder, retieFolder, orFolder;
+            try {
+                for await (const e of handle.values()) {
+                    if (e.name.startsWith('1.') && e.name.includes('Preeliminar')) preliminarFolder = e;
+                    if (e.name.startsWith('1.') && !e.name.includes('Preeliminar')) ingFolder = e;
+                    if (e.name.startsWith('2.') && e.name.includes('ESTADOS')) estadosFolder = e;
+                    if (e.name.startsWith('3.')) budgetFolder = e;
+                    if (e.name.startsWith('5.')) {
+                        for await (const s of e.values()) if (s.name.startsWith('1.')) actFolder = s;
+                    }
+                }
+                // Dentro de "2. ESTADOS OR Y RETIE" hay dos subcarpetas: "1. RETIE" y "2. OR"
+                if (estadosFolder) {
+                    for await (const s of estadosFolder.values()) {
+                        if (s.kind === 'directory' && s.name.startsWith('1.')) retieFolder = s;
+                        if (s.kind === 'directory' && s.name.startsWith('2.')) orFolder = s;
+                    }
+                }
+            } catch(e) {}
+
+            const getFiles = async (f) => {
+                if (!f) return [];
+                const r = [];
+                try { for await (const x of f.values()) if (x.kind === 'file') r.push({n: x.name, h: x}); } catch(e) {}
+                return r;
+            };
+
+            const filesIng = await getFiles(ingFolder);
+            const filesAct = await getFiles(actFolder);
+            const filesRetieConf = await getFiles(retieFolder);
+            const filesOrConf = await getFiles(orFolder);
+
+            const mapItems = (cfg, files) => cfg.map(c => {
+                const f = files.find(x => x.n.trim().startsWith(c.id));
+                return {...c, found: !!f, handle: f?.h};
+            });
+
+            const ingItems = mapItems(CONFIG.ing, filesIng);
+            const actItems = mapItems(CONFIG.act, filesAct);
+
+            let info = null;
+            try {
+                const hiddenFolder = await getOrCreateHiddenFolder(handle, '_data');
+                info = await readJson(hiddenFolder, 'data.json');
+            } catch (e) {}
+
+            return {
+                id: handle.name,
+                name: handle.name.replace(/^\d+\.\s*/, ''),
+                ingItems, actItems, ingFolder, actFolder, budgetFolder, preliminarFolder,
+                info,
+                // Conformidad detectada automáticamente por archivos presentes en las subcarpetas
+                retieConforme: filesRetieConf.length >= 2,
+                orConforme: filesOrConf.length >= 1,
+                filesRetieConf, filesOrConf,
+                prog: Math.round((ingItems.filter(i=>i.found).length / ingItems.length) * 100),
+                states
+            };
+        }
+
+        // Renderizado
+        // Event listener para el buscador
+        document.getElementById('projectSearch').addEventListener('input', renderSidebar);
+
+        function renderSidebar() {
+            const searchTerm = document.getElementById('projectSearch').value.toLowerCase();
+
+            // Filtrar proyectos por búsqueda
+            let filteredProjects = projects.filter(p => p.name.toLowerCase().includes(searchTerm));
+
+            // Ordenar proyectos por nombre (alfabéticamente)
+            const sortedProjects = [...filteredProjects].sort((a, b) => a.name.localeCompare(b.name));
+
+            // Agrupar por año (usa el año real de la carpeta 0.N. AAAA que contiene el proyecto)
+            const groupedByYear = {};
+            sortedProjects.forEach(p => {
+                const year = p.year || 'Sin Año';
+                if (!groupedByYear[year]) groupedByYear[year] = [];
+                groupedByYear[year].push(p);
+            });
+
+            // Generar HTML agrupado
+            const html = Object.keys(groupedByYear).sort((a, b) => b.localeCompare(a)).map(year => `
+                <div class="mb-4">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-2">${year}</h4>
+                    ${groupedByYear[year].map(p => `
+                        <div onclick="selectProject('${p.id}')" class="project-card p-4 cursor-pointer ${selectedProjectId === p.id ? 'active' : ''}">
+                            <div class="flex justify-between items-center mb-1 text-[9px] font-black ${selectedProjectId === p.id ? 'text-blue-300' : 'text-slate-500'}">
+                                <span>${p.prog}% DOCS</span>
+                                <div class="w-1.5 h-1.5 rounded-full ${p.prog === 100 ? 'bg-emerald-400' : 'bg-blue-500'}"></div>
+                            </div>
+                            <h3 class="text-xs font-bold uppercase truncate tracking-wide ${selectedProjectId === p.id ? 'text-white' : 'text-slate-300'}">${p.name}</h3>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+
+            document.getElementById('projectList').innerHTML = html;
+        }
+
+        window.selectProject = (id) => {
+            selectedProjectId = id;
+            const p = projects.find(x => x.id === id);
+            document.getElementById('hubProjectName').innerText = p.name;
+            document.getElementById('hubProjectYear').innerText = p.year || '----';
+            document.getElementById('docProjectName').innerText = p.name;
+            document.getElementById('devProjectName').innerText = p.name;
+            document.getElementById('headProgIng').innerText = `${p.prog}%`;
+            renderDocModule(p);
+            // Si empleados era la última vista (no es una sección de proyecto),
+            // al elegir un proyecto lo natural es caer en el hub.
+            switchView(lastProjectView === 'employees' ? 'hub' : lastProjectView);
+            renderSidebar();
+        };
+        async function renderDocModule(p) {
+            // Ingeniería y Actas
+            const actionBtn = (found, type, docId) => found ? 
+                `<button onclick="openFile('${p.id}','${docId}','${type}')" class="btn-action btn-view">Abrir</button>` : 
+                `<button onclick="uploadFile('${p.id}','${docId}','${type}')" class="btn-action btn-upload">Subir</button>`;
+            const actActionBtn = (found, docId) => found ? 
+                `<button onclick="openFile('${p.id}','${docId}','act')" class="btn-action btn-view">Abrir</button>` :
+                `<button onclick="generarActa('${docId}','${p.id}')" class="btn-action btn-upload">Generar</button>`;
+
+            document.getElementById('listIng').innerHTML = p.ingItems.map(i => `
+                <div class="flex items-center justify-between p-4 bg-white border ${i.found ? 'border-blue-100' : 'border-slate-100'} rounded-xl shadow-sm">
+                    <span class="text-xs font-bold text-slate-700 truncate pr-2">${i.label}</span>
+                    ${actionBtn(i.found, 'ing', i.id)}
+                </div>
+            `).join('');
+
+            document.getElementById('listAct').innerHTML = p.actItems.map(i => `
+                <div class="flex items-center justify-between p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                    <span class="text-[10px] font-bold text-slate-500">${i.label}</span>
+                    ${actActionBtn(i.found, i.id)}
+                </div>
+            `).join('');
+
+            // Trámites Estados
+            // Si hay archivos de conformidad detectados y el estado sigue en su valor base
+            // (nunca se ha tocado manualmente), lo mostramos ya avanzado automáticamente.
+            const orStatusReal = p.states.or.status;
+            const orStatus = (orStatusReal === 'NO INSCRITO' && p.orConforme) ? 'CONFORME' : orStatusReal;
+            const retieStatusReal = p.states.retie.status;
+            const retieStatus = (retieStatusReal === 'POR AGENDAR' && p.retieConforme) ? 'APROBADO' : retieStatusReal;
+
+            const statusOrColors = {
+                'NO INSCRITO': 'text-slate-500',
+                'INSCRITO': 'text-blue-600',
+                'CONFORME': 'text-emerald-600',
+                'DE BAJA': 'text-red-600'
+            };
+            const statusRetieColors = {
+                'POR AGENDAR': 'text-slate-500',
+                'EN TRÁMITE': 'text-amber-600',
+                'AGENDADO': 'text-blue-600',
+                'OBSERVACIONES': 'text-red-600',
+                'APROBADO': 'text-emerald-600'
+            };
+            const statusOrEl = document.getElementById('status-or');
+            statusOrEl.innerText = orStatus;
+            statusOrEl.className = `text-sm font-bold ${statusOrColors[orStatus] || 'text-slate-800'}`;
+            document.getElementById('badge-or').classList.toggle('hidden', orStatusReal !== 'DE BAJA');
+
+            const statusRetieEl = document.getElementById('status-retie');
+            statusRetieEl.innerText = retieStatus;
+            statusRetieEl.className = `text-sm font-bold ${statusRetieColors[retieStatus] || 'text-slate-800'}`;
+
+            document.getElementById('date-or').innerText = `Última act: ${p.states.or.date || '--/--'}`;
+            document.getElementById('date-retie').innerText = `Última act: ${p.states.retie.date || '--/--'}`;
+
+            await renderInfoProyecto(p.id);
+        }
+
+        // --- Datos del Proyecto (nombre dueño, potencias, contacto) ---
+        async function getProjectInfo(id) {
+            return new Promise(r => {
+                const req = db.transaction(STORES.PROJECT_INFO).objectStore(STORES.PROJECT_INFO).get(id);
+                req.onsuccess = () => r(req.result || null);
+            });
+        }
+
+        async function getProjectFolderById(id) {
+            if (!currentHandle) return null;
+            for await (const entry of currentHandle.values()) {
+                if (entry.kind === 'directory' && entry.name === id) return entry;
+            }
+            return null;
+        }
+
+        async function saveProjectInfo(id, data) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORES.PROJECT_INFO, 'readwrite');
+                tx.objectStore(STORES.PROJECT_INFO).put(data, id);
+                tx.oncomplete = async () => {
+                    try {
+                        const projectFolder = await getProjectFolderById(id);
+                        if (projectFolder) {
+                            const hiddenFolder = await getOrCreateHiddenFolder(projectFolder, '_data');
+                            await writeJson(hiddenFolder, 'data.json', data);
+                        }
+                        const idx = projects.findIndex(x => x.id === id);
+                        if (idx >= 0) projects[idx] = { ...projects[idx], info: data };
+                        resolve();
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                tx.onerror = () => reject(new Error('No se pudo guardar la información del proyecto'));
+            });
+        }
+
+        async function renderInfoProyecto(projectId) {
+            const project = projects.find(x => x.id === projectId);
+            const info = (project && project.info) || (await getProjectInfo(projectId));
+            const list = document.getElementById('infoProyectoList');
+            if (!list) return;
+            const campo = (label, valor) => `
+                <div class="flex items-center justify-between gap-2 py-1.5 border-b border-slate-50 last:border-0">
+                    <div class="min-w-0">
+                        <p class="text-[9px] font-black text-slate-400 uppercase">${label}</p>
+                        <p class="text-xs font-semibold text-slate-700 truncate">${valor || '—'}</p>
+                    </div>
+                    ${valor ? `<button onclick="navigator.clipboard.writeText('${String(valor).replace(/'/g, "\\'")}'); showToast('Copiado')" class="shrink-0 p-1.5 hover:bg-slate-100 rounded-lg" title="Copiar">
+                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    </button>` : ''}
+                </div>`;
+            if (!info) {
+                list.innerHTML = `<p class="text-center text-slate-400 text-xs py-6">Sin datos aún — dale a "Editar" para completarlos.</p>`;
+                return;
+            }
+            list.innerHTML = [
+                campo('Dueño del Proyecto', info.dueno),
+                campo('Potencia AC', info.potenciaAC ? `${info.potenciaAC} kW` : ''),
+                campo('Potencia DC', info.potenciaDC ? `${info.potenciaDC} kWp` : ''),
+                campo('Teléfono', info.telefono),
+                campo('Correo', info.correo),
+                campo('Dirección', info.direccion),
+            ].join('');
+        }
+
+        let modalMode = 'create';
+
+        window.abrirModalNuevoProyecto = () => {
+            modalMode = 'create';
+            document.getElementById('proyectoInfoModalTitle').innerText = 'Nuevo Proyecto';
+            document.getElementById('proyectoInfoSubmitBtn').innerText = 'Crear Proyecto';
+            document.getElementById('proyectoInfoForm').reset();
+            document.getElementById('infoNombreProyecto').disabled = false;
+            document.getElementById('infoNombreProyectoHint').classList.remove('hidden');
+            document.getElementById('proyectoInfoModal').classList.remove('hidden');
+        };
+
+        window.abrirModalEditarInfo = async () => {
+            if (!selectedProjectId) return;
+            modalMode = 'edit';
+            const p = projects.find(x => x.id === selectedProjectId);
+            const info = (await getProjectInfo(selectedProjectId)) || {};
+            document.getElementById('proyectoInfoModalTitle').innerText = 'Datos del Proyecto';
+            document.getElementById('proyectoInfoSubmitBtn').innerText = 'Guardar Datos';
+            document.getElementById('infoNombreProyecto').value = p.name;
+            document.getElementById('infoNombreProyecto').disabled = true; // no soportamos renombrar la carpeta desde aquí
+            document.getElementById('infoNombreProyectoHint').classList.add('hidden');
+            document.getElementById('infoDueno').value = info.dueno || '';
+            document.getElementById('infoPotenciaAC').value = info.potenciaAC || '';
+            document.getElementById('infoPotenciaDC').value = info.potenciaDC || '';
+            document.getElementById('infoTelefono').value = info.telefono || '';
+            document.getElementById('infoCorreo').value = info.correo || '';
+            document.getElementById('infoDireccion').value = info.direccion || '';
+            document.getElementById('proyectoInfoModal').classList.remove('hidden');
+        };
+
+        document.getElementById('proyectoInfoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                dueno: document.getElementById('infoDueno').value.trim(),
+                potenciaAC: document.getElementById('infoPotenciaAC').value.trim(),
+                potenciaDC: document.getElementById('infoPotenciaDC').value.trim(),
+                telefono: document.getElementById('infoTelefono').value.trim(),
+                correo: document.getElementById('infoCorreo').value.trim(),
+                direccion: document.getElementById('infoDireccion').value.trim(),
+            };
+            const btn = document.getElementById('proyectoInfoSubmitBtn');
+
+            if (modalMode === 'create') {
+                const nombreProyecto = document.getElementById('infoNombreProyecto').value.trim();
+                if (!nombreProyecto) return;
+                btn.disabled = true;
+                btn.innerText = 'Creando carpetas...';
+                try {
+                    await crearNuevoProyecto(nombreProyecto, data);
+                    document.getElementById('proyectoInfoModal').classList.add('hidden');
+                    showToast('Proyecto creado');
+                } catch (err) {
+                    alert('No se pudo crear el proyecto: ' + err.message);
+                } finally {
+                    btn.disabled = false;
+                }
+            } else {
+                await saveProjectInfo(selectedProjectId, data);
+                await renderInfoProyecto(selectedProjectId);
+                document.getElementById('proyectoInfoModal').classList.add('hidden');
+                showToast('Datos guardados');
+            }
+        });
+
+        // Busca la carpeta de año actual (0.N. AAAA); si no existe, crea la siguiente disponible
+        async function getOrCreateYearFolder(year) {
+            for await (const entry of currentHandle.values()) {
+                if (entry.kind === 'directory' && /^0\.\d+\./.test(entry.name) && entry.name.includes(String(year))) {
+                    return entry;
+                }
+            }
+            let maxNum = 0;
+            for await (const entry of currentHandle.values()) {
+                const m = entry.name.match(/^0\.(\d+)\./);
+                if (m) maxNum = Math.max(maxNum, parseInt(m[1]));
+            }
+            const folderName = `0.${maxNum + 1}. ${year}`;
+            return await currentHandle.getDirectoryHandle(folderName, { create: true });
+        }
+
+        // Crea toda la estructura estándar de carpetas para un proyecto nuevo, vacía
+        async function crearNuevoProyecto(nombreProyecto, data) {
+            const year = new Date().getFullYear();
+            const yearFolder = await getOrCreateYearFolder(year);
+            const projectFolder = await yearFolder.getDirectoryHandle(nombreProyecto, { create: true });
+
+            await projectFolder.getDirectoryHandle('0. DOCUMENTACION CONTRACTUAL', { create: true });
+            await projectFolder.getDirectoryHandle('1. INGENIERIA DE DETALLE', { create: true });
+            const estadosFolder = await projectFolder.getDirectoryHandle('2. ESTADOS OR Y RETIE', { create: true });
+            await estadosFolder.getDirectoryHandle('1. RETIE', { create: true });
+            await estadosFolder.getDirectoryHandle('2. OR', { create: true });
+            await projectFolder.getDirectoryHandle('3. CONTROL DE PRESUPUESTO', { create: true });
+            const dossierName = `4. DOSSIER_${nombreProyecto.trim().toUpperCase().replace(/\s+/g, '_')}`;
+            await projectFolder.getDirectoryHandle(dossierName, { create: true });
+            const seguimientoFolder = await projectFolder.getDirectoryHandle('5. INFORME DE SEGUIMIENTO', { create: true });
+            await seguimientoFolder.getDirectoryHandle('1. ACTAS', { create: true });
+            await projectFolder.getDirectoryHandle('6. ESTADOS DE PAGO', { create: true });
+
+            await saveProjectInfo(projectFolder.name, data);
+            await scan();
+            selectProject(projectFolder.name);
+        }
+
+        // Muestra los archivos encontrados en las subcarpetas de conformidad (2. ESTADOS OR Y RETIE)
+        window.verConformidad = (type) => {
+            const p = projects.find(x => x.id === selectedProjectId);
+            if (!p) return;
+            const files = type === 'or' ? p.filesOrConf : p.filesRetieConf;
+            document.getElementById('conformidadModalType').innerText = type === 'or' ? 'OPERADOR DE RED (OR)' : 'RETIE';
+            const list = document.getElementById('conformidadModalList');
+            if (!files || files.length === 0) {
+                list.innerHTML = `<p class="text-sm text-slate-400 text-center py-8">Todavía no hay archivos en esta carpeta.</p>`;
+            } else {
+                list.innerHTML = files.map((f, idx) => `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span class="text-xs font-semibold text-slate-700 truncate mr-2">${f.n}</span>
+                        <button onclick="abrirArchivoConformidad('${type}', ${idx})" class="btn-action btn-view shrink-0">Abrir</button>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('conformidadModal').classList.remove('hidden');
+        };
+
+        window.abrirArchivoConformidad = async (type, idx) => {
+            const p = projects.find(x => x.id === selectedProjectId);
+            const files = type === 'or' ? p.filesOrConf : p.filesRetieConf;
+            const f = files[idx];
+            if (f?.h) window.open(URL.createObjectURL(await f.h.getFile()), '_blank');
+        };
+
+        window.switchDevTab = function(tab) {
+            const budgetTab = document.getElementById('devBudgetTab');
+            const activitiesTab = document.getElementById('devActivitiesTab');
+            const budgetSection = document.getElementById('devBudgetSection');
+            const activitiesSection = document.getElementById('devActivitiesSection');
+
+            if (tab === 'budget') {
+                budgetTab.classList.remove('bg-slate-600');
+                budgetTab.classList.add('bg-emerald-600');
+                activitiesTab.classList.remove('bg-blue-600');
+                activitiesTab.classList.add('bg-slate-600');
+                budgetSection.classList.remove('hidden');
+                activitiesSection.classList.add('hidden');
+            } else if (tab === 'activities') {
+                activitiesTab.classList.remove('bg-slate-600');
+                activitiesTab.classList.add('bg-blue-600');
+                budgetTab.classList.remove('bg-emerald-600');
+                budgetTab.classList.add('bg-slate-600');
+                activitiesSection.classList.remove('hidden');
+                budgetSection.classList.add('hidden');
+                loadEmployees();
+                loadActivities();
+            }
+        };
+
+        let selectedActivityPersonnel = [];
+        let currentViewedActivityId = null;
+
+        // --- EMPLEADOS ---
+        window.loadEmployees = function() {
+            const transaction = db.transaction(STORES.EMPLOYEES, 'readonly');
+            const store = transaction.objectStore(STORES.EMPLOYEES);
+            const req = store.getAll();
+            req.onsuccess = () => {
+                const employees = req.result;
+                document.getElementById('employeesList').innerHTML = employees.map(emp => `
+                    <div class="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl shadow-sm">
+                        <div>
+                            <p class="text-sm font-bold text-slate-700">${emp.name}</p>
+                            <p class="text-xs text-slate-500">${emp.role}</p>
+                        </div>
+                        <button onclick="deleteEmployee(${emp.id})" class="px-3 py-1 bg-red-500 text-white text-xs rounded">Eliminar</button>
+                    </div>
+                `).join('');
+
+                // Actualizar select en actividades
+                const select = document.getElementById('activityPersonnelSelect');
+                select.innerHTML = employees.map(emp => `<option value="${emp.id}">${emp.name} - ${emp.role}</option>`).join('');
+            };
+        };
+
+        function renderSelectedPersonnel() {
+            const container = document.getElementById('selectedPersonnelChips');
+            const transaction = db.transaction(STORES.EMPLOYEES, 'readonly');
+            const store = transaction.objectStore(STORES.EMPLOYEES);
+            container.innerHTML = '';
+
+            selectedActivityPersonnel.forEach(id => {
+                const req = store.get(id);
+                req.onsuccess = () => {
+                    const emp = req.result;
+                    if (emp) {
+                        const chip = document.createElement('div');
+                        chip.className = 'px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold flex items-center gap-2';
+                        chip.innerHTML = `${emp.name} <span onclick="removeSelectedPersonnel(${id})" class='cursor-pointer font-black'>×</span>`;
+                        container.appendChild(chip);
+                    }
+                };
+            });
+        }
+
+        window.addSelectedPersonnel = function() {
+            const select = document.getElementById('activityPersonnelSelect');
+            const selectedId = parseInt(select.value);
+            if (!selectedId || selectedActivityPersonnel.includes(selectedId)) return;
+            selectedActivityPersonnel.push(selectedId);
+            renderSelectedPersonnel();
+        };
+
+        window.removeSelectedPersonnel = function(id) {
+            selectedActivityPersonnel = selectedActivityPersonnel.filter(x => x !== id);
+            renderSelectedPersonnel();
+        };
+
+        document.getElementById('newEmployeeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('employeeName').value;
+            const role = document.getElementById('employeeRole').value;
+            const transaction = db.transaction(STORES.EMPLOYEES, 'readwrite');
+            const store = transaction.objectStore(STORES.EMPLOYEES);
+            store.add({ name, role });
+            transaction.oncomplete = () => {
+                document.getElementById('newEmployeeForm').reset();
+                loadEmployees();
+                showToast('Empleado agregado');
+            };
+        });
+
+        document.getElementById('addPersonnelBtn').addEventListener('click', () => {
+            addSelectedPersonnel();
+        });
+
+        document.getElementById('newActivityForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('activityName').value.trim();
+            const date = document.getElementById('activityDate').value;
+            if (!name) return showToast('Ingresa nombre de actividad');
+            if (!date) return showToast('Selecciona fecha de actividad');
+            if (selectedActivityPersonnel.length === 0) return showToast('Agrega al menos un técnico');
+
+            const transaction = db.transaction(STORES.ACTIVITIES, 'readwrite');
+            const store = transaction.objectStore(STORES.ACTIVITIES);
+            store.add({ name, date, personnel: selectedActivityPersonnel.slice(), projectId: selectedProjectId, evidences: [] });
+            transaction.oncomplete = () => {
+                document.getElementById('newActivityForm').reset();
+                selectedActivityPersonnel = [];
+                renderSelectedPersonnel();
+                loadActivities();
+                showToast('Actividad creada');
+            };
+        });
+
+        window.deleteEmployee = function(id) {
+            const transaction = db.transaction(STORES.EMPLOYEES, 'readwrite');
+            const store = transaction.objectStore(STORES.EMPLOYEES);
+            store.delete(id);
+            transaction.oncomplete = () => {
+                loadEmployees();
+                showToast('Empleado eliminado');
+            };
+        };
+
+        // --- ACTIVIDADES ---
+        window.loadActivities = function() {
+            const activityTx = db.transaction(STORES.ACTIVITIES, 'readonly');
+            const activityStore = activityTx.objectStore(STORES.ACTIVITIES);
+            const activityReq = activityStore.getAll();
+
+            activityReq.onsuccess = () => {
+                const activities = activityReq.result.filter(a => a.projectId === selectedProjectId);
+                const employeeTx = db.transaction(STORES.EMPLOYEES, 'readonly');
+                const employeeStore = employeeTx.objectStore(STORES.EMPLOYEES);
+                const employeeReq = employeeStore.getAll();
+                employeeReq.onsuccess = () => {
+                    const employees = employeeReq.result;
+                    
+                    // Calculate start date, end date, and worked days
+                    if (activities.length > 0) {
+                        const dates = activities.map(act => new Date(act.date)).filter(date => !isNaN(date));
+                        if (dates.length > 0) {
+                            const startDate = new Date(Math.min(...dates));
+                            const endDate = new Date(Math.max(...dates));
+                            const uniqueDates = new Set(activities.map(act => act.date));
+                            const workedDays = uniqueDates.size;
+                            
+                            document.getElementById('activityStartDate').innerText = startDate.toLocaleDateString('es-ES');
+                            document.getElementById('activityEndDate').innerText = endDate.toLocaleDateString('es-ES');
+                            document.getElementById('activityDaysWorked').innerText = workedDays;
+                        } else {
+                            document.getElementById('activityStartDate').innerText = '--';
+                            document.getElementById('activityEndDate').innerText = '--';
+                            document.getElementById('activityDaysWorked').innerText = '0';
+                        }
+                    } else {
+                        document.getElementById('activityStartDate').innerText = '--';
+                        document.getElementById('activityEndDate').innerText = '--';
+                        document.getElementById('activityDaysWorked').innerText = '0';
+                    }
+                    
+                    document.getElementById('activitiesList').innerHTML = activities.map(act => {
+                        const names = act.personnel.map(empId => {
+                            const emp = employees.find(e => e.id === empId);
+                            return emp ? emp.name : 'Desconocido';
+                        }).join(', ');
+                        const actDate = act.date ? new Date(act.date).toLocaleDateString('es-ES') : 'Sin fecha';
+                        return `
+                            <div class="p-4 bg-white border border-slate-100 rounded-xl shadow-sm">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h5 class="text-sm font-bold text-slate-700">${act.name}</h5>
+                                    <div class="flex gap-2">
+                                        <button onclick="viewActivity(${act.id})" class="text-blue-500 text-xs">Ver detalles</button>
+                                        <button onclick="deleteActivity(${act.id})" class="text-red-500 text-xs hover:text-red-700">Eliminar</button>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-slate-500">Personal: ${names}</p>
+                                <p class="text-xs text-slate-500">Fecha: ${actDate}</p>
+                            </div>
+                        `;
+                    }).join('');
+                };
+            };
+        };
+
+
+        window.viewActivity = function(id) {
+            currentViewedActivityId = id;
+            const transaction = db.transaction(STORES.ACTIVITIES, 'readonly');
+            const store = transaction.objectStore(STORES.ACTIVITIES);
+            const req = store.get(id);
+            req.onsuccess = () => {
+                const act = req.result;
+                document.getElementById('activityTitle').innerText = act.name;
+
+                const empTx = db.transaction(STORES.EMPLOYEES, 'readonly');
+                const empStore = empTx.objectStore(STORES.EMPLOYEES);
+                const empReq = empStore.getAll();
+                empReq.onsuccess = () => {
+                    const employees = empReq.result;
+                    const names = act.personnel.map(empId => {
+                        const emp = employees.find(e => e.id === empId);
+                        return emp ? `${emp.name} (${emp.role})` : 'Desconocido';
+                    }).join(', ');
+
+                    document.getElementById('activityDetails').innerHTML = `
+                        <p><strong>Personal:</strong> ${names}</p>
+                        <div id="activityEvidences" class="grid grid-cols-3 gap-2 mt-4">
+                            ${act.evidences.map(img => `<img src="${img}" class="w-full h-20 object-cover rounded">`).join('')}
+                        </div>
+                    `;
+
+                    document.getElementById('activityModal').classList.remove('hidden');
+                };
+            };
+        };
+
+        window.closeActivityModal = function() {
+            document.getElementById('activityModal').classList.add('hidden');
+        };
+
+        window.deleteActivity = function(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta actividad?')) return;
+            
+            const transaction = db.transaction(STORES.ACTIVITIES, 'readwrite');
+            const store = transaction.objectStore(STORES.ACTIVITIES);
+            const req = store.delete(id);
+            
+            req.onsuccess = () => {
+                loadActivities();
+                showToast('Actividad eliminada');
+            };
+            
+            req.onerror = () => {
+                showToast('Error al eliminar actividad');
+            };
+        };
+
+        window.addActivityEvidence = async function() {
+            if (!currentViewedActivityId) return showToast('Selecciona primero una actividad');
+            const input = document.getElementById('activityImageInput');
+            const files = input.files;
+            if (!files.length) return showToast('Selecciona al menos una imagen');
+
+            const dataUrls = [];
+            for (const file of files) {
+                const reader = new FileReader();
+                dataUrls.push(await new Promise(resolve => {
+                    reader.onload = () => resolve(reader.result);
+                    reader.readAsDataURL(file);
+                }));
+            }
+
+            const tx = db.transaction(STORES.ACTIVITIES, 'readwrite');
+            const store = tx.objectStore(STORES.ACTIVITIES);
+            const getReq = store.get(currentViewedActivityId);
+            getReq.onsuccess = () => {
+                const act = getReq.result;
+                if (!act) return showToast('Actividad no encontrada');
+                act.evidences = act.evidences.concat(dataUrls);
+                const updateReq = store.put(act);
+                updateReq.onsuccess = () => {
+                    renderActivityEvidences(act.evidences);
+                    input.value = '';
+                    showToast('Evidencias guardadas');
+                };
+            };
+        };
+
+        function renderActivityEvidences(evidences) {
+            const target = document.getElementById('activityEvidences');
+            if (!target) return;
+            target.innerHTML = evidences.map(img => `<img src="${img}" class="w-full h-20 object-cover rounded" />`).join('');
+        };
+
+        // --- DESARROLLO / PRESUPUESTO ---
+        async function renderDevelopment() {
+            const p = projects.find(x => x.id === selectedProjectId);
+            if (!p) return;
+
+            const budgetData = await getBudgetData(selectedProjectId);
+            const projectBudgetItem = budgetData.find(item => item.type === 'project_budget');
+            const projectBudget = projectBudgetItem ? projectBudgetItem.value : 0;
+            document.getElementById('projectBudgetInput').value = projectBudget;
+
+            const filesInFolder = [];
+
+            if (p.budgetFolder) {
+                try {
+                    for await (const entry of p.budgetFolder.values()) {
+                        if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.pdf')) {
+                            filesInFolder.push(entry.name);
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            const history = [];
+            const pending = [];
+
+            filesInFolder.forEach(fileName => {
+                const record = budgetData.find(b => b.fileName === fileName);
+                if (record) history.push(record);
+                else pending.push(fileName);
+            });
+
+            // Ordenar alfabéticamente
+            pending.sort((a, b) => a.localeCompare(b));
+            history.sort((a, b) => a.fileName.localeCompare(b.fileName));
+
+            const pendingSection = document.getElementById('pendingFilesSection');
+            if (pending.length > 0) {
+                pendingSection.classList.remove('hidden');
+                document.getElementById('pendingFilesList').innerHTML = pending.map(f => `
+                    <div class="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-100">
+                        <span class="text-[10px] font-mono text-amber-800 truncate pr-4">${f}</span>
+                        <div class="flex gap-2">
+                            <button onclick="openBudgetFile('${f}')" class="px-2 py-1 bg-blue-600 text-white text-[9px] font-black uppercase rounded">Ver PDF</button>
+                            <button onclick="openAssignModal('${f}')" class="px-3 py-1 bg-amber-600 text-white text-[9px] font-black uppercase rounded-lg">Asignar $</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                pendingSection.classList.add('hidden');
+            }
+
+            let total = 0;
+            const historyContainer = document.getElementById('devHistoryList');
+            if (history.length === 0) {
+                historyContainer.innerHTML = `<div class="p-10 text-center text-slate-400 text-xs">Sin registros financieros.</div>`;
+            } else {
+                historyContainer.innerHTML = history.map(h => {
+                    total += h.value;
+                    return `
+                        <div class="p-4 flex items-center justify-between hover:bg-slate-50">
+                            <div>
+                                <h5 class="text-xs font-black text-slate-800 uppercase">${h.label}</h5>
+                                <p class="text-[9px] text-slate-400 font-mono">${h.fileName}</p>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm font-black text-slate-900">$ ${h.value.toLocaleString()}</span>
+                                <button onclick="openBudgetFile('${h.fileName}')" class="px-2 py-1 bg-blue-600 text-white text-[9px] font-black uppercase rounded">Ver PDF</button>
+                                <button onclick="deleteBudgetRecord('${h.id}')" class="text-slate-300 hover:text-rose-500 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            document.getElementById('totalDevBudget').innerText = `$ ${total.toLocaleString()}`;
+
+            const difference = projectBudget - total;
+            const differenceElement = document.getElementById('budgetDifference');
+            differenceElement.innerText = `$ ${difference.toLocaleString()}`;
+            differenceElement.className = difference >= 0 ? 'text-lg font-black text-green-600' : 'text-lg font-black text-red-600';
+        }
+
+        async function handleNewExpense() {
+            const p = projects.find(x => x.id === selectedProjectId);
+            if (!p || !p.budgetFolder) return alert("Carpeta 3. Presupuesto no encontrada.");
+
+            const label = document.getElementById('devExpLabel').value;
+            const value = parseFloat(document.getElementById('devExpValue').value);
+            const file = document.getElementById('devExpFile').files[0];
+
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            const fileName = `${label}_${timestamp}.pdf`;
+
+            try {
+                const handle = await p.budgetFolder.getFileHandle(fileName, { create: true });
+                const writable = await handle.createWritable();
+                await writable.write(file);
+                await writable.close();
+
+                const data = await getBudgetData(selectedProjectId);
+                data.push({ id: Date.now().toString(), label, value, fileName });
+                await saveBudgetData(selectedProjectId, data);
+
+                document.getElementById('newDevExpenseForm').reset();
+                document.getElementById('devFileName').innerText = "ADJUNTAR FACTURA (PDF)";
+                renderDevelopment();
+            } catch(e) {
+                alert("Error al guardar archivo en la carpeta local.");
+            }
+        }
+
+        window.openAssignModal = (fileName) => {
+            currentPendingFile = fileName;
+            document.getElementById('assignFileName').innerText = fileName;
+            document.getElementById('assignInput').value = '';
+            document.getElementById('assignValueModal').classList.remove('hidden');
+        };
+
+        window.closeAssignModal = () => {
+            document.getElementById('assignValueModal').classList.add('hidden');
+        };
+
+        window.confirmAssignValue = async () => {
+            const val = parseFloat(document.getElementById('assignInput').value);
+            if (isNaN(val) || val <= 0) return alert("Ingrese un valor válido");
+
+            const data = await getBudgetData(selectedProjectId);
+            data.push({
+                id: Date.now().toString(),
+                label: currentPendingFile.replace('.pdf', '').replace(/_/g, ' '),
+                value: val,
+                fileName: currentPendingFile
+            });
+
+            await saveBudgetData(selectedProjectId, data);
+            closeAssignModal();
+            renderDevelopment();
+        };
+
+        window.deleteBudgetRecord = async (id) => {
+            const data = await getBudgetData(selectedProjectId);
+            await saveBudgetData(selectedProjectId, data.filter(d => d.id !== id));
+            renderDevelopment();
+        };
+
+        // --- DATABASE HELPERS ---
+        async function getBudgetData(id) {
+            return new Promise(r => {
+                const req = db.transaction(STORES.BUDGET).objectStore(STORES.BUDGET).get(id);
+                req.onsuccess = () => r(req.result || []);
+            });
+        }
+
+        async function saveBudgetData(id, data) {
+            return new Promise(r => {
+                const req = db.transaction(STORES.BUDGET, 'readwrite').objectStore(STORES.BUDGET).put(data, id);
+                req.onsuccess = () => r();
+            });
+        }
+
+        function updateTramiteSaveButtonState() {
+            const select = document.getElementById('modalStateSelect');
+            const saveBtn = document.getElementById('saveTramiteUpdateBtn');
+            const type = activeTramiteType;
+            const p = projects.find(x => x.id === selectedProjectId);
+            const prevStatus = p?.states?.[type]?.status;
+            const status = select?.value;
+            let valid = true;
+            let reason = '';
+
+            if (!type) return { valid: false, reason: 'No hay trámite activo.' };
+
+            if (type === 'or') {
+                if (status === 'INSCRITO' && prevStatus !== 'INSCRITO') {
+                    const radicado = document.getElementById('modalRadicadoInput')?.value?.trim();
+                    valid = Boolean(radicado);
+                    reason = 'Debe ingresar el número de radicado para pasar a INSCRITO.';
+                } else if (status === 'CONFORME' && prevStatus !== 'CONFORME') {
+                    const files = document.getElementById('modalTramiteFiles')?.files;
+                    const hasFiles = Boolean(files && files.length > 0);
+                    valid = hasFiles;
+                    reason = 'Debe subir al menos un archivo para pasar a CONFORME.';
+                }
+            } else if (type === 'retie') {
+                if (status === 'AGENDADO' && prevStatus !== 'AGENDADO') {
+                    const date = document.getElementById('modalAgendaDateInput')?.value?.trim();
+                    valid = Boolean(date);
+                    reason = 'Debe ingresar la fecha de agendamiento.';
+                } else if (status === 'OBSERVACIONES' && prevStatus !== 'OBSERVACIONES') {
+                    const obs = document.getElementById('modalObservacionesInput')?.value?.trim();
+                    valid = Boolean(obs);
+                    reason = 'Debe escribir las observaciones para pasar a OBSERVACIONES.';
+                } else if (status === 'APROBADO' && prevStatus !== 'APROBADO') {
+                    const files = document.getElementById('modalTramiteFiles')?.files;
+                    const hasFiles = Boolean(files && files.length > 0);
+                    valid = hasFiles;
+                    reason = 'Debe subir al menos un archivo para aprobar el trámite.';
+                }
+            }
+
+            saveBtn.disabled = !valid;
+            saveBtn.classList.toggle('opacity-60', !valid);
+            saveBtn.classList.toggle('cursor-not-allowed', !valid);
+            saveBtn.innerText = valid ? 'Guardar Actualización' : 'Falta información';
+            return { valid, reason };
+        }
+
+        async function renderTramiteRequirementFields() {
+            const container = document.getElementById('tramiteRequirementFields');
+            const select = document.getElementById('modalStateSelect');
+            const type = activeTramiteType;
+            const p = projects.find(x => x.id === selectedProjectId);
+            const prevStatus = p?.states?.[type]?.status;
+            const status = select?.value;
+            let html = '';
+
+            if (type === 'or') {
+                if (status === 'INSCRITO' && prevStatus !== 'INSCRITO') {
+                    html = `
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Número de radicado</label>
+                            <input id="modalRadicadoInput" type="text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ingrese el radicado" oninput="updateTramiteSaveButtonState()">
+                        </div>`;
+                } else if (status === 'CONFORME' && prevStatus !== 'CONFORME') {
+                    html = `
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Subir archivos</label>
+                            <input id="modalTramiteFiles" type="file" multiple class="w-full text-sm text-slate-600" onchange="updateTramiteSaveButtonState()">
+                        </div>`;
+                }
+            } else if (type === 'retie') {
+                if (status === 'AGENDADO' && prevStatus !== 'AGENDADO') {
+                    html = `
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Fecha de agendamiento</label>
+                            <input id="modalAgendaDateInput" type="date" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" onchange="updateTramiteSaveButtonState()">
+                        </div>`;
+                } else if (status === 'OBSERVACIONES' && prevStatus !== 'OBSERVACIONES') {
+                    html = `
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Observaciones realizadas</label>
+                            <textarea id="modalObservacionesInput" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm min-h-[90px] outline-none focus:ring-2 focus:ring-blue-500" placeholder="Describa las observaciones" oninput="updateTramiteSaveButtonState()"></textarea>
+                        </div>`;
+                } else if (status === 'APROBADO' && prevStatus !== 'APROBADO') {
+                    html = `
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Subir archivos</label>
+                            <input id="modalTramiteFiles" type="file" multiple class="w-full text-sm text-slate-600" onchange="updateTramiteSaveButtonState()">
+                        </div>`;
+                }
+            }
+
+            container.innerHTML = html;
+            updateTramiteSaveButtonState();
+        }
+
+        async function createOrGetTramiteFolder(project, type) {
+            if (!project?.rootHandle) return null;
+            const parent = await project.rootHandle.getDirectoryHandle('6. Trámites', { create: true });
+            return parent.getDirectoryHandle(type === 'or' ? 'OR' : 'RETIE', { create: true });
+        }
+
+        async function saveTramiteFiles(project, type, files) {
+            if (!files?.length) return [];
+            const folder = await createOrGetTramiteFolder(project, type);
+            if (!folder) return [];
+            const saved = [];
+            for (const file of files) {
+                const safeName = `${Date.now()}_${file.name.replace(/[\\/:*?\"<>|]/g, '_')}`;
+                const handle = await folder.getFileHandle(safeName, { create: true });
+                const writable = await handle.createWritable();
+                await writable.write(file);
+                await writable.close();
+                saved.push(safeName);
+            }
+            return saved;
+        }
+
+        window.openTramiteModal = async (type) => {
+            activeTramiteType = type;
+            const p = projects.find(x => x.id === selectedProjectId);
+            const state = p.states[type];
+
+            document.getElementById('modalTramiteType').innerText = type === 'or' ? 'Trámite Operador de Red' : 'Inspección RETIE';
+
+            const select = document.getElementById('modalStateSelect');
+            select.innerHTML = TRAMITE_STATES[type].map(s => `<option value="${s}">${s}</option>`).join('');
+
+            let estadoMostrado = state.status;
+            if (type === 'or' && state.status === 'NO INSCRITO' && p.orConforme) estadoMostrado = 'CONFORME';
+            if (type === 'retie' && state.status === 'POR AGENDAR' && p.retieConforme) estadoMostrado = 'APROBADO';
+            select.value = estadoMostrado;
+
+            document.getElementById('modalCommentInput').value = '';
+            document.getElementById('tramiteModal').classList.remove('hidden');
+            
+            await renderHistory();
+            await renderTramiteRequirementFields();
+            select.onchange = () => renderTramiteRequirementFields();
+        };
+
+        window.closeTramiteModal = () => {
+            document.getElementById('tramiteModal').classList.add('hidden');
+            activeTramiteType = null;
+        };
+
+        async function renderHistory() {
+            const key = `${selectedProjectId}_${activeTramiteType}`;
+            const history = await new Promise(r => {
+                const req = db.transaction(STORES.HISTORY).objectStore(STORES.HISTORY).get(key);
+                req.onsuccess = () => r(req.result || []);
+            });
+
+            document.getElementById('modalHistoryList').innerHTML = history.slice().reverse().map(h => `
+                <div class="relative pl-8">
+                    <div class="absolute left-0 top-1.5 w-6 h-6 bg-slate-100 border-4 border-white rounded-full z-10"></div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-[9px] font-black text-blue-600 uppercase">${h.status}</span>
+                            <span class="text-[8px] text-slate-400 font-bold">${h.date}</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">${h.comment}</p>
+                    </div>
+                </div>
+            `).join('') || '<p class="text-center text-slate-400 text-xs py-10">Sin historial registrado aún.</p>';
+        }
+
+        window.saveTramiteUpdate = async () => {
+            const validation = updateTramiteSaveButtonState();
+            if (!validation.valid) {
+                alert(validation.reason);
+                return;
+            }
+
+            const comment = document.getElementById('modalCommentInput').value.trim();
+            const status = document.getElementById('modalStateSelect').value;
+            if (!comment) {
+                alert('Debe escribir un comentario o hito para guardar la actualización.');
+                return;
+            }
+
+            const date = new Date().toLocaleString('es-CO', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+            const key = `${selectedProjectId}_${activeTramiteType}`;
+            const p = projects.find(x => x.id === selectedProjectId);
+            const previousState = p?.states?.[activeTramiteType] || {};
+            const radicado = document.getElementById('modalRadicadoInput')?.value?.trim() || previousState.radicado || '';
+            const appointmentDate = document.getElementById('modalAgendaDateInput')?.value?.trim() || previousState.appointmentDate || '';
+            const observations = document.getElementById('modalObservacionesInput')?.value?.trim() || previousState.observations || '';
+            const selectedFiles = Array.from(document.getElementById('modalTramiteFiles')?.files || []);
+
+            let uploadedFiles = [];
+            if (selectedFiles.length > 0) {
+                uploadedFiles = await saveTramiteFiles(p, activeTramiteType, selectedFiles);
+            }
+
+            const pStates = await getStates(selectedProjectId);
+            pStates[activeTramiteType] = {
+                status,
+                date,
+                radicado: activeTramiteType === 'or' ? radicado : previousState.radicado || '',
+                appointmentDate: activeTramiteType === 'retie' ? appointmentDate : previousState.appointmentDate || '',
+                observations: activeTramiteType === 'retie' ? observations : previousState.observations || ''
+            };
+            await db.transaction(STORES.STATES, 'readwrite').objectStore(STORES.STATES).put(pStates, selectedProjectId);
+
+            const history = await new Promise(r => {
+                const req = db.transaction(STORES.HISTORY).objectStore(STORES.HISTORY).get(key);
+                req.onsuccess = () => r(req.result || []);
+            });
+            history.push({ status, comment, date, metadata: { radicado, appointmentDate, observations, uploadedFiles } });
+            await db.transaction(STORES.HISTORY, 'readwrite').objectStore(STORES.HISTORY).put(history, key);
+
+            await scan();
+            await renderHistory();
+            document.getElementById('modalCommentInput').value = '';
+            if (document.getElementById('modalRadicadoInput')) document.getElementById('modalRadicadoInput').value = '';
+            if (document.getElementById('modalAgendaDateInput')) document.getElementById('modalAgendaDateInput').value = '';
+            if (document.getElementById('modalObservacionesInput')) document.getElementById('modalObservacionesInput').value = '';
+            if (document.getElementById('modalTramiteFiles')) document.getElementById('modalTramiteFiles').value = '';
+            await renderTramiteRequirementFields();
+        };
+
+        // Helpers de DB y Archivos
+        async function getStates(id) {
+            return new Promise(r => {
+                const req = db.transaction(STORES.STATES).objectStore(STORES.STATES).get(id);
+                req.onsuccess = () => r(req.result || { or: { status: 'NO INSCRITO', date: '' }, retie: { status: 'POR AGENDAR', date: '' } });
+            });
+        }
+
+        window.openFile = async (pId, dId, type) => {
+            const p = projects.find(x => x.id === pId);
+            const item = (type === 'ing' ? p.ingItems : p.actItems).find(i => i.id === dId);
+            if (item.handle) window.open(URL.createObjectURL(await item.handle.getFile()), '_blank');
+        };
+
+        window.openBudgetFile = async (fileName) => {
+            const p = projects.find(x => x.id === selectedProjectId);
+            if (!p || !p.budgetFolder) return alert("Carpeta 3. Presupuesto no encontrada.");
+            try {
+                const handle = await p.budgetFolder.getFileHandle(fileName);
+                window.open(URL.createObjectURL(await handle.getFile()), '_blank');
+            } catch (e) {
+                alert("Archivo no encontrado.");
+            }
+        };
+
+        window.updateProjectBudget = async () => {
+            const budget = parseFloat(document.getElementById('projectBudgetInput').value) || 0;
+            const budgetData = await getBudgetData(selectedProjectId);
+            const projectBudget = budgetData.find(item => item.type === 'project_budget');
+            if (projectBudget) {
+                projectBudget.value = budget;
+            } else {
+                budgetData.push({ type: 'project_budget', value: budget, id: Date.now() });
+            }
+            await saveBudgetData(selectedProjectId, budgetData);
+            renderDevelopment();
+        };
+
+        window.uploadFile = async (pId, dId, type) => {
+            try {
+                const [h] = await window.showOpenFilePicker({ types: [{ description: 'PDF', accept: {'application/pdf': ['.pdf']} }] });
+                const p = projects.find(x => x.id === pId);
+                const folder = type === 'ing' ? p.ingFolder : p.actFolder;
+                const item = (type === 'ing' ? p.ingItems : p.actItems).find(i => i.id === dId);
+                const dest = await folder.getFileHandle(`${item.id} ${item.label}.pdf`, {create: true});
+                const w = await dest.createWritable();
+                await w.write(await h.getFile());
+                await w.close();
+                await scan();
+            } catch(e){}
+        };
+
+        document.getElementById('btnSettings').onclick = async () => {
+            try {
+                currentHandle = await window.showDirectoryPicker();
+                db.transaction(STORES.SETTINGS, 'readwrite').objectStore(STORES.SETTINGS).put(currentHandle, 'root');
+                start();
+            } catch(e) {}
+        };
+
+        document.getElementById('btnReactivate').addEventListener('click', async () => {
+            const rootReq = db.transaction(STORES.SETTINGS).objectStore(STORES.SETTINGS).get('root');
+            rootReq.onsuccess = async () => {
+                const saved = rootReq.result;
+                if (!saved) return;
+                const req = await saved.requestPermission({ mode: 'readwrite' });
+                if (req === 'granted') {
+                    currentHandle = saved;
+                    document.getElementById('btnReactivate').classList.add('hidden');
+                    document.getElementById('pathDisplay').innerText = currentHandle.name;
+                    await scan();
+                }
+            };
+        });
+
+        function start() {
+            document.getElementById('btnReactivate').classList.add('hidden');
+            document.getElementById('pathDisplay').innerText = currentHandle.name;
+            scan();
+            setInterval(scan, 60000);
+        }
+
+        init();
+    </script>
+
+    <!-- Modal para ver actividad -->
+    <div id="activityModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-2xl shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="activityTitle" class="text-xl font-black text-slate-900 uppercase">Actividad</h3>
+                <button onclick="closeActivityModal()" class="p-2 hover:bg-slate-100 rounded-full" title="Cerrar modal" aria-label="Cerrar modal">
+                    <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"/></svg>
+                </button>
+            </div>
+            <div id="activityDetails" class="space-y-4">
+                <!-- Detalles se cargarán aquí -->
+            </div>
+            <div class="mt-6">
+                <label for="activityImageInput" class="block text-xs font-semibold text-slate-500 mb-1">Subir evidencias (imágenes)</label>
+                <input type="file" id="activityImageInput" accept="image/*" multiple class="mb-2" aria-label="Subir evidencias" title="Subir evidencias de actividad">
+                <button onclick="addActivityEvidence()" class="px-4 py-2 bg-blue-600 text-white rounded">Agregar Evidencia</button>
+        </div>
     </div>
-  </header>
-
-  <!-- Paso 1: Conexión -->
-  <section id="connectSection" class="glass rounded-2xl p-6">
-    <h2 class="text-xs font-black text-blue-400 uppercase tracking-widest mb-4">Paso 1 — Conectar carpeta de trabajo</h2>
-    <p id="connectHelp" class="text-xs text-slate-400 mb-4 leading-relaxed">Elige (o crea) una carpeta de prueba <b>dentro de tu carpeta sincronizada de Google Drive</b>. La app guarda el acceso a esa carpeta para no volver a pedírtela cada vez — solo te pedirá un clic cuando el navegador de verdad lo exija (por ejemplo, tras reiniciar el equipo).</p>
-
-    <!-- Estado: comprobando en silencio -->
-    <div id="checkingBox" class="flex items-center gap-2 text-xs text-slate-500">
-      <div class="w-3 h-3 border-2 border-slate-600 border-t-blue-400 rounded-full animate-spin"></div>
-      Comprobando si hay una carpeta guardada de una sesión anterior...
-    </div>
-
-    <!-- Estado: nunca se ha conectado -->
-    <div id="firstTimeBox" class="hidden fade-in">
-      <button id="btnConnect" class="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase rounded-xl transition-colors">Elegir carpeta</button>
-    </div>
-
-    <!-- Estado: reconectado en silencio, sin pedir nada -->
-    <div id="autoConnectedBox" class="hidden fade-in flex items-center gap-3">
-      <span class="text-emerald-400 text-xs font-bold">✓ Reconectado automáticamente a "<span id="autoConnectedName"></span>" — no hizo falta ningún clic.</span>
-      <button id="btnForgetA" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-black uppercase rounded-lg">Olvidar carpeta</button>
-    </div>
-
-    <!-- Estado: requiere un clic porque el permiso expiró -->
-    <div id="needsClickBox" class="hidden fade-in">
-      <p class="text-xs text-amber-400 mb-3 font-semibold">⚠ El navegador pide reconfirmar el permiso (pasa tras reiniciar el equipo o cerrar Chrome del todo). Es un solo clic, no vuelve a preguntar durante esta sesión.</p>
-      <div class="flex flex-wrap gap-3">
-        <button id="btnReconnect" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase rounded-xl transition-colors">Reconectar carpeta guardada — "<span id="needsClickName"></span>"</button>
-        <button id="btnForgetB" class="px-5 py-3 bg-slate-700 hover:bg-slate-600 text-white text-xs font-black uppercase rounded-xl transition-colors">Olvidar y elegir otra</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Paso 2: Archivos -->
-  <section id="filesSection" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-    <!-- _empresa.json -->
-    <div class="glass rounded-2xl p-6 flex flex-col">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-xs font-black text-amber-400 uppercase tracking-widest">_empresa.json</h3>
-        <span id="empresaBadge" class="text-[9px] font-bold px-2 py-1 rounded-full bg-slate-800 text-slate-400">no existe</span>
-      </div>
-      <div class="space-y-3 flex-1">
-        <input id="fEmpresaRazon" placeholder="Razón social" class="w-full p-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-xs outline-none focus:ring-2 focus:ring-amber-500">
-        <input id="fEmpresaNit" placeholder="NIT" class="w-full p-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-xs outline-none focus:ring-2 focus:ring-amber-500">
-        <input id="fEmpresaRep" placeholder="Representante legal" class="w-full p-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-xs outline-none focus:ring-2 focus:ring-amber-500">
-      </div>
-      <div class="flex gap-2 mt-4">
-        <button onclick="guardarEmpresa()" class="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-black uppercase rounded-lg">Guardar en disco</button>
-        <button onclick="leerEmpresa()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-black uppercase rounded-lg">Releer</button>
-      </div>
-    </div>
-
-    <!-- _index.json -->
-    <div class="glass rounded-2xl p-6 flex flex-col">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-xs font-black text-purple-400 uppercase tracking-widest">_index.json</h3>
-        <span id="indexBadge" class="text-[9px] font-bold px-2 py-1 rounded-full bg-slate-800 text-slate-400">no existe</span>
-      </div>
-      <div class="space-y-3 flex-1">
-        <input id="fProyNombre" placeholder="Nombre del proyecto de prueba" class="w-full p-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
-        <select id="fProyEstado" class="w-full p-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
-          <option value="no_inscrito">No inscrito</option>
-          <option value="inscrito">Inscrito</option>
-          <option value="conforme">Conforme</option>
-        </select>
-        <p class="text-[10px] text-slate-500">Agrega proyectos de prueba al índice para simular la lista de la sidebar.</p>
-      </div>
-      <div class="flex gap-2 mt-4">
-        <button onclick="agregarProyectoIndex()" class="flex-1 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-black uppercase rounded-lg">Añadir y guardar</button>
-        <button onclick="leerIndex()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-black uppercase rounded-lg">Releer</button>
-      </div>
-    </div>
-
-    <!-- _data.json -->
-    <div class="glass rounded-2xl p-6 flex flex-col">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-xs font-black text-emerald-400 uppercase tracking-widest">_data.json</h3>
-        <span id="dataBadge" class="text-[9px] font-bold px-2 py-1 rounded-full bg-slate-800 text-slate-400">no existe</span>
-      </div>
-      <div class="space-y-3 flex-1">
-        <p class="text-[10px] text-slate-500 leading-relaxed">Se guarda dentro de <span class="mono">/proyecto-prueba/_data.json</span> (crea la subcarpeta automáticamente).</p>
-        <input id="fDataDueno" placeholder="Nombre del dueño del proyecto" class="w-full p-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500">
-        <input id="fDataPresupuesto" type="number" placeholder="Presupuesto total" class="w-full p-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500">
-      </div>
-      <div class="flex gap-2 mt-4">
-        <button onclick="guardarData()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase rounded-lg">Guardar en disco</button>
-        <button onclick="leerData()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-black uppercase rounded-lg">Releer</button>
-      </div>
-    </div>
-
-  </section>
-
-  <!-- Paso 3: la prueba real -->
-  <section id="testSection" class="hidden glass rounded-2xl p-6">
-    <h2 class="text-xs font-black text-rose-400 uppercase tracking-widest mb-3">Paso 2 — La prueba que de verdad importa</h2>
-    <ol class="text-xs text-slate-300 space-y-2 list-decimal list-inside leading-relaxed">
-      <li>Llena y guarda los 3 archivos de arriba.</li>
-      <li>Cierra la <b>pestaña</b> (no todo Chrome) y vuelve a abrir el archivo. Debería reconectar solo, sin ningún clic — fíjate en el mensaje verde de arriba.</li>
-      <li>Ahora cierra <b>Chrome por completo</b> (todas las ventanas) y ábrelo de nuevo. Aquí sí es posible que aparezca el botón de un clic — es el navegador pidiéndolo, no la app.</li>
-      <li>Dale clic a "Releer" en cada tarjeta. Si los datos siguen ahí, la persistencia real en disco funciona.</li>
-      <li>Bonus: abre la carpeta en tu explorador de archivos y confirma que los <span class="mono">.json</span> existen y tienen contenido, sin depender de esta app para verlos.</li>
-    </ol>
-  </section>
-
-  <!-- Log -->
-  <section class="glass rounded-2xl p-6">
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest">Registro de actividad</h2>
-      <button onclick="document.getElementById('log').innerHTML=''" class="text-[9px] font-bold text-slate-500 hover:text-slate-300 uppercase">Limpiar</button>
-    </div>
-    <div id="log" class="mono text-[11px] space-y-1 max-h-64 overflow-y-auto"></div>
-  </section>
-
-</div>
-
-<script>
-const DB_NAME = 'FaseCero_TestPersistencia';
-const HANDLE_KEY = 'rootHandle';
-let db, rootHandle;
-
-function log(msg, type = 'info') {
-  const colors = { info: 'text-slate-400', ok: 'text-emerald-400', err: 'text-rose-400', warn: 'text-amber-400' };
-  const el = document.getElementById('log');
-  const time = new Date().toLocaleTimeString('es-CO', { hour12: false });
-  const row = document.createElement('div');
-  row.className = colors[type] || colors.info;
-  row.textContent = `[${time}] ${msg}`;
-  el.prepend(row);
-}
-
-function showConnectState(state, handleName) {
-  // state: 'checking' | 'firstTime' | 'autoConnected' | 'needsClick'
-  document.getElementById('checkingBox').classList.toggle('hidden', state !== 'checking');
-  document.getElementById('firstTimeBox').classList.toggle('hidden', state !== 'firstTime');
-  document.getElementById('autoConnectedBox').classList.toggle('hidden', state !== 'autoConnected');
-  document.getElementById('needsClickBox').classList.toggle('hidden', state !== 'needsClick');
-  if (handleName) {
-    document.getElementById('autoConnectedName').textContent = handleName;
-    document.getElementById('needsClickName').textContent = handleName;
-  }
-}
-
-function setConnStatus(connected) {
-  const dot = document.getElementById('connDot');
-  const text = document.getElementById('connText');
-  dot.className = `w-2.5 h-2.5 rounded-full ${connected ? 'bg-emerald-400 pulse-dot' : 'bg-slate-600'}`;
-  text.textContent = connected ? 'Conectado' : 'Sin conectar';
-  document.getElementById('filesSection').classList.toggle('hidden', !connected);
-  document.getElementById('testSection').classList.toggle('hidden', !connected);
-}
-
-// --- IndexedDB solo para guardar el handle de la carpeta ---
-function openDb() {
-  return new Promise(res => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = e => {
-      e.target.result.createObjectStore('settings');
-    };
-    req.onsuccess = () => res(req.result);
-  });
-}
-
-async function saveHandle(handle) {
-  return new Promise(r => {
-    const tx = db.transaction('settings', 'readwrite');
-    tx.objectStore('settings').put(handle, HANDLE_KEY);
-    tx.oncomplete = () => r();
-  });
-}
-
-async function getSavedHandle() {
-  return new Promise(r => {
-    const req = db.transaction('settings').objectStore('settings').get(HANDLE_KEY);
-    req.onsuccess = () => r(req.result || null);
-  });
-}
-
-async function activarConexion(handle, origen) {
-  rootHandle = handle;
-  setConnStatus(true);
-  log(`Carpeta activa: "${handle.name}" (${origen})`, 'ok');
-  await refrescarBadges();
-}
-
-// --- Conectar por primera vez ---
-document.getElementById('btnConnect').addEventListener('click', async () => {
-  try {
-    const handle = await window.showDirectoryPicker();
-    await saveHandle(handle);
-    log(`Carpeta elegida y guardada: "${handle.name}"`, 'ok');
-    await activarConexion(handle, 'primera conexión');
-  } catch (e) {
-    log('Selección cancelada o denegada.', 'warn');
-  }
-});
-
-// --- Reconectar con clic (solo cuando el navegador lo exige) ---
-document.getElementById('btnReconnect').addEventListener('click', async () => {
-  const saved = await getSavedHandle();
-  if (!saved) return log('No hay carpeta guardada todavía.', 'err');
-  const req = await saved.requestPermission({ mode: 'readwrite' });
-  if (req !== 'granted') return log('Permiso denegado al reconectar.', 'err');
-  await activarConexion(saved, 'reconexión manual');
-});
-
-// --- Olvidar carpeta (desde cualquiera de los dos estados) ---
-async function olvidarCarpeta() {
-  const tx = db.transaction('settings', 'readwrite');
-  tx.objectStore('settings').delete(HANDLE_KEY);
-  tx.oncomplete = () => {
-    rootHandle = null;
-    setConnStatus(false);
-    showConnectState('firstTime');
-    log('Carpeta olvidada. Elige una nueva cuando quieras.', 'warn');
-  };
-}
-document.getElementById('btnForgetA').addEventListener('click', olvidarCarpeta);
-document.getElementById('btnForgetB').addEventListener('click', olvidarCarpeta);
-
-// --- Helpers de lectura/escritura JSON sobre FS Access API ---
-async function writeJson(folderHandle, fileName, obj) {
-  const fileHandle = await folderHandle.getFileHandle(fileName, { create: true });
-  const writable = await fileHandle.createWritable();
-  await writable.write(JSON.stringify(obj, null, 2));
-  await writable.close();
-}
-
-async function readJson(folderHandle, fileName) {
-  try {
-    const fileHandle = await folderHandle.getFileHandle(fileName);
-    const file = await fileHandle.getFile();
-    const text = await file.text();
-    return JSON.parse(text);
-  } catch (e) {
-    return null;
-  }
-}
-
-async function getOrCreateSubfolder(name) {
-  return rootHandle.getDirectoryHandle(name, { create: true });
-}
-
-function setBadge(id, exists) {
-  const el = document.getElementById(id);
-  el.textContent = exists ? 'existe en disco' : 'no existe';
-  el.className = `text-[9px] font-bold px-2 py-1 rounded-full ${exists ? 'bg-emerald-900/40 text-emerald-400' : 'bg-slate-800 text-slate-400'}`;
-}
-
-async function refrescarBadges() {
-  const empresa = await readJson(rootHandle, '_empresa.json');
-  setBadge('empresaBadge', !!empresa);
-  if (empresa) {
-    document.getElementById('fEmpresaRazon').value = empresa.razonSocial || '';
-    document.getElementById('fEmpresaNit').value = empresa.nit || '';
-    document.getElementById('fEmpresaRep').value = empresa.representanteLegal || '';
-  }
-
-  const index = await readJson(rootHandle, '_index.json');
-  setBadge('indexBadge', !!index);
-
-  const proyectoFolder = await getOrCreateSubfolder('proyecto-prueba');
-  const data = await readJson(proyectoFolder, '_data.json');
-  setBadge('dataBadge', !!data);
-  if (data) {
-    document.getElementById('fDataDueno').value = data.duenoProyecto || '';
-    document.getElementById('fDataPresupuesto').value = data.presupuesto?.total || '';
-  }
-}
-
-// --- _empresa.json ---
-async function guardarEmpresa() {
-  const obj = {
-    razonSocial: document.getElementById('fEmpresaRazon').value,
-    nit: document.getElementById('fEmpresaNit').value,
-    representanteLegal: document.getElementById('fEmpresaRep').value,
-    empleados: []
-  };
-  await writeJson(rootHandle, '_empresa.json', obj);
-  setBadge('empresaBadge', true);
-  log('_empresa.json escrito en disco.', 'ok');
-}
-
-async function leerEmpresa() {
-  const data = await readJson(rootHandle, '_empresa.json');
-  if (!data) return log('_empresa.json no existe todavía en disco.', 'err');
-  document.getElementById('fEmpresaRazon').value = data.razonSocial || '';
-  document.getElementById('fEmpresaNit').value = data.nit || '';
-  document.getElementById('fEmpresaRep').value = data.representanteLegal || '';
-  log('_empresa.json releído desde disco: ' + JSON.stringify(data), 'ok');
-}
-
-// --- _index.json ---
-async function agregarProyectoIndex() {
-  const nombre = document.getElementById('fProyNombre').value.trim();
-  if (!nombre) return log('Escribe un nombre de proyecto primero.', 'warn');
-  const current = (await readJson(rootHandle, '_index.json')) || { proyectos: [] };
-  current.proyectos.push({
-    id: 'proy_' + Date.now(),
-    nombre,
-    estadoOR: document.getElementById('fProyEstado').value,
-    progresoDocs: 0,
-    actualizado: new Date().toISOString()
-  });
-  await writeJson(rootHandle, '_index.json', current);
-  setBadge('indexBadge', true);
-  document.getElementById('fProyNombre').value = '';
-  log(`Proyecto "${nombre}" añadido a _index.json (total: ${current.proyectos.length}).`, 'ok');
-}
-
-async function leerIndex() {
-  const data = await readJson(rootHandle, '_index.json');
-  if (!data) return log('_index.json no existe todavía en disco.', 'err');
-  log(`_index.json releído: ${data.proyectos.length} proyecto(s) — ${data.proyectos.map(p => p.nombre).join(', ')}`, 'ok');
-}
-
-// --- _data.json (dentro de subcarpeta de proyecto) ---
-async function guardarData() {
-  const proyectoFolder = await getOrCreateSubfolder('proyecto-prueba');
-  const obj = {
-    id: 'proy_test',
-    nombre: 'Proyecto de Prueba',
-    duenoProyecto: document.getElementById('fDataDueno').value,
-    fechas: { inicioProyecto: '', entregaMateriales: '', entregaCapacitacion: '', entregaProyecto: '' },
-    presupuesto: { total: parseFloat(document.getElementById('fDataPresupuesto').value) || 0, registros: [] },
-    actividades: [],
-    preliminar: { coordenadas: null, archivos: [] },
-    tramites: {
-      or: { status: 'POR AGENDAR', date: '', historial: [] },
-      retie: { status: 'POR AGENDAR', date: '', historial: [] }
-    },
-    actas: {}
-  };
-  await writeJson(proyectoFolder, '_data.json', obj);
-  setBadge('dataBadge', true);
-  log('_data.json escrito en /proyecto-prueba/_data.json', 'ok');
-}
-
-async function leerData() {
-  const proyectoFolder = await getOrCreateSubfolder('proyecto-prueba');
-  const data = await readJson(proyectoFolder, '_data.json');
-  if (!data) return log('_data.json no existe todavía en disco.', 'err');
-  log('_data.json releído: ' + JSON.stringify(data), 'ok');
-}
-
-// --- Init: el corazón del arreglo de esta versión ---
-(async function init() {
-  if (!window.showDirectoryPicker) {
-    log('Este navegador no soporta File System Access API. Usa Chrome o Edge en escritorio.', 'err');
-    showConnectState('firstTime');
-    return;
-  }
-
-  showConnectState('checking');
-  db = await openDb();
-  const saved = await getSavedHandle();
-
-  if (!saved) {
-    log('Sin carpeta guardada aún. Empieza con "Elegir carpeta".', 'info');
-    showConnectState('firstTime');
-    return;
-  }
-
-  // Punto clave: queryPermission() es SILENCIOSO — no requiere clic ni gesto del usuario.
-  // Si el permiso técnicamente sigue vigente (pasa la mayoría de las veces si no
-  // reiniciaste el equipo o cerraste TODO Chrome), conectamos directo, sin mostrar botón.
-  const permiso = await saved.queryPermission({ mode: 'readwrite' });
-
-  if (permiso === 'granted') {
-    showConnectState('autoConnected', saved.name);
-    await activarConexion(saved, 'reconexión silenciosa, sin clic');
-  } else {
-    // Solo aquí, cuando el navegador de verdad lo exige, mostramos el botón.
-    showConnectState('needsClick', saved.name);
-    log(`Hay una carpeta guardada ("${saved.name}") pero el navegador pide reconfirmar el permiso.`, 'warn');
-  }
-})();
-
-// Registro del service worker — necesario para que Chrome ofrezca "Instalar app".
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
-}
-</script>
 </body>
 </html>
