@@ -1093,24 +1093,28 @@
         }
 
         try {
-            const plantillasFolder = await currentHandle.getDirectoryHandle('plantillas');
-            const plantillaHandle = await plantillasFolder.getFileHandle(`plantilla_${docId}.docx`);
+            const dptFolder = await currentHandle.getDirectoryHandle('2. DPT EJECUCION');
+            const seingFolder = await dptFolder.getDirectoryHandle('3. SEING');
+            const plantillasFolder = await seingFolder.getDirectoryHandle('Plantillas');
+
+            const actaConfig = CONFIG.act.find(a => a.id === docId);
+            const nombreActa = actaConfig ? actaConfig.label : docId;
+
+            const plantillaHandle = await plantillasFolder.getFileHandle(`${docId} ${nombreActa}.docx`);
             const arrayBuffer = await (await plantillaHandle.getFile()).arrayBuffer();
 
             const zip = new PizZip(arrayBuffer);
             const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
             doc.render({
             proyecto: p.name,
-            item: docId,
-            fecha: new Date().toLocaleDateString('es-CO'),
             dueno: info.dueno,
-            potencia_ac: info.potenciaAC || '',
-            responsable: 'Smart Energy'
+            fecha: new Date().toLocaleDateString('es-CO'),
+            potenciaac: info.potenciaAC || ''
             });
 
             const buf = doc.getZip().generate({ type: 'uint8array' });
 
-            const fileName = `${docId}_${p.name}.docx`;
+            const fileName = `${docId} ${nombreActa} - ${p.name}.docx`;
             const actaHandle = await p.actFolder.getFileHandle(fileName, { create: true });
             const writable = await actaHandle.createWritable();
             await writable.write(buf);
