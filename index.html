@@ -1082,73 +1082,89 @@
             }
         };
 
+        function limpiarNombreProyecto(nombre) {
+        return nombre
+            .replace(/^\d+(\.\d+)?\.\s*/, '')
+            .replace(/^PROYECTO\s+/i, '')
+            .trim();
+        }
+
         window.generarActa = async (docId, projectId) => {
-        console.log('=== INICIO generarActa ===', { docId, projectId });
-        const p = projects.find(x => x.id === projectId);
-        console.log('Proyecto encontrado:', p);
+            console.log('=== INICIO generarActa ===', { docId, projectId });
+            const p = projects.find(x => x.id === projectId);
+            console.log('Proyecto encontrado:', p);
 
-        if (!p || !p.actFolder) {
-            console.error('FALLO: proyecto o actFolder no existe', { p });
-            alert('Carpeta 5. INFORME DE SEGUIMIENTO/1. ACTAS no encontrada.');
-            return;
-        }
-
-        const info = await getProjectInfo(projectId);
-        console.log('Info del proyecto:', info);
-
-        if (!info || !info.dueno) {
-            console.error('FALLO: falta info.dueno', { info });
-            alert('Faltan datos del proyecto (dueño, etc.) para generar el acta.');
-            return;
-        }
-
-        try {
-            console.log('Paso 1: buscando carpeta Plantillas dentro de currentHandle...');
-            console.log('currentHandle actual:', currentHandle?.name);
-            const plantillasFolder = await currentHandle.getDirectoryHandle('Plantillas');
-            console.log('Paso 1 OK - carpeta Plantillas encontrada:', plantillasFolder.name);
-
-            const actaConfig = CONFIG.act.find(a => a.id === docId);
-            const nombreActa = actaConfig ? actaConfig.label : docId;
-            const nombreArchivoPlantilla = `${docId} ${nombreActa}.docx`;
-            console.log('Paso 2: buscando archivo exacto:', JSON.stringify(nombreArchivoPlantilla));
-
-            console.log('Listando TODO lo que hay dentro de Plantillas:');
-            for await (const entry of plantillasFolder.values()) {
-            console.log(' -> encontrado:', JSON.stringify(entry.name), entry.kind);
+            if (!p || !p.actFolder) {
+                console.error('FALLO: proyecto o actFolder no existe', { p });
+                alert('Carpeta 5. INFORME DE SEGUIMIENTO/1. ACTAS no encontrada.');
+                return;
             }
 
-            const plantillaHandle = await plantillasFolder.getFileHandle(nombreArchivoPlantilla);
-            console.log('Paso 2 OK');
+            const info = await getProjectInfo(projectId);
+            console.log('Info del proyecto:', info);
 
-            const arrayBuffer = await (await plantillaHandle.getFile()).arrayBuffer();
-            const zip = new PizZip(arrayBuffer);
-            const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
-            doc.render({
-            proyecto: p.name,
-            dueno: info.dueno,
-            fecha: new Date().toLocaleDateString('es-CO'),
-            potenciaac: info.potenciaAC || ''
-            });
-            console.log('Paso 3 OK: render completado');
+            if (!info || !info.dueno) {
+                console.error('FALLO: falta info.dueno', { info });
+                alert('Faltan datos del proyecto (dueño, etc.) para generar el acta.');
+                return;
+            }
 
-            const buf = doc.getZip().generate({ type: 'uint8array' });
-            const fileName = `${docId} ${nombreActa} - ${p.name}.docx`;
-            console.log('Paso 4: guardando como', fileName);
-            const actaHandle = await p.actFolder.getFileHandle(fileName, { create: true });
-            const writable = await actaHandle.createWritable();
-            await writable.write(buf);
-            await writable.close();
-            console.log('Paso 4 OK - archivo guardado');
+            try {
+                console.log('Paso 1: buscando carpeta Plantillas dentro de currentHandle...');
+                console.log('currentHandle actual:', currentHandle?.name);
+                const plantillasFolder = await currentHandle.getDirectoryHandle('Plantillas');
+                console.log('Paso 1 OK - carpeta Plantillas encontrada:', plantillasFolder.name);
 
-            await scan();
-            showToast('Acta generada correctamente');
-        } catch (e) {
-            console.error('ERROR COMPLETO:', e);
-            console.error('Nombre del error:', e.name);
-            console.error('Mensaje:', e.message);
-            alert('No se pudo generar el acta: ' + e.message + ' (' + e.name + ')');
-        }
+                const actaConfig = CONFIG.act.find(a => a.id === docId);
+                const nombreActa = actaConfig ? actaConfig.label : docId;
+                const nombreArchivoPlantilla = `${docId} ${nombreActa}.docx`;
+                console.log('Paso 2: buscando archivo exacto:', JSON.stringify(nombreArchivoPlantilla));
+
+                console.log('Listando TODO lo que hay dentro de Plantillas:');
+                for await (const entry of plantillasFolder.values()) {
+                console.log(' -> encontrado:', JSON.stringify(entry.name), entry.kind);
+                }
+
+                const plantillaHandle = await plantillasFolder.getFileHandle(nombreArchivoPlantilla);
+                console.log('Paso 2 OK');
+
+                const arrayBuffer = await (await plantillaHandle.getFile()).arrayBuffer();
+
+                const nombreLimpio = limpiarNombreProyecto(p.name);
+                console.log('Nombre limpio del proyecto:', nombreLimpio);
+
+                const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+                const hoy = new Date();
+                const fechaLarga = `${hoy.getDate()} de ${meses[hoy.getMonth()]} del ${hoy.getFullYear()}`;
+                console.log('Fecha larga generada:', fechaLarga);
+
+                const zip = new PizZip(arrayBuffer);
+                const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+                doc.render({
+                proyecto: nombreLimpio,
+                dueno: info.dueno,
+                fecha: fechaLarga,
+                potenciaac: info.potenciaAC || ''
+                });
+                console.log('Paso 3 OK: render completado');
+
+                const buf = doc.getZip().generate({ type: 'uint8array' });
+                const fileName = `${docId} ${nombreActa} - ${nombreLimpio}.docx`;
+                console.log('Paso 4: guardando como', fileName);
+                const actaHandle = await p.actFolder.getFileHandle(fileName, { create: true });
+                const writable = await actaHandle.createWritable();
+                await writable.write(buf);
+                await writable.close();
+                console.log('Paso 4 OK - archivo guardado');
+
+                await scan();
+                showToast('Acta generada correctamente');
+            } catch (e) {
+                console.error('ERROR COMPLETO:', e);
+                console.error('Nombre del error:', e.name);
+                console.error('Mensaje:', e.message);
+                alert('No se pudo generar el acta: ' + e.message + ' (' + e.name + ')');
+            }
         };
 
         // Actualizar nombres de archivos al seleccionar
@@ -1315,12 +1331,25 @@
             const filesOrConf = await getFiles(orFolder);
 
             const mapItems = (cfg, files) => cfg.map(c => {
-                const f = files.find(x => x.n.trim().startsWith(c.id));
-                return {...c, found: !!f, handle: f?.h};
+            const f = files.find(x => x.n.trim().startsWith(c.id));
+            return {...c, found: !!f, handle: f?.h};
+            });
+
+            const mapActItems = (cfg, files) => cfg.map(c => {
+            const matches = files.filter(x => x.n.trim().startsWith(c.id));
+            const pdfFile = matches.find(x => x.n.toLowerCase().endsWith('.pdf'));
+            const docxFile = matches.find(x => x.n.toLowerCase().endsWith('.docx'));
+            return {
+                ...c,
+                found: !!pdfFile,
+                handle: pdfFile?.h,
+                generated: !!docxFile,
+                docxHandle: docxFile?.h
+            };
             });
 
             const ingItems = mapItems(CONFIG.ing, filesIng);
-            const actItems = mapItems(CONFIG.act, filesAct);
+            const actItems = mapActItems(CONFIG.act, filesAct);
 
             let info = null;
             try {
@@ -1401,9 +1430,15 @@
             const actionBtn = (found, type, docId) => found ? 
                 `<button onclick="openFile('${p.id}','${docId}','${type}')" class="btn-action btn-view">Abrir</button>` : 
                 `<button onclick="uploadFile('${p.id}','${docId}','${type}')" class="btn-action btn-upload">Subir</button>`;
-            const actActionBtn = (found, docId) => found ? 
-                `<button onclick="openFile('${p.id}','${docId}','act')" class="btn-action btn-view">Abrir</button>` :
-                `<button onclick="generarActa('${docId}','${p.id}')" class="btn-action btn-upload">Generar</button>`;
+            const actActionBtn = (found, docId, generated) => {
+            if (found) {
+                return `<button onclick="openFile('${p.id}','${docId}','act')" class="btn-action btn-view">Abrir</button>`;
+            }
+            if (generated) {
+                return `<button onclick="generarActa('${docId}','${p.id}')" class="btn-action btn-upload" title="Ya existe un borrador sin firmar, esto lo reemplaza">Regenerar</button>`;
+            }
+            return `<button onclick="generarActa('${docId}','${p.id}')" class="btn-action btn-upload">Generar</button>`;
+            };
 
             document.getElementById('listIng').innerHTML = p.ingItems.map(i => `
                 <div class="flex items-center justify-between p-4 bg-white border ${i.found ? 'border-blue-100' : 'border-slate-100'} rounded-xl shadow-sm">
@@ -1415,7 +1450,7 @@
             document.getElementById('listAct').innerHTML = p.actItems.map(i => `
                 <div class="flex items-center justify-between p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors">
                     <span class="text-[10px] font-bold text-slate-500">${i.label}</span>
-                    ${actActionBtn(i.found, i.id)}
+                    ${actActionBtn(i.found, i.id, i.generated)}
                 </div>
             `).join('');
 
