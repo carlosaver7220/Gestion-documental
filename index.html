@@ -1093,9 +1093,7 @@
         }
 
         try {
-            const dptFolder = await currentHandle.getDirectoryHandle('2. DPT EJECUCION');
-            const seingFolder = await dptFolder.getDirectoryHandle('3. SEING');
-            const plantillasFolder = await seingFolder.getDirectoryHandle('Plantillas');
+            const plantillasFolder = await currentHandle.getDirectoryHandle('Plantillas');
 
             const actaConfig = CONFIG.act.find(a => a.id === docId);
             const nombreActa = actaConfig ? actaConfig.label : docId;
