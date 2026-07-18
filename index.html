@@ -1083,24 +1083,45 @@
         };
 
         window.generarActa = async (docId, projectId) => {
+        console.log('=== INICIO generarActa ===', { docId, projectId });
         const p = projects.find(x => x.id === projectId);
-        if (!p || !p.actFolder) { alert('Carpeta 5. INFORME DE SEGUIMIENTO/1. ACTAS no encontrada.'); return; }
+        console.log('Proyecto encontrado:', p);
+
+        if (!p || !p.actFolder) {
+            console.error('FALLO: proyecto o actFolder no existe', { p });
+            alert('Carpeta 5. INFORME DE SEGUIMIENTO/1. ACTAS no encontrada.');
+            return;
+        }
 
         const info = await getProjectInfo(projectId);
+        console.log('Info del proyecto:', info);
+
         if (!info || !info.dueno) {
+            console.error('FALLO: falta info.dueno', { info });
             alert('Faltan datos del proyecto (dueño, etc.) para generar el acta.');
             return;
         }
 
         try {
+            console.log('Paso 1: buscando carpeta Plantillas dentro de currentHandle...');
+            console.log('currentHandle actual:', currentHandle?.name);
             const plantillasFolder = await currentHandle.getDirectoryHandle('Plantillas');
+            console.log('Paso 1 OK - carpeta Plantillas encontrada:', plantillasFolder.name);
 
             const actaConfig = CONFIG.act.find(a => a.id === docId);
             const nombreActa = actaConfig ? actaConfig.label : docId;
+            const nombreArchivoPlantilla = `${docId} ${nombreActa}.docx`;
+            console.log('Paso 2: buscando archivo exacto:', JSON.stringify(nombreArchivoPlantilla));
 
-            const plantillaHandle = await plantillasFolder.getFileHandle(`${docId} ${nombreActa}.docx`);
+            console.log('Listando TODO lo que hay dentro de Plantillas:');
+            for await (const entry of plantillasFolder.values()) {
+            console.log(' -> encontrado:', JSON.stringify(entry.name), entry.kind);
+            }
+
+            const plantillaHandle = await plantillasFolder.getFileHandle(nombreArchivoPlantilla);
+            console.log('Paso 2 OK');
+
             const arrayBuffer = await (await plantillaHandle.getFile()).arrayBuffer();
-
             const zip = new PizZip(arrayBuffer);
             const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
             doc.render({
@@ -1109,19 +1130,24 @@
             fecha: new Date().toLocaleDateString('es-CO'),
             potenciaac: info.potenciaAC || ''
             });
+            console.log('Paso 3 OK: render completado');
 
             const buf = doc.getZip().generate({ type: 'uint8array' });
-
             const fileName = `${docId} ${nombreActa} - ${p.name}.docx`;
+            console.log('Paso 4: guardando como', fileName);
             const actaHandle = await p.actFolder.getFileHandle(fileName, { create: true });
             const writable = await actaHandle.createWritable();
             await writable.write(buf);
             await writable.close();
+            console.log('Paso 4 OK - archivo guardado');
 
             await scan();
             showToast('Acta generada correctamente');
         } catch (e) {
-            alert('No se pudo generar el acta: ' + e.message);
+            console.error('ERROR COMPLETO:', e);
+            console.error('Nombre del error:', e.name);
+            console.error('Mensaje:', e.message);
+            alert('No se pudo generar el acta: ' + e.message + ' (' + e.name + ')');
         }
         };
 
