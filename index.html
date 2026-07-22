@@ -6,12 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Energy | Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         // Desactivar warnings de Tailwind en desarrollo
         if (typeof window !== 'undefined') {
             window.TAILWIND_DISABLE_WARNINGS = true;
         }
     </script>
+
+    
     <!--
         INSTRUCCIONES PARA GOOGLE MAPS:
         1. Ve a https://console.cloud.google.com/
@@ -775,6 +778,17 @@
     </div>
 
     <script>
+
+        // Remplaza con tus credenciales guardadas
+        const SUPABASE_URL = 'https://whgjypkyqcaujzkueyks.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndoZ2p5cGt5cWNhdWp6a3VleWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2OTI4OTEsImV4cCI6MjEwMDI2ODg5MX0.4Ddavi1NWXzTunuEIRcW4ehZuMwsinwOnb5OnnAoNSA'; 
+
+        // Inicializar el cliente de Supabase solo si la librería está disponible
+        const supabase = typeof window !== 'undefined' && window.supabase
+            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+            : null;
+
+
         // --- PREELIMINAR / COORDINATES ---
         let googleMapsLoaded = false;
 
@@ -872,6 +886,7 @@
             if (permiso === 'granted') {
                 currentHandle = saved;
                 document.getElementById('btnReactivate').classList.add('hidden');
+                document.getElementById('pathDisplay').innerText = currentHandle.name;
                 await scan();
             } else {
                 document.getElementById('btnReactivate').classList.remove('hidden');
@@ -1640,6 +1655,10 @@
 
         // Crea toda la estructura estándar de carpetas para un proyecto nuevo, vacía
         async function crearNuevoProyecto(nombreProyecto, data) {
+            if (!currentHandle) {
+                alert('Debes conectar la Ruta Maestra antes de crear un proyecto.');
+                return;
+            }
             const year = new Date().getFullYear();
             const yearFolder = await getOrCreateYearFolder(year);
             const projectFolder = await yearFolder.getDirectoryHandle(nombreProyecto, { create: true });
@@ -1716,48 +1735,6 @@
         let selectedActivityPersonnel = [];
         let currentViewedActivityId = null;
 
-        // --- EMPLEADOS ---
-        window.loadEmployees = function() {
-            const transaction = db.transaction(STORES.EMPLOYEES, 'readonly');
-            const store = transaction.objectStore(STORES.EMPLOYEES);
-            const req = store.getAll();
-            req.onsuccess = () => {
-                const employees = req.result;
-                document.getElementById('employeesList').innerHTML = employees.map(emp => `
-                    <div class="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl shadow-sm">
-                        <div>
-                            <p class="text-sm font-bold text-slate-700">${emp.name}</p>
-                            <p class="text-xs text-slate-500">${emp.role}</p>
-                        </div>
-                        <button onclick="deleteEmployee(${emp.id})" class="px-3 py-1 bg-red-500 text-white text-xs rounded">Eliminar</button>
-                    </div>
-                `).join('');
-
-                // Actualizar select en actividades
-                const select = document.getElementById('activityPersonnelSelect');
-                select.innerHTML = employees.map(emp => `<option value="${emp.id}">${emp.name} - ${emp.role}</option>`).join('');
-            };
-        };
-
-        function renderSelectedPersonnel() {
-            const container = document.getElementById('selectedPersonnelChips');
-            const transaction = db.transaction(STORES.EMPLOYEES, 'readonly');
-            const store = transaction.objectStore(STORES.EMPLOYEES);
-            container.innerHTML = '';
-
-            selectedActivityPersonnel.forEach(id => {
-                const req = store.get(id);
-                req.onsuccess = () => {
-                    const emp = req.result;
-                    if (emp) {
-                        const chip = document.createElement('div');
-                        chip.className = 'px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold flex items-center gap-2';
-                        chip.innerHTML = `${emp.name} <span onclick="removeSelectedPersonnel(${id})" class='cursor-pointer font-black'>×</span>`;
-                        container.appendChild(chip);
-                    }
-                };
-            });
-        }
 
         window.addSelectedPersonnel = function() {
             const select = document.getElementById('activityPersonnelSelect');
@@ -1772,20 +1749,6 @@
             renderSelectedPersonnel();
         };
 
-        document.getElementById('newEmployeeForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const name = document.getElementById('employeeName').value;
-            const role = document.getElementById('employeeRole').value;
-            const transaction = db.transaction(STORES.EMPLOYEES, 'readwrite');
-            const store = transaction.objectStore(STORES.EMPLOYEES);
-            store.add({ name, role });
-            transaction.oncomplete = () => {
-                document.getElementById('newEmployeeForm').reset();
-                loadEmployees();
-                showToast('Empleado agregado');
-            };
-        });
-
         document.getElementById('addPersonnelBtn').addEventListener('click', () => {
             addSelectedPersonnel();
         });
@@ -1798,7 +1761,6 @@
             if (!date) return showToast('Selecciona fecha de actividad');
             if (selectedActivityPersonnel.length === 0) return showToast('Agrega al menos un técnico');
 
-            const transaction = db.transaction(STORES.ACTIVITIES, 'readwrite');
             const store = transaction.objectStore(STORES.ACTIVITIES);
             store.add({ name, date, personnel: selectedActivityPersonnel.slice(), projectId: selectedProjectId, evidences: [] });
             transaction.oncomplete = () => {
@@ -1810,15 +1772,92 @@
             };
         });
 
-        window.deleteEmployee = function(id) {
-            const transaction = db.transaction(STORES.EMPLOYEES, 'readwrite');
-            const store = transaction.objectStore(STORES.EMPLOYEES);
-            store.delete(id);
-            transaction.oncomplete = () => {
-                loadEmployees();
-                showToast('Empleado eliminado');
-            };
+        // Cargar actividades filtradas por el proyecto seleccionado
+        window.loadActivities = async function() {
+            if (!selectedProjectId) return;
+
+            const { data: activities, error } = await supabaseClient
+                .from('actividades')
+                .select('*')
+                .eq('project_id', selectedProjectId);
+
+            if (error) {
+                console.error('Error cargando actividades:', error);
+                return showToast('Error al cargar actividades');
+            }
+
+            renderActivitiesList(activities || []);
         };
+
+        // Guardar nueva actividad vinculada al proyecto actual
+        document.getElementById('newActivityForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('activityName').value.trim();
+            const date = document.getElementById('activityDate').value;
+
+            if (!name) return showToast('Ingresa nombre de actividad');
+            if (!date) return showToast('Selecciona fecha de actividad');
+            if (!selectedProjectId) return showToast('No hay un proyecto seleccionado');
+
+            const { error } = await supabaseClient
+                .from('actividades')
+                .insert([{
+                    name: name,
+                    date: date,
+                    project_id: selectedProjectId,
+                    evidences: []
+                }]);
+
+            if (error) {
+                console.error('Error guardando actividad:', error);
+                showToast('Error al guardar en la nube');
+            } else {
+                document.getElementById('newActivityForm').reset();
+                loadActivities();
+                showToast('Actividad creada exitosamente');
+            }
+        });
+
+        // Ver detalle de una actividad
+        window.viewActivity = async function(id) {
+            currentViewedActivityId = id;
+            
+            const { data: act, error } = await supabaseClient
+                .from('actividades')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error || !act) return showToast('Error al cargar detalle');
+
+            document.getElementById('activityTitle').innerText = act.name;
+            document.getElementById('activityDetails').innerHTML = `
+                <p class="text-xs text-slate-500 mb-2">Fecha: ${act.date}</p>
+                <div id="activityEvidences" class="grid grid-cols-3 gap-2 mt-4">
+                    ${(act.evidences || []).map(img => `<img src="${img}" class="w-full h-20 object-cover rounded">`).join('')}
+                </div>
+            `;
+
+            document.getElementById('activityModal').classList.remove('hidden');
+        };
+
+        // Eliminar una actividad
+        window.deleteActivity = async function(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta actividad?')) return;
+
+            const { error } = await supabaseClient
+                .from('actividades')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                showToast('Error al eliminar la actividad');
+            } else {
+                loadActivities();
+                showToast('Actividad eliminada');
+            }
+        };
+
 
         // --- ACTIVIDADES ---
         window.loadActivities = function() {
@@ -1881,58 +1920,11 @@
             };
         };
 
-
-        window.viewActivity = function(id) {
-            currentViewedActivityId = id;
-            const transaction = db.transaction(STORES.ACTIVITIES, 'readonly');
-            const store = transaction.objectStore(STORES.ACTIVITIES);
-            const req = store.get(id);
-            req.onsuccess = () => {
-                const act = req.result;
-                document.getElementById('activityTitle').innerText = act.name;
-
-                const empTx = db.transaction(STORES.EMPLOYEES, 'readonly');
-                const empStore = empTx.objectStore(STORES.EMPLOYEES);
-                const empReq = empStore.getAll();
-                empReq.onsuccess = () => {
-                    const employees = empReq.result;
-                    const names = act.personnel.map(empId => {
-                        const emp = employees.find(e => e.id === empId);
-                        return emp ? `${emp.name} (${emp.role})` : 'Desconocido';
-                    }).join(', ');
-
-                    document.getElementById('activityDetails').innerHTML = `
-                        <p><strong>Personal:</strong> ${names}</p>
-                        <div id="activityEvidences" class="grid grid-cols-3 gap-2 mt-4">
-                            ${act.evidences.map(img => `<img src="${img}" class="w-full h-20 object-cover rounded">`).join('')}
-                        </div>
-                    `;
-
-                    document.getElementById('activityModal').classList.remove('hidden');
-                };
-            };
-        };
-
         window.closeActivityModal = function() {
             document.getElementById('activityModal').classList.add('hidden');
         };
 
-        window.deleteActivity = function(id) {
-            if (!confirm('¿Estás seguro de que quieres eliminar esta actividad?')) return;
-            
-            const transaction = db.transaction(STORES.ACTIVITIES, 'readwrite');
-            const store = transaction.objectStore(STORES.ACTIVITIES);
-            const req = store.delete(id);
-            
-            req.onsuccess = () => {
-                loadActivities();
-                showToast('Actividad eliminada');
-            };
-            
-            req.onerror = () => {
-                showToast('Error al eliminar actividad');
-            };
-        };
+
 
         window.addActivityEvidence = async function() {
             if (!currentViewedActivityId) return showToast('Selecciona primero una actividad');
@@ -2457,5 +2449,7 @@
                 <button onclick="addActivityEvidence()" class="px-4 py-2 bg-blue-600 text-white rounded">Agregar Evidencia</button>
         </div>
     </div>
+    <!-- CDN Oficial de Supabase JS -->
+
 </body>
 </html>
