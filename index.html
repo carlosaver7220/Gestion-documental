@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -160,7 +159,6 @@
                     </div>
                 </button>
                 <button id="btnReactivate" class="hidden w-full mt-3 py-3 bg-blue-600 text-white text-[10px] font-black uppercase rounded-lg shadow-lg shadow-blue-900/40 hover:bg-blue-500 active:scale-95 transition-all">Reconectar</button>
-                <button onclick="switchView('employees')" class="hidden w-full mt-3 py-3 bg-purple-600 text-white text-[10px] font-black uppercase rounded-lg shadow-lg shadow-purple-900/40 hover:bg-purple-500 active:scale-95 transition-all">Empleados</button>
             </div>
 
             <!-- Buscador de Proyectos (fijo, no se oculta al hacer scroll) -->
@@ -465,8 +463,7 @@
                             <h2 id="devProjectName" class="text-xl font-black text-slate-900 uppercase">---</h2>
                             <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Módulo de Desarrollo</p>
                             <div class="flex gap-2 mt-2">
-                                <button onclick="switchDevTab('budget')" id="devBudgetTab" class="px-4 py-1 bg-emerald-600 text-white text-[9px] font-black uppercase rounded-lg">Presupuesto</button>
-                                <button onclick="switchDevTab('activities')" id="devActivitiesTab" class="px-4 py-1 bg-slate-600 text-white text-[9px] font-black uppercase rounded-lg">Actividades</button>
+                                <button id="devBudgetTab" class="px-4 py-1 bg-emerald-600 text-white text-[9px] font-black uppercase rounded-lg">Presupuesto</button>
                             </div>
                         </div>
                     </div>
@@ -517,49 +514,6 @@
                     </div>
                 </div>
 
-                <!-- Sección Actividades -->
-                <div id="devActivitiesSection" class="hidden flex-1 overflow-y-auto p-8 space-y-8">
-                    <div class="max-w-6xl mx-auto">
-                        <div class="grid grid-cols-12 gap-8">
-                            <div class="col-span-12 lg:col-span-4 space-y-6">
-                                <div class="glass-card p-6">
-                                    <h4 class="text-[11px] font-black text-slate-900 uppercase mb-4 tracking-widest">Crear Nueva Actividad</h4>
-                                    <form id="newActivityForm" class="space-y-4">
-                                        <input type="text" id="activityName" placeholder="Nombre de la actividad" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" required>
-                                        <div class="space-y-2">
-                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Seleccionar técnico</label>
-                                            <div class="flex gap-2 items-center">
-                                                <select id="activityPersonnelSelect" title="Selecciona personal técnico" class="flex-1 p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500">
-                                                    <!-- Opciones se cargarán dinámicamente -->
-                                                </select>
-                                                <button type="button" id="addPersonnelBtn" class="w-10 h-10 bg-amber-600 text-white font-black text-lg rounded-xl hover:bg-amber-700 transition-colors flex items-center justify-center">+</button>
-                                            </div>
-                                            <div class="space-y-2">
-                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Fecha de actividad</label>
-                                            <input type="date" id="activityDate" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" required>
-                                        </div>
-                                        <div id="selectedPersonnelChips" class="flex flex-wrap gap-2 mt-2"></div>
-                                        </div>
-                                        <button type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-[10px] uppercase rounded-xl hover:bg-blue-700 transition-colors">Crear Actividad</button>
-                                    </form>
-                                </div>
-                            </div>
-                            <div class="col-span-12 lg:col-span-8 space-y-6">
-                                <div class="glass-card p-6">
-                                    <h4 class="text-[11px] font-black text-slate-900 uppercase mb-4 tracking-widest">Actividades del Proyecto</h4>
-                                    <div class="mb-3 border border-slate-100 rounded-xl p-3 bg-slate-50">
-                                        <div class="flex flex-wrap gap-3 text-[10px] text-slate-600">
-                                            <div>Inicio: <span id="activityStartDate">--</span></div>
-                                            <div>Último: <span id="activityEndDate">--</span></div>
-                                            <div>Días trabajados: <span id="activityDaysWorked">0</span></div>
-                                        </div>
-                                    </div>
-                                    <div id="activitiesList" class="space-y-3"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Modal para asignar valor -->
@@ -737,42 +691,6 @@
                 </div>
             </div>
 
-            <!-- Vista EMPLEADOS -->
-            <div id="employeesView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
-                <header class="px-10 py-6 bg-white border-b flex justify-between items-center">
-                    <div class="flex items-center gap-4">
-                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-xl">
-                            <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2"/></svg>
-                        </button>
-                        <div>
-                            <h2 class="text-xl font-black text-slate-900 uppercase">Empleados</h2>
-                            <p class="text-[10px] font-bold text-purple-600 uppercase tracking-widest">Gestión de Personal Técnico</p>
-                        </div>
-                    </div>
-                </header>
-
-                <div class="flex-1 overflow-y-auto p-8 space-y-8">
-                    <div class="max-w-4xl mx-auto">
-                        <div class="grid grid-cols-12 gap-8">
-                            <div class="col-span-12 lg:col-span-4 space-y-6">
-                                <div class="glass-card p-6">
-                                    <h4 class="text-[11px] font-black text-slate-900 uppercase mb-4 tracking-widest">Agregar Empleado</h4>
-                                    <form id="newEmployeeForm" class="space-y-4">
-                                        <input type="text" id="employeeName" placeholder="Nombre completo" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-purple-500" required>
-                                        <input type="text" id="employeeRole" placeholder="Cargo/Rol" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-purple-500" required>
-                                        <button type="submit" class="w-full py-3 bg-purple-600 text-white font-black text-[10px] uppercase rounded-xl hover:bg-purple-700 transition-colors">Agregar Empleado</button>
-                                    </form>
-                                </div>
-                            </div>
-                            <div class="col-span-12 lg:col-span-8 space-y-6">
-                                <div class="glass-card p-6">
-                                    <h4 class="text-[11px] font-black text-slate-900 uppercase mb-4 tracking-widest">Lista de Empleados</h4>
-                                    <div id="employeesList" class="space-y-3"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </main>
     </div>
@@ -896,19 +814,7 @@
         });
         }
 
-        document.getElementById('btnReactivate').addEventListener('click', async () => {
-        const rootReq = db.transaction(STORES.SETTINGS).objectStore(STORES.SETTINGS).get('root');
-        rootReq.onsuccess = async () => {
-            const saved = rootReq.result;
-            if (!saved) return;
-            const req = await saved.requestPermission({ mode: 'readwrite' });
-            if (req === 'granted') {
-            currentHandle = saved;
-            document.getElementById('btnReactivate').classList.add('hidden');
-            await scan();
-            }
-        };
-        });
+
 
         async function readJson(folderHandle, fileName) {
             try {
@@ -1198,7 +1104,7 @@
             console.warn('Aplicación ejecutándose desde archivo local. Algunas funcionalidades pueden estar limitadas.');
         }
         const DB_NAME = 'SolarBox_Dev_Core';
-        const STORES = { SETTINGS: 'settings', BUDGET: 'budget_data', STATES: 'states', HISTORY: 'history', PRELIMINAR: 'preliminar_files', COORDINATES: 'project_coordinates', EMPLOYEES: 'employees', ACTIVITIES: 'activities', PROJECT_INFO: 'project_info' };
+        const STORES = { SETTINGS: 'settings', BUDGET: 'budget_data', STATES: 'states', HISTORY: 'history', PRELIMINAR: 'preliminar_files', COORDINATES: 'project_coordinates', PROJECT_INFO: 'project_info' };
         let db, currentHandle, selectedProjectId, projects = [], activeTramiteType = null, currentPendingFile = null;
         let currentTramiteExistingFiles = [];
         let lastProjectView = 'hub'; // recuerda en qué sección (Documentación/Desarrollo/Preeliminar) estaba el usuario
@@ -1240,8 +1146,6 @@
                     if (!d.objectStoreNames.contains(STORES.HISTORY)) d.createObjectStore(STORES.HISTORY);
                     if (!d.objectStoreNames.contains(STORES.PRELIMINAR)) d.createObjectStore(STORES.PRELIMINAR);
                     if (!d.objectStoreNames.contains(STORES.COORDINATES)) d.createObjectStore(STORES.COORDINATES);
-                    if (!d.objectStoreNames.contains(STORES.EMPLOYEES)) d.createObjectStore(STORES.EMPLOYEES, { keyPath: 'id', autoIncrement: true });
-                    if (!d.objectStoreNames.contains(STORES.ACTIVITIES)) d.createObjectStore(STORES.ACTIVITIES, { keyPath: 'id', autoIncrement: true });
                     if (!d.objectStoreNames.contains(STORES.PROJECT_INFO)) d.createObjectStore(STORES.PROJECT_INFO);
                 };
                 req.onsuccess = () => res(req.result);
@@ -1262,19 +1166,16 @@
 
         // Navegación
         window.switchView = (view) => {
-            ['emptyState', 'projectHub', 'documentationView', 'developmentView', 'preliminarView', 'employeesView'].forEach(id => {
+            ['emptyState', 'projectHub', 'documentationView', 'developmentView', 'preliminarView'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
-            const viewsMap = { hub: 'projectHub', documentation: 'documentationView', development: 'developmentView', preliminar: 'preliminarView', employees: 'employeesView', empty: 'emptyState' };
+            const viewsMap = { hub: 'projectHub', documentation: 'documentationView', development: 'developmentView', preliminar: 'preliminarView', empty: 'emptyState' };
             document.getElementById(viewsMap[view]).classList.remove('hidden');
             const p = projects.find(x => x.id === selectedProjectId);
             if (view === 'development' && p) renderDevelopment();
             if (view === 'preliminar' && p) renderPreliminar();
             if (view === 'documentation' && p) renderDocModule(p);
-            if (view === 'employees') loadEmployees();
 
-            // Solo recordamos las secciones que viven "dentro" de un proyecto,
-            // no 'employees' (es una vista aparte, no una sección de proyecto).
             if (['hub', 'documentation', 'development', 'preliminar'].includes(view)) {
                 lastProjectView = view;
             }
@@ -1437,7 +1338,7 @@
             renderDocModule(p);
             // Si empleados era la última vista (no es una sección de proyecto),
             // al elegir un proyecto lo natural es caer en el hub.
-            switchView(lastProjectView === 'employees' ? 'hub' : lastProjectView);
+            switchView(lastProjectView);
             renderSidebar();
         };
         async function renderDocModule(p) {
@@ -1707,261 +1608,7 @@
             if (f?.h) window.open(URL.createObjectURL(await f.h.getFile()), '_blank');
         };
 
-        window.switchDevTab = function(tab) {
-            const budgetTab = document.getElementById('devBudgetTab');
-            const activitiesTab = document.getElementById('devActivitiesTab');
-            const budgetSection = document.getElementById('devBudgetSection');
-            const activitiesSection = document.getElementById('devActivitiesSection');
-
-            if (tab === 'budget') {
-                budgetTab.classList.remove('bg-slate-600');
-                budgetTab.classList.add('bg-emerald-600');
-                activitiesTab.classList.remove('bg-blue-600');
-                activitiesTab.classList.add('bg-slate-600');
-                budgetSection.classList.remove('hidden');
-                activitiesSection.classList.add('hidden');
-            } else if (tab === 'activities') {
-                activitiesTab.classList.remove('bg-slate-600');
-                activitiesTab.classList.add('bg-blue-600');
-                budgetTab.classList.remove('bg-emerald-600');
-                budgetTab.classList.add('bg-slate-600');
-                activitiesSection.classList.remove('hidden');
-                budgetSection.classList.add('hidden');
-                loadEmployees();
-                loadActivities();
-            }
-        };
-
-        let selectedActivityPersonnel = [];
-        let currentViewedActivityId = null;
-
-
-        window.addSelectedPersonnel = function() {
-            const select = document.getElementById('activityPersonnelSelect');
-            const selectedId = parseInt(select.value);
-            if (!selectedId || selectedActivityPersonnel.includes(selectedId)) return;
-            selectedActivityPersonnel.push(selectedId);
-            renderSelectedPersonnel();
-        };
-
-        window.removeSelectedPersonnel = function(id) {
-            selectedActivityPersonnel = selectedActivityPersonnel.filter(x => x !== id);
-            renderSelectedPersonnel();
-        };
-
-        document.getElementById('addPersonnelBtn').addEventListener('click', () => {
-            addSelectedPersonnel();
-        });
-
-        document.getElementById('newActivityForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const name = document.getElementById('activityName').value.trim();
-            const date = document.getElementById('activityDate').value;
-            if (!name) return showToast('Ingresa nombre de actividad');
-            if (!date) return showToast('Selecciona fecha de actividad');
-            if (selectedActivityPersonnel.length === 0) return showToast('Agrega al menos un técnico');
-
-            const store = transaction.objectStore(STORES.ACTIVITIES);
-            store.add({ name, date, personnel: selectedActivityPersonnel.slice(), projectId: selectedProjectId, evidences: [] });
-            transaction.oncomplete = () => {
-                document.getElementById('newActivityForm').reset();
-                selectedActivityPersonnel = [];
-                renderSelectedPersonnel();
-                loadActivities();
-                showToast('Actividad creada');
-            };
-        });
-
-        // Cargar actividades filtradas por el proyecto seleccionado
-        window.loadActivities = async function() {
-            if (!selectedProjectId) return;
-
-            const { data: activities, error } = await supabaseClient
-                .from('actividades')
-                .select('*')
-                .eq('project_id', selectedProjectId);
-
-            if (error) {
-                console.error('Error cargando actividades:', error);
-                return showToast('Error al cargar actividades');
-            }
-
-            renderActivitiesList(activities || []);
-        };
-
-        // Guardar nueva actividad vinculada al proyecto actual
-        document.getElementById('newActivityForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const name = document.getElementById('activityName').value.trim();
-            const date = document.getElementById('activityDate').value;
-
-            if (!name) return showToast('Ingresa nombre de actividad');
-            if (!date) return showToast('Selecciona fecha de actividad');
-            if (!selectedProjectId) return showToast('No hay un proyecto seleccionado');
-
-            const { error } = await supabaseClient
-                .from('actividades')
-                .insert([{
-                    name: name,
-                    date: date,
-                    project_id: selectedProjectId,
-                    evidences: []
-                }]);
-
-            if (error) {
-                console.error('Error guardando actividad:', error);
-                showToast('Error al guardar en la nube');
-            } else {
-                document.getElementById('newActivityForm').reset();
-                loadActivities();
-                showToast('Actividad creada exitosamente');
-            }
-        });
-
-        // Ver detalle de una actividad
-        window.viewActivity = async function(id) {
-            currentViewedActivityId = id;
-            
-            const { data: act, error } = await supabaseClient
-                .from('actividades')
-                .select('*')
-                .eq('id', id)
-                .single();
-
-            if (error || !act) return showToast('Error al cargar detalle');
-
-            document.getElementById('activityTitle').innerText = act.name;
-            document.getElementById('activityDetails').innerHTML = `
-                <p class="text-xs text-slate-500 mb-2">Fecha: ${act.date}</p>
-                <div id="activityEvidences" class="grid grid-cols-3 gap-2 mt-4">
-                    ${(act.evidences || []).map(img => `<img src="${img}" class="w-full h-20 object-cover rounded">`).join('')}
-                </div>
-            `;
-
-            document.getElementById('activityModal').classList.remove('hidden');
-        };
-
-        // Eliminar una actividad
-        window.deleteActivity = async function(id) {
-            if (!confirm('¿Estás seguro de que quieres eliminar esta actividad?')) return;
-
-            const { error } = await supabaseClient
-                .from('actividades')
-                .delete()
-                .eq('id', id);
-
-            if (error) {
-                showToast('Error al eliminar la actividad');
-            } else {
-                loadActivities();
-                showToast('Actividad eliminada');
-            }
-        };
-
-
-        // --- ACTIVIDADES ---
-        window.loadActivities = function() {
-            const activityTx = db.transaction(STORES.ACTIVITIES, 'readonly');
-            const activityStore = activityTx.objectStore(STORES.ACTIVITIES);
-            const activityReq = activityStore.getAll();
-
-            activityReq.onsuccess = () => {
-                const activities = activityReq.result.filter(a => a.projectId === selectedProjectId);
-                const employeeTx = db.transaction(STORES.EMPLOYEES, 'readonly');
-                const employeeStore = employeeTx.objectStore(STORES.EMPLOYEES);
-                const employeeReq = employeeStore.getAll();
-                employeeReq.onsuccess = () => {
-                    const employees = employeeReq.result;
-                    
-                    // Calculate start date, end date, and worked days
-                    if (activities.length > 0) {
-                        const dates = activities.map(act => new Date(act.date)).filter(date => !isNaN(date));
-                        if (dates.length > 0) {
-                            const startDate = new Date(Math.min(...dates));
-                            const endDate = new Date(Math.max(...dates));
-                            const uniqueDates = new Set(activities.map(act => act.date));
-                            const workedDays = uniqueDates.size;
-                            
-                            document.getElementById('activityStartDate').innerText = startDate.toLocaleDateString('es-ES');
-                            document.getElementById('activityEndDate').innerText = endDate.toLocaleDateString('es-ES');
-                            document.getElementById('activityDaysWorked').innerText = workedDays;
-                        } else {
-                            document.getElementById('activityStartDate').innerText = '--';
-                            document.getElementById('activityEndDate').innerText = '--';
-                            document.getElementById('activityDaysWorked').innerText = '0';
-                        }
-                    } else {
-                        document.getElementById('activityStartDate').innerText = '--';
-                        document.getElementById('activityEndDate').innerText = '--';
-                        document.getElementById('activityDaysWorked').innerText = '0';
-                    }
-                    
-                    document.getElementById('activitiesList').innerHTML = activities.map(act => {
-                        const names = act.personnel.map(empId => {
-                            const emp = employees.find(e => e.id === empId);
-                            return emp ? emp.name : 'Desconocido';
-                        }).join(', ');
-                        const actDate = act.date ? new Date(act.date).toLocaleDateString('es-ES') : 'Sin fecha';
-                        return `
-                            <div class="p-4 bg-white border border-slate-100 rounded-xl shadow-sm">
-                                <div class="flex justify-between items-start mb-2">
-                                    <h5 class="text-sm font-bold text-slate-700">${act.name}</h5>
-                                    <div class="flex gap-2">
-                                        <button onclick="viewActivity(${act.id})" class="text-blue-500 text-xs">Ver detalles</button>
-                                        <button onclick="deleteActivity(${act.id})" class="text-red-500 text-xs hover:text-red-700">Eliminar</button>
-                                    </div>
-                                </div>
-                                <p class="text-xs text-slate-500">Personal: ${names}</p>
-                                <p class="text-xs text-slate-500">Fecha: ${actDate}</p>
-                            </div>
-                        `;
-                    }).join('');
-                };
-            };
-        };
-
-        window.closeActivityModal = function() {
-            document.getElementById('activityModal').classList.add('hidden');
-        };
-
-
-
-        window.addActivityEvidence = async function() {
-            if (!currentViewedActivityId) return showToast('Selecciona primero una actividad');
-            const input = document.getElementById('activityImageInput');
-            const files = input.files;
-            if (!files.length) return showToast('Selecciona al menos una imagen');
-
-            const dataUrls = [];
-            for (const file of files) {
-                const reader = new FileReader();
-                dataUrls.push(await new Promise(resolve => {
-                    reader.onload = () => resolve(reader.result);
-                    reader.readAsDataURL(file);
-                }));
-            }
-
-            const tx = db.transaction(STORES.ACTIVITIES, 'readwrite');
-            const store = tx.objectStore(STORES.ACTIVITIES);
-            const getReq = store.get(currentViewedActivityId);
-            getReq.onsuccess = () => {
-                const act = getReq.result;
-                if (!act) return showToast('Actividad no encontrada');
-                act.evidences = act.evidences.concat(dataUrls);
-                const updateReq = store.put(act);
-                updateReq.onsuccess = () => {
-                    renderActivityEvidences(act.evidences);
-                    input.value = '';
-                    showToast('Evidencias guardadas');
-                };
-            };
-        };
-
-        function renderActivityEvidences(evidences) {
-            const target = document.getElementById('activityEvidences');
-            if (!target) return;
-            target.innerHTML = evidences.map(img => `<img src="${img}" class="w-full h-20 object-cover rounded" />`).join('');
-        };
+        // (Módulo de Empleados/Actividades eliminado: ya no se usa)
 
         // --- DESARROLLO / PRESUPUESTO ---
         async function renderDevelopment() {
@@ -2399,11 +2046,20 @@
         };
 
         document.getElementById('btnSettings').onclick = async () => {
+            if (!('showDirectoryPicker' in window)) {
+                showToast('Tu navegador no soporta abrir carpetas locales. Usa Chrome o Edge en computador (no funciona en Firefox, Safari, ni en el navegador de celular).');
+                return;
+            }
             try {
                 currentHandle = await window.showDirectoryPicker();
                 db.transaction(STORES.SETTINGS, 'readwrite').objectStore(STORES.SETTINGS).put(currentHandle, 'root');
                 start();
-            } catch(e) {}
+            } catch (e) {
+                // AbortError = el usuario cerró el diálogo sin elegir carpeta, no es un error real.
+                if (e && e.name === 'AbortError') return;
+                console.error('Error al abrir la carpeta:', e);
+                showToast('No se pudo abrir la carpeta: ' + (e && e.message ? e.message : e));
+            }
         };
 
         document.getElementById('btnReactivate').addEventListener('click', async () => {
@@ -2411,12 +2067,19 @@
             rootReq.onsuccess = async () => {
                 const saved = rootReq.result;
                 if (!saved) return;
-                const req = await saved.requestPermission({ mode: 'readwrite' });
-                if (req === 'granted') {
-                    currentHandle = saved;
-                    document.getElementById('btnReactivate').classList.add('hidden');
-                    document.getElementById('pathDisplay').innerText = currentHandle.name;
-                    await scan();
+                try {
+                    const req = await saved.requestPermission({ mode: 'readwrite' });
+                    if (req === 'granted') {
+                        currentHandle = saved;
+                        document.getElementById('btnReactivate').classList.add('hidden');
+                        document.getElementById('pathDisplay').innerText = currentHandle.name;
+                        await scan();
+                    } else {
+                        showToast('Permiso denegado para acceder a la carpeta.');
+                    }
+                } catch (e) {
+                    console.error('Error al reconectar la carpeta:', e);
+                    showToast('No se pudo reconectar la carpeta: ' + (e && e.message ? e.message : e));
                 }
             };
         });
@@ -2430,26 +2093,6 @@
 
         init();
     </script>
-
-    <!-- Modal para ver actividad -->
-    <div id="activityModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-        <div class="bg-white rounded-3xl p-8 w-full max-w-2xl shadow-2xl">
-            <div class="flex justify-between items-center mb-6">
-                <h3 id="activityTitle" class="text-xl font-black text-slate-900 uppercase">Actividad</h3>
-                <button onclick="closeActivityModal()" class="p-2 hover:bg-slate-100 rounded-full" title="Cerrar modal" aria-label="Cerrar modal">
-                    <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"/></svg>
-                </button>
-            </div>
-            <div id="activityDetails" class="space-y-4">
-                <!-- Detalles se cargarán aquí -->
-            </div>
-            <div class="mt-6">
-                <label for="activityImageInput" class="block text-xs font-semibold text-slate-500 mb-1">Subir evidencias (imágenes)</label>
-                <input type="file" id="activityImageInput" accept="image/*" multiple class="mb-2" aria-label="Subir evidencias" title="Subir evidencias de actividad">
-                <button onclick="addActivityEvidence()" class="px-4 py-2 bg-blue-600 text-white rounded">Agregar Evidencia</button>
-        </div>
-    </div>
-    <!-- CDN Oficial de Supabase JS -->
 
 </body>
 </html>
