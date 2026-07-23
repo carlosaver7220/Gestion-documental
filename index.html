@@ -702,7 +702,9 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndoZ2p5cGt5cWNhdWp6a3VleWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2OTI4OTEsImV4cCI6MjEwMDI2ODg5MX0.4Ddavi1NWXzTunuEIRcW4ehZuMwsinwOnb5OnnAoNSA'; 
 
         // Inicializar el cliente de Supabase solo si la librería está disponible
-        const supabase = typeof window !== 'undefined' && window.supabase
+        // (se llama "supabaseClient" y no "supabase" para no chocar con la variable
+        // global "supabase" que ya crea la librería cargada por <script src="...supabase-js...">)
+        const supabaseClient = typeof window !== 'undefined' && window.supabase
             ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
             : null;
 
