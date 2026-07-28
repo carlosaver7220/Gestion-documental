@@ -447,6 +447,41 @@
                 </div>
             </div>
 
+            <!-- Explorador de carpetas de Google Drive (propio, sin depender del Picker de Google) -->
+            <div id="driveFolderPickerModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl flex flex-col view-transition" style="max-height: 85vh;">
+                    <div class="p-5 border-b border-slate-100 flex justify-between items-center shrink-0">
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Elegir Carpeta de Drive</p>
+                            <p id="dfpBreadcrumb" class="text-xs text-slate-500 truncate mt-0.5"></p>
+                        </div>
+                        <button onclick="closeCustomDriveFolderPicker()" class="p-2 hover:bg-slate-100 rounded-xl shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+
+                    <div id="dfpRootChoice" class="p-5 space-y-3">
+                        <button onclick="dfpEnterRoot('mydrive')" class="w-full flex items-center gap-3 p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all">
+                            <svg class="w-5 h-5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+                            <span class="text-sm font-bold text-slate-800">Mi unidad</span>
+                        </button>
+                        <button onclick="dfpEnterRoot('shared')" class="w-full flex items-center gap-3 p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all">
+                            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/></svg>
+                            <span class="text-sm font-bold text-slate-800">Compartido conmigo</span>
+                        </button>
+                    </div>
+
+                    <div id="dfpListWrap" class="flex-1 overflow-y-auto px-3 pb-3">
+                        <div id="dfpList" class="space-y-1"></div>
+                    </div>
+
+                    <div class="p-4 border-t border-slate-100 flex gap-2 shrink-0">
+                        <button id="dfpBackBtn" onclick="dfpGoBack()" class="hidden px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-black uppercase text-slate-600 hover:bg-slate-50">Atrás</button>
+                        <button id="dfpUseBtn" onclick="dfpSelectCurrent()" class="hidden flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-black uppercase hover:bg-blue-700">Usar esta carpeta</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Panel de Trámites (Historial y Gestión) -->
             <div id="tramiteModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex justify-end">
                 <div class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col view-transition">
@@ -1511,7 +1546,7 @@
                         scan();
                         startAutoScan();
                     } else {
-                        driveOpenPicker();
+                        openCustomDriveFolderPicker();
                     }
                 }
             });
@@ -1524,45 +1559,8 @@
             driveTokenClient.requestAccessToken({ prompt: 'consent' });
         }
 
-        function driveOpenPicker() {
-            gapi.load('picker', () => {
-                driveGapiReady = true;
-                // "Mi unidad": setParent('root') es clave — sin esto, el Picker no navega
-                // carpeta por carpeta, sino que muestra una lista plana/repetida de TODO lo
-                // que tienes accesible (propio + compartido), que es justo lo que estaba pasando.
-                const viewMiUnidad = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
-                    .setSelectFolderEnabled(true)
-                    .setIncludeFolders(true)
-                    .setParent('root');
-                // "Compartido conmigo": carpetas que otras personas compartieron contigo
-                // (como la de tu jefe), que NO viven dentro de "Mi unidad".
-                const viewCompartidoConmigo = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
-                    .setSelectFolderEnabled(true)
-                    .setIncludeFolders(true)
-                    .setOwnedByMe(false);
-                // Unidades Compartidas (Shared Drives) — solo aplica a cuentas de Workspace.
-                const viewUnidadesCompartidas = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
-                    .setSelectFolderEnabled(true)
-                    .setIncludeFolders(true)
-                    .setEnableDrives(true);
-                const picker = new google.picker.PickerBuilder()
-                    .addView(viewMiUnidad)
-                    .addView(viewCompartidoConmigo)
-                    .addView(viewUnidadesCompartidas)
-                    .setOAuthToken(driveAccessToken)
-                    .setDeveloperKey(DRIVE_API_KEY)
-                    .setAppId(DRIVE_APP_ID)
-                    .setCallback(driveOnFolderPicked)
-                    .build();
-                picker.setVisible(true);
-            });
-        }
-
-        async function driveOnFolderPicked(data) {
-            if (data.action !== google.picker.Action.PICKED) return;
-            const picked = data.docs[0];
-            // Si "picked" es un acceso directo, resolvemos el ID de la carpeta real.
-            const { id, name } = await driveResolveIfShortcut(picked.id, picked.name);
+        // Elige la carpeta indicada (id + nombre ya resueltos) como raíz del proyecto y arranca el scan.
+        async function selectDriveRootFolder(id, name) {
             currentHandle = new DriveFolderHandle(id, name);
             db.transaction(STORES.SETTINGS, 'readwrite').objectStore(STORES.SETTINGS).put({ type: 'drive', id, name }, 'root');
             document.getElementById('btnReactivate').classList.add('hidden');
@@ -1571,6 +1569,119 @@
             closeSidebar();
             scan();
             startAutoScan();
+        }
+
+        // ==========================================================
+        // EXPLORADOR DE CARPETAS DE DRIVE (propio, sin Picker de Google)
+        // El Picker de Google resultó poco confiable en móvil (mostraba
+        // listas planas/repetidas en vez de navegar por carpetas). Este
+        // explorador usa la misma API de Drive (files.list) que ya usa
+        // scan(), así que si scan() funciona, esto también funciona.
+        // ==========================================================
+        let dfpStack = [];   // [{id, name}, ...] ruta actual (breadcrumb)
+        let dfpMode = null;  // 'mydrive' | 'shared' | null (pantalla inicial)
+
+        function openCustomDriveFolderPicker() {
+            dfpStack = [];
+            dfpMode = null;
+            document.getElementById('driveFolderPickerModal').classList.remove('hidden');
+            renderDriveFolderPicker();
+        }
+
+        function closeCustomDriveFolderPicker() {
+            document.getElementById('driveFolderPickerModal').classList.add('hidden');
+        }
+
+        function dfpEnterRoot(mode) {
+            dfpMode = mode;
+            dfpStack = [{ id: mode === 'mydrive' ? 'root' : 'shared', name: mode === 'mydrive' ? 'Mi unidad' : 'Compartido conmigo' }];
+            renderDriveFolderPicker();
+        }
+
+        function dfpEnterFolder(id, name) {
+            dfpStack.push({ id, name });
+            renderDriveFolderPicker();
+        }
+
+        function dfpGoBack() {
+            if (dfpStack.length <= 1) { dfpStack = []; dfpMode = null; }
+            else dfpStack.pop();
+            renderDriveFolderPicker();
+        }
+
+        async function dfpListCurrent() {
+            const current = dfpStack[dfpStack.length - 1];
+            let q;
+            if (dfpMode === 'shared' && dfpStack.length === 1) {
+                // Nivel superior de "Compartido conmigo": es plano, igual que en la propia Drive.
+                q = `sharedWithMe = true and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+            } else {
+                q = `'${current.id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+            }
+            const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,shortcutDetails)&pageSize=200&orderBy=name&supportsAllDrives=true&includeItemsFromAllDrives=true`);
+            const data = await res.json();
+            if (data.error) {
+                console.error('dfpListCurrent error:', data.error);
+                showToast('Error listando Drive: ' + data.error.message);
+                return [];
+            }
+            return (data.files || []).map(resolveDriveShortcut);
+        }
+
+        let dfpCurrentItems = [];
+
+        async function renderDriveFolderPicker() {
+            const listEl = document.getElementById('dfpList');
+            const breadcrumbEl = document.getElementById('dfpBreadcrumb');
+            const rootChoiceEl = document.getElementById('dfpRootChoice');
+            const useBtnEl = document.getElementById('dfpUseBtn');
+            const backBtnEl = document.getElementById('dfpBackBtn');
+
+            if (!dfpMode) {
+                rootChoiceEl.classList.remove('hidden');
+                listEl.innerHTML = '';
+                breadcrumbEl.textContent = 'Elige dónde buscar';
+                useBtnEl.classList.add('hidden');
+                backBtnEl.classList.add('hidden');
+                return;
+            }
+            rootChoiceEl.classList.add('hidden');
+            useBtnEl.classList.remove('hidden');
+            backBtnEl.classList.remove('hidden');
+            breadcrumbEl.textContent = dfpStack.map(s => s.name).join(' / ');
+            listEl.innerHTML = '<div class="p-6 text-center text-xs text-slate-400 font-bold uppercase">Cargando...</div>';
+            const items = await dfpListCurrent();
+            dfpCurrentItems = items;
+            if (!items.length) {
+                listEl.innerHTML = '<div class="p-6 text-center text-xs text-slate-400">No hay subcarpetas aquí. Si es la que buscas, usa el botón de abajo.</div>';
+                return;
+            }
+            listEl.innerHTML = items.map((it, idx) => `
+                <button onclick="dfpEnterFolderByIndex(${idx})" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 text-left transition-colors">
+                    <svg class="w-5 h-5 text-blue-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+                    <span class="text-sm text-slate-800 truncate"></span>
+                </button>
+            `).join('');
+            // Texto del nombre se inserta aparte (textContent) para no depender de escapar HTML/JS a la vez.
+            [...listEl.querySelectorAll('button')].forEach((btn, idx) => {
+                btn.querySelector('span').textContent = items[idx].name;
+            });
+        }
+
+        function dfpEnterFolderByIndex(idx) {
+            const it = dfpCurrentItems[idx];
+            if (!it) return;
+            dfpEnterFolder(it.id, it.name);
+        }
+
+        function dfpSelectCurrent() {
+            const current = dfpStack[dfpStack.length - 1];
+            if (!current || current.id === 'root' || current.id === 'shared') {
+                showToast('Entra a una carpeta primero (toca alguna de la lista).');
+                return;
+            }
+            closeCustomDriveFolderPicker();
+            selectDriveRootFolder(current.id, current.name);
         }
 
         // Estados posibles por tipo de trámite. OR: ciclo real de inscripción ante el Operador de Red.
