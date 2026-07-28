@@ -1527,19 +1527,27 @@
         function driveOpenPicker() {
             gapi.load('picker', () => {
                 driveGapiReady = true;
-                // Vista normal: carpetas de "Mi unidad".
+                // "Mi unidad": setParent('root') es clave — sin esto, el Picker no navega
+                // carpeta por carpeta, sino que muestra una lista plana/repetida de TODO lo
+                // que tienes accesible (propio + compartido), que es justo lo que estaba pasando.
                 const viewMiUnidad = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
                     .setSelectFolderEnabled(true)
-                    .setIncludeFolders(true);
-                // Vista aparte: carpetas dentro de Unidades Compartidas (Shared Drives).
-                // Sin esto, el Picker solo deja navegar "Mi unidad" y las carpetas que
-                // viven en una Unidad Compartida ni siquiera aparecen para seleccionarlas.
+                    .setIncludeFolders(true)
+                    .setParent('root');
+                // "Compartido conmigo": carpetas que otras personas compartieron contigo
+                // (como la de tu jefe), que NO viven dentro de "Mi unidad".
+                const viewCompartidoConmigo = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+                    .setSelectFolderEnabled(true)
+                    .setIncludeFolders(true)
+                    .setOwnedByMe(false);
+                // Unidades Compartidas (Shared Drives) — solo aplica a cuentas de Workspace.
                 const viewUnidadesCompartidas = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
                     .setSelectFolderEnabled(true)
                     .setIncludeFolders(true)
                     .setEnableDrives(true);
                 const picker = new google.picker.PickerBuilder()
                     .addView(viewMiUnidad)
+                    .addView(viewCompartidoConmigo)
                     .addView(viewUnidadesCompartidas)
                     .setOAuthToken(driveAccessToken)
                     .setDeveloperKey(DRIVE_API_KEY)
