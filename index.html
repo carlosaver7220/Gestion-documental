@@ -1351,6 +1351,28 @@
             return res.json();
         }
 
+        // Si un elemento es un acceso directo (shortcut), lo cambiamos por su destino real:
+        // un shortcut no tiene contenido propio, así que si no lo resolvemos, cualquier
+        // carpeta que llegue como shortcut se ve "vacía" aunque sí tenga archivos adentro.
+        function resolveDriveShortcut(item) {
+            if (item.mimeType === 'application/vnd.google-apps.shortcut' && item.shortcutDetails) {
+                return {
+                    id: item.shortcutDetails.targetId,
+                    name: item.name,
+                    mimeType: item.shortcutDetails.targetMimeType
+                };
+            }
+            return item;
+        }
+
+        async function driveResolveIfShortcut(id, name) {
+            const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files/${id}?fields=id,name,mimeType,shortcutDetails&supportsAllDrives=true`);
+            const data = await res.json();
+            if (data.error) { console.error('driveResolveIfShortcut error:', data.error); return { id, name }; }
+            const resolved = resolveDriveShortcut(data);
+            return { id: resolved.id, name: name || resolved.name };
+        }
+
         class DriveFileHandle {
             constructor(id, name) {
                 this.kind = 'file';
@@ -1388,16 +1410,18 @@
             async _listChildren() {
                 if (this._cache) return this._cache;
                 const q = encodeURIComponent(`'${this.id}' in parents and trashed = false`);
-                // supportsAllDrives + includeItemsFromAllDrives: sin esto, la API de Drive
-                // devuelve una lista VACÍA (sin error) para cualquier carpeta que viva dentro
-                // de una Unidad Compartida (Shared Drive), en vez de "Mi unidad".
-                const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType)&pageSize=1000&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives`);
+                // supportsAllDrives + includeItemsFromAllDrives: no hacen daño en cuentas
+                // personales, y evitan sorpresas si algún día esto corre en una cuenta de
+                // Workspace con Unidades Compartidas. shortcutDetails: para poder resolver
+                // accesos directos (típico cuando alguien te comparte una carpeta y a ti
+                // te aparece como "acceso directo" en vez de la carpeta real).
+                const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,shortcutDetails)&pageSize=1000&supportsAllDrives=true&includeItemsFromAllDrives=true`);
                 const data = await res.json();
                 if (data.error) {
                     console.error('Drive _listChildren error:', data.error);
                     throw new Error(data.error.message || 'Error listando archivos de Drive');
                 }
-                this._cache = data.files || [];
+                this._cache = (data.files || []).map(resolveDriveShortcut);
                 return this._cache;
             }
             async *values() {
@@ -1526,13 +1550,15 @@
             });
         }
 
-        function driveOnFolderPicked(data) {
+        async function driveOnFolderPicked(data) {
             if (data.action !== google.picker.Action.PICKED) return;
-            const folder = data.docs[0];
-            currentHandle = new DriveFolderHandle(folder.id, folder.name);
-            db.transaction(STORES.SETTINGS, 'readwrite').objectStore(STORES.SETTINGS).put({ type: 'drive', id: folder.id, name: folder.name }, 'root');
+            const picked = data.docs[0];
+            // Si "picked" es un acceso directo, resolvemos el ID de la carpeta real.
+            const { id, name } = await driveResolveIfShortcut(picked.id, picked.name);
+            currentHandle = new DriveFolderHandle(id, name);
+            db.transaction(STORES.SETTINGS, 'readwrite').objectStore(STORES.SETTINGS).put({ type: 'drive', id, name }, 'root');
             document.getElementById('btnReactivate').classList.add('hidden');
-            document.getElementById('pathDisplay').innerText = folder.name + ' (Drive)';
+            document.getElementById('pathDisplay').innerText = name + ' (Drive)';
             setGoogleDriveState(true);
             closeSidebar();
             scan();
