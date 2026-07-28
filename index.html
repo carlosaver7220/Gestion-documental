@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -12,7 +12,7 @@
             window.TAILWIND_DISABLE_WARNINGS = true;
         }
     </script>
- 
+
     
     <!--
         INSTRUCCIONES PARA GOOGLE MAPS:
@@ -46,12 +46,12 @@
             height: 100vh;
             width: 100vw;
         }
- 
+
         .sidebar-bg { 
             background-color: #020617; 
             border-right: 1px solid #1e293b; 
         }
- 
+
         .mobile-topbar {
             display: flex;
             align-items: center;
@@ -61,7 +61,7 @@
             border-bottom: 1px solid #e2e8f0;
             z-index: 20;
         }
- 
+
         .project-card { 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 0.75rem;
@@ -78,14 +78,14 @@
             border-color: #3b82f6;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
- 
+
         .glass-card {
             background: #ffffff;
             border-radius: 1.25rem;
             border: 1px solid #e2e8f0;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
         }
- 
+
         .doc-tab-btn {
             color: #94a3b8;
             background: transparent;
@@ -100,7 +100,7 @@
             background: #ffffff;
             border-bottom: 3px solid #2563eb;
         }
- 
+
         .nav-hub-card {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
@@ -111,13 +111,13 @@
             border-color: #3b82f6;
             box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.2);
         }
- 
+
         .ing-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1.25rem;
         }
- 
+
         .btn-action {
             display: flex;
             align-items: center;
@@ -129,22 +129,22 @@
             text-transform: uppercase;
             transition: all 0.2s;
         }
- 
+
         .btn-view { background-color: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
         .btn-view:hover { background-color: #2563eb; color: white; }
- 
+
         .btn-upload { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
         .btn-upload:hover { background-color: #1e293b; color: white; }
- 
+
         .view-transition {
             animation: fadeIn 0.4s ease-out;
         }
- 
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
- 
+
         .history-badge {
             font-size: 9px;
             padding: 2px 6px;
@@ -152,15 +152,15 @@
             background: #f1f5f9;
             color: #64748b;
         }
- 
+
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
- 
+
         @media (min-width: 768px) {
             .app-wrapper { flex-direction: row; }
             .mobile-topbar { display: none; }
         }
- 
+
         @media (max-width: 767px) {
             body { overflow: hidden; }
             .app-wrapper { height: 100dvh; }
@@ -186,9 +186,9 @@
     </style>
 </head>
 <body class="antialiased">
- 
+
     <div id="sidebarOverlay" class="hidden fixed inset-0 bg-slate-950/60 z-40 md:hidden"></div>
- 
+
     <div class="app-wrapper">
         <header class="mobile-topbar md:hidden">
             <button id="toggleSidebarBtn" class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 shadow-sm">
@@ -200,7 +200,7 @@
                 <div id="mobileDriveBadge" class="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Conectar Drive</div>
             </div>
         </header>
- 
+
         <!-- Sidebar -->
         <aside id="sidebar" class="w-80 sidebar-bg flex flex-col overflow-hidden shrink-0">
             <div class="p-8 flex items-center gap-4 border-b border-white/5">
@@ -212,7 +212,7 @@
                     <span class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">Engineering Hub</span>
                 </div>
             </div>
- 
+
             <div class="p-6">
                 <button id="btnSettings" class="w-full flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:border-blue-500/50 transition-all group">
                     <div class="flex items-center gap-3">
@@ -244,7 +244,7 @@
                     </div>
                 </div>
             </div>
- 
+
             <!-- Buscador de Proyectos (fijo, no se oculta al hacer scroll) -->
             <div class="px-6 pb-4 shrink-0 flex items-center gap-2">
                 <input type="text" id="projectSearch" placeholder="Buscar proyecto..." class="flex-1 p-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -259,7 +259,7 @@
                 <div id="projectList" class="space-y-2"></div>
             </div>
         </aside>
- 
+
         <!-- Main Content -->
         <main class="flex-1 overflow-hidden flex flex-col relative">
             
@@ -273,7 +273,7 @@
                     <p class="text-slate-500 text-xs mt-2">Elija un proyecto del panel lateral para gestionar sus módulos</p>
                 </div>
             </div>
- 
+
             <!-- 1. Menu de Navegación del Proyecto (Hub) -->
             <div id="projectHub" class="hidden flex-1 p-12 overflow-y-auto view-transition">
                 <div class="max-w-5xl mx-auto h-full flex flex-col">
@@ -284,7 +284,7 @@
                         </div>
                         <p class="text-blue-600 font-bold uppercase tracking-[0.3em] text-xs mt-4">Panel Central de Operaciones</p>
                     </header>
- 
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1 content-center max-w-3xl mx-auto w-full">
                         <div onclick="switchView('documentation')" class="nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
                             <div class="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/40 mb-8 group-hover:scale-110 transition-transform">
@@ -296,7 +296,7 @@
                             <p class="text-slate-500 text-sm mt-3 leading-relaxed">Bóveda Técnica, RETIE, OR, Actas y Archivos.</p>
                             <div class="mt-8 px-6 py-2 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:bg-blue-600 group-hover:text-white transition-colors">Ingresar Módulo</div>
                         </div>
- 
+
                         <div onclick="switchView('development')" class="hidden nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
                             <div class="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center shadow-2xl shadow-slate-900/40 mb-8 group-hover:scale-110 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -307,7 +307,7 @@
                             <p class="text-slate-500 text-sm mt-3 leading-relaxed">Hitos, Cronogramas y Estado de Obra.</p>
                             <div class="mt-8 px-6 py-2 bg-emerald-500 rounded-full text-[10px] font-black text-white uppercase tracking-widest group-hover:bg-emerald-600 transition-colors">En Construcción</div>
                         </div>
- 
+
                         <div onclick="switchView('preliminar')" class="nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
                             <div class="w-20 h-20 bg-amber-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-amber-500/40 mb-8 group-hover:scale-110 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -321,7 +321,7 @@
                     </div>
                 </div>
             </div>
- 
+
             <!-- 2. Interfaz de Documentación -->
             <div id="documentationView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
                 <header class="px-10 py-6 bg-white border-b border-slate-200 flex justify-between items-center">
@@ -350,10 +350,10 @@
                         <button id="docTabBtn-info" onclick="switchDocTab('info')" class="doc-tab-btn px-5 py-3 text-[11px] font-black uppercase tracking-widest rounded-t-xl transition-colors">Información del Proyecto</button>
                     </div>
                 </div>
- 
+
                 <div class="flex-1 overflow-y-auto p-10 bg-slate-50/50">
                     <div class="max-w-7xl mx-auto">
- 
+
                         <!-- PESTAÑA: BÓVEDA TÉCNICA -->
                         <div id="docTab-boveda" class="doc-tab-panel">
                             <div class="glass-card p-8">
@@ -364,7 +364,7 @@
                                 <div id="listIng" class="ing-grid"></div>
                             </div>
                         </div>
- 
+
                         <!-- PESTAÑA: ACTAS -->
                         <div id="docTab-actas" class="doc-tab-panel hidden">
                             <div class="glass-card p-8">
@@ -374,7 +374,7 @@
                                 <div id="listAct" class="space-y-2"></div>
                             </div>
                         </div>
- 
+
                         <!-- PESTAÑA: INFORMACIÓN DEL PROYECTO (Datos + OR/RETIE) -->
                         <div id="docTab-info" class="doc-tab-panel hidden">
                             <div class="grid grid-cols-12 gap-8">
@@ -390,7 +390,7 @@
                                         </div>
                                     </div>
                                 </div>
- 
+
                                 <div class="col-span-7">
                                     <!-- SECCIÓN TRÁMITES -->
                                     <div class="glass-card overflow-hidden">
@@ -442,11 +442,11 @@
                                 </div>
                             </div>
                         </div>
- 
+
                     </div>
                 </div>
             </div>
- 
+
             <!-- Panel de Trámites (Historial y Gestión) -->
             <div id="tramiteModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex justify-end">
                 <div class="w-full max-w-md bg-white h-full shadow-2xl flex flex-col view-transition">
@@ -459,7 +459,7 @@
                             <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"/></svg>
                         </button>
                     </div>
- 
+
                     <div class="flex-1 overflow-y-auto p-8 space-y-8">
                         <!-- Cambio de Estado -->
                         <div class="space-y-3">
@@ -468,7 +468,7 @@
                                 <!-- Opciones generadas dinámicamente según el trámite (OR o RETIE) -->
                             </select>
                         </div>
- 
+
                         <!-- Nuevo Comentario -->
                         <div class="space-y-3">
                             <label class="text-[10px] font-black text-slate-400 uppercase">Añadir Comentario / Hito</label>
@@ -476,7 +476,7 @@
                             <div id="tramiteRequirementFields" class="space-y-3"></div>
                             <button id="saveTramiteUpdateBtn" onclick="saveTramiteUpdate()" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Guardar Actualización</button>
                         </div>
- 
+
                         <!-- Línea de Tiempo -->
                         <div class="space-y-4">
                             <label class="text-[10px] font-black text-slate-400 uppercase">Trazabilidad</label>
@@ -487,7 +487,7 @@
                     </div>
                 </div>
             </div>
- 
+
             <!-- Modal para ver archivos de conformidad (detectados en 2. ESTADOS OR Y RETIE) -->
             <div id="conformidadModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center">
                 <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl flex flex-col max-h-[80vh]">
@@ -505,7 +505,7 @@
                     </div>
                 </div>
             </div>
- 
+
             <!-- Modal Nuevo Proyecto / Editar Datos del Proyecto (comparten el mismo formulario) -->
             <div id="proyectoInfoModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
                 <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
@@ -557,7 +557,7 @@
                     </form>
                 </div>
             </div>
- 
+
             <!-- Vista DESARROLLO (Presupuesto) -->
             <div id="developmentView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
                 <header class="px-10 py-6 bg-white border-b flex justify-between items-center">
@@ -590,7 +590,7 @@
                         </div>
                     </div>
                 </header>
- 
+
                 <!-- Sección Presupuesto -->
                 <div id="devBudgetSection" class="flex-1 overflow-y-auto p-8 space-y-8">
                     <div class="max-w-6xl mx-auto grid grid-cols-12 gap-8">
@@ -619,9 +619,9 @@
                         </div>
                     </div>
                 </div>
- 
+
             </div>
- 
+
             <!-- Modal para asignar valor -->
             <div id="assignValueModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
                 <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
@@ -636,7 +636,7 @@
                     </div>
                 </div>
             </div>
- 
+
             <!-- 4. Interfaz de Preeliminar -->
             <div id="preliminarView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
                 <header class="px-10 py-6 bg-white border-b flex justify-between items-center">
@@ -654,7 +654,7 @@
                         <p id="headProgIng" class="text-lg font-black text-slate-900">0%</p>
                     </div>
                 </header>
- 
+
                 <div class="flex-1 overflow-y-auto p-8 space-y-8">
                     <div class="max-w-6xl mx-auto grid grid-cols-12 gap-8">
                         <!-- Documentos Preeliminares -->
@@ -674,7 +674,7 @@
                                             <button onclick="viewPreliminarFile('kickoff')" id="kickoffViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
                                         </div>
                                     </div>
- 
+
                                     <!-- Acta Visita Técnica -->
                                     <div class="p-4 border border-slate-200 rounded-xl">
                                         <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Acta Visita Técnica</h5>
@@ -687,7 +687,7 @@
                                             <button onclick="viewPreliminarFile('visita')" id="visitaViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
                                         </div>
                                     </div>
- 
+
                                     <!-- Lista de Material -->
                                     <div class="p-4 border border-slate-200 rounded-xl">
                                         <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Lista de Material</h5>
@@ -700,7 +700,7 @@
                                             <button onclick="viewPreliminarFile('material')" id="materialViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
                                         </div>
                                     </div>
- 
+
                                     <!-- Recibo -->
                                     <div class="p-4 border border-slate-200 rounded-xl">
                                         <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Recibo</h5>
@@ -713,7 +713,7 @@
                                             <button onclick="viewPreliminarFile('recibo')" id="reciboViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
                                         </div>
                                     </div>
- 
+
                                     <!-- Contrato -->
                                     <div class="p-4 border border-slate-200 rounded-xl">
                                         <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Contrato</h5>
@@ -729,7 +729,7 @@
                                 </div>
                             </div>
                         </div>
- 
+
                         <!-- Google Maps -->
                         <div class="col-span-12 lg:col-span-4 space-y-6">
                             <div class="glass-card p-6">
@@ -737,7 +737,7 @@
                                     <i class="fa-solid fa-map-location-dot text-amber-500 mr-2"></i>
                                     Ubicación del Proyecto
                                 </h4>
- 
+
                                 <!-- Controles de Coordenadas -->
                                 <div class="space-y-4 mb-4">
                                     <div class="grid grid-cols-2 gap-3">
@@ -752,7 +752,7 @@
                                                 class="w-full p-2 bg-slate-50 border rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500 text-center font-mono">
                                         </div>
                                     </div>
- 
+
                                     <div class="flex gap-2">
                                         <button onclick="saveCoordinates()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black text-[9px] uppercase rounded-lg transition-colors shadow-lg active:scale-95">Guardar</button>
                                         <button onclick="searchCoordinates()" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-black text-[9px] uppercase rounded-lg transition-colors active:scale-95">
@@ -763,14 +763,14 @@
                                         </button>
                                     </div>
                                 </div>
- 
+
                                 <!-- Controles de Vista del Mapa -->
                                 <div class="space-y-3">
                                     <button onclick="openInGoogleMaps()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase rounded-lg transition-colors flex items-center justify-center">
                                         <i class="fa-solid fa-external-link-alt mr-2"></i> Abrir en Google Maps
                                     </button>
                                 </div>
- 
+
                                 <!-- Información de Dirección -->
                                 <div id="addressInfo" class="mt-4 pt-4 border-t border-slate-200 hidden">
                                     <div class="flex items-start">
@@ -781,7 +781,7 @@
                                         </div>
                                     </div>
                                 </div>
- 
+
                                 <!-- Contenedor de Imagen del Proyecto -->
                                 <div id="imageContainer" class="w-full h-80 bg-slate-100 rounded-xl border mt-4 flex items-center justify-center relative overflow-hidden">
                                     <img id="projectImage" src="" alt="Imagen del proyecto" class="max-w-full max-h-full object-contain hidden">
@@ -796,24 +796,24 @@
                     </div>
                 </div>
             </div>
- 
+
             </div>
         </main>
     </div>
- 
+
     <script>
- 
+
         // Remplaza con tus credenciales guardadas
         const SUPABASE_URL = 'https://whgjypkyqcaujzkueyks.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndoZ2p5cGt5cWNhdWp6a3VleWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2OTI4OTEsImV4cCI6MjEwMDI2ODg5MX0.4Ddavi1NWXzTunuEIRcW4ehZuMwsinwOnb5OnnAoNSA'; 
- 
+
         // Inicializar el cliente de Supabase solo si la librería está disponible
         // (se llama "supabaseClient" y no "supabase" para no chocar con la variable
         // global "supabase" que ya crea la librería cargada por <script src="...supabase-js...">)
         const supabaseClient = typeof window !== 'undefined' && window.supabase
             ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
             : null;
- 
+
         // ==========================================================
         // SINCRONIZACIÓN CON SUPABASE
         // ----------------------------------------------------------
@@ -828,14 +828,14 @@
         // es un handle de archivos del sistema operativo, no puede
         // ni debe sincronizarse entre navegadores/equipos.
         // ==========================================================
- 
+
         function getProjectName(id) {
             return projects.find(x => x.id === id)?.name || id;
         }
- 
+
         // Cache simple en memoria para no pegarle a Supabase en cada get()
         const _projectDataCache = new Map();
- 
+
         async function getProjectData(codigo, { fresh = false } = {}) {
             if (!supabaseClient || !codigo) return {};
             if (!fresh && _projectDataCache.has(codigo)) return _projectDataCache.get(codigo);
@@ -853,7 +853,7 @@
             _projectDataCache.set(codigo, datos);
             return datos;
         }
- 
+
         async function saveProjectField(codigo, field, value) {
             if (!supabaseClient || !codigo) return;
             const current = await getProjectData(codigo, { fresh: true });
@@ -871,10 +871,10 @@
             }
             _projectDataCache.set(codigo, current);
         }
- 
+
         // --- PREELIMINAR / COORDINATES ---
         let googleMapsLoaded = false;
- 
+
         window.initGoogleMaps = function() {
             googleMapsLoaded = true;
             // Si estamos en la vista preliminar, inicializar el mapa
@@ -883,7 +883,7 @@
                 if (p) renderPreliminar();
             }
         };
- 
+
         // Manejar selección de imagen
         document.getElementById('imageInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -897,13 +897,13 @@
                 reader.readAsDataURL(file);
             }
         });
- 
+
         async function renderPreliminar() {
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p) return;
- 
+
             document.getElementById('preliminarProjectName').innerText = p.name;
- 
+
             // Cargar coordenadas guardadas
             const coords = await getCoordinates(selectedProjectId);
             if (coords) {
@@ -916,16 +916,16 @@
                 document.getElementById('mapLat').value = defaultLat.toFixed(6);
                 document.getElementById('mapLng').value = defaultLng.toFixed(6);
             }
- 
+
             // Cargar estado de archivos
             const preliminarData = await getPreliminarData(selectedProjectId);
             const fileTypes = ['kickoff', 'visita', 'material', 'recibo', 'contrato'];
- 
+
             fileTypes.forEach(type => {
                 const fileData = preliminarData.find(f => f.type === type);
                 const viewBtn = document.getElementById(`${type}ViewBtn`);
                 const fileNameDiv = document.getElementById(`${type}FileName`);
- 
+
                 if (fileData) {
                     viewBtn.disabled = false;
                     viewBtn.classList.remove('opacity-50');
@@ -937,30 +937,30 @@
                 }
             });
         }
- 
+
         async function getPreliminarData(projectId) {
             const datos = await getProjectData(projectId);
             return datos.preliminar || [];
         }
- 
+
         async function savePreliminarData(projectId, data) {
             await saveProjectField(projectId, 'preliminar', data);
         }
- 
+
         async function writeJson(folderHandle, fileName, obj) {
             const fileHandle = await folderHandle.getFileHandle(fileName, { create: true });
             const writable = await fileHandle.createWritable();
             await writable.write(JSON.stringify(obj, null, 2));
             await writable.close();
         }
- 
+
         async function intentarReconexionSilenciosa() {
         return new Promise((resolve) => {
             const rootReq = db.transaction(STORES.SETTINGS).objectStore(STORES.SETTINGS).get('root');
             rootReq.onsuccess = async () => {
             const saved = rootReq.result;
             if (!saved) { resolve(); return; }
- 
+
             // Carpeta de Google Drive guardada de una sesión anterior: el access token
             // NUNCA sobrevive un refresh, así que no podemos reconectar solos. Dejamos
             // todo listo para que un clic en "Reactivar" pida el token y retome la carpeta.
@@ -971,7 +971,7 @@
                 resolve();
                 return;
             }
- 
+
             const permiso = await saved.queryPermission({ mode: 'readwrite' });
             if (permiso === 'granted') {
                 currentHandle = saved;
@@ -985,9 +985,9 @@
             };
         });
         }
- 
- 
- 
+
+
+
         async function readJson(folderHandle, fileName) {
             try {
                 const fileHandle = await folderHandle.getFileHandle(fileName);
@@ -997,73 +997,73 @@
                 return null;
             }
         }
- 
+
         async function getOrCreateHiddenFolder(parentHandle, name) {
             return parentHandle.getDirectoryHandle(name, { create: true });
         }
- 
+
         async function getCoordinates(projectId) {
             const datos = await getProjectData(projectId);
             return datos.coordinates || null;
         }
- 
+
         async function saveCoordinates() {
             const lat = parseFloat(document.getElementById('mapLat').value);
             const lng = parseFloat(document.getElementById('mapLng').value);
- 
+
             if (!lat || !lng || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
                 alert('Por favor ingrese coordenadas válidas');
                 return;
             }
- 
+
             await saveProjectField(selectedProjectId, 'coordinates', { lat, lng });
- 
+
             // Actualizar inputs del mapa
             document.getElementById('mapLat').value = lat.toFixed(6);
             document.getElementById('mapLng').value = lng.toFixed(6);
- 
+
             if (googleMapsLoaded && map && marker) {
                 const pos = { lat, lng };
                 map.panTo(pos);
                 marker.setPosition(pos);
                 getReverseGeocoding(pos);
             }
- 
+
             showToast('Coordenadas guardadas correctamente');
         }
- 
+
         window.searchCoordinates = function() {
             const lat = parseFloat(document.getElementById('mapLat').value);
             const lng = parseFloat(document.getElementById('mapLng').value);
- 
+
             if (isNaN(lat) || isNaN(lng)) {
                 showToast("Introduce coordenadas válidas");
                 return;
             }
- 
+
             // Generar enlace a Google Maps con las coordenadas
             const zoom = 15; // Nivel de zoom por defecto
             const url = `https://www.google.com/maps/@${lat},${lng},${zoom}z`;
             window.open(url, '_blank');
- 
+
             showToast("Abriendo Google Maps con las coordenadas");
         };
- 
+
         window.copyCoordinates = function() {
             const lat = document.getElementById('mapLat').value;
             const lng = document.getElementById('mapLng').value;
             const text = `${lat}, ${lng}`;
- 
+
             const el = document.createElement('textarea');
             el.value = text;
             document.body.appendChild(el);
             el.select();
             document.execCommand('copy');
             document.body.removeChild(el);
- 
+
             showToast("Coordenadas copiadas al portapapeles");
         };
- 
+
         window.openInGoogleMaps = function() {
             const lat = document.getElementById('mapLat').value;
             const lng = document.getElementById('mapLng').value;
@@ -1073,7 +1073,7 @@
                 showToast("Ingresa coordenadas válidas primero");
             }
         };
- 
+
         function showToast(msg) {
             // Crear toast si no existe
             let toast = document.getElementById('toast');
@@ -1083,17 +1083,17 @@
                 toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none text-sm';
                 document.body.appendChild(toast);
             }
- 
+
             toast.innerText = msg;
             toast.style.opacity = '1';
             setTimeout(() => { toast.style.opacity = '0'; }, 3000);
         }
- 
+
         // Sincronizar inputs del mapa con el header y agregar event listeners
         document.addEventListener('DOMContentLoaded', function() {
             const mapLatInput = document.getElementById('mapLat');
             const mapLngInput = document.getElementById('mapLng');
- 
+
             if (mapLatInput && mapLngInput) {
                 // Buscar al presionar Enter
                 mapLatInput.addEventListener('keypress', function(e) {
@@ -1104,64 +1104,64 @@
                 });
             }
         });
- 
+
         window.uploadPreliminarFile = async (type) => {
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p || !p.preliminarFolder) {
                 alert("Carpeta 1. Preeliminar no encontrada.");
                 return;
             }
- 
+
             const input = document.getElementById(`${type}File`);
             const file = input.files[0];
             if (!file) {
                 alert('Por favor seleccione un archivo PDF');
                 return;
             }
- 
+
             const fileName = `${type}_${Date.now()}.pdf`;
- 
+
             try {
                 const handle = await p.preliminarFolder.getFileHandle(fileName, { create: true });
                 const writable = await handle.createWritable();
                 await writable.write(file);
                 await writable.close();
- 
+
                 // Guardar referencia en BD
                 const preliminarData = await getPreliminarData(selectedProjectId);
                 const existingIndex = preliminarData.findIndex(f => f.type === type);
- 
+
                 const fileData = {
                     type,
                     fileName,
                     originalName: file.name,
                     uploadedAt: new Date().toISOString()
                 };
- 
+
                 if (existingIndex >= 0) {
                     preliminarData[existingIndex] = fileData;
                 } else {
                     preliminarData.push(fileData);
                 }
- 
+
                 await savePreliminarData(selectedProjectId, preliminarData);
                 renderPreliminar();
- 
+
                 alert('Archivo subido correctamente');
             } catch (e) {
                 alert('Error al subir el archivo: ' + e.message);
             }
         };
- 
+
         window.viewPreliminarFile = async (type) => {
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p || !p.preliminarFolder) return alert("Carpeta 1. Preeliminar no encontrada.");
- 
+
             const preliminarData = await getPreliminarData(selectedProjectId);
             const fileData = preliminarData.find(f => f.type === type);
- 
+
             if (!fileData) return alert("Archivo no encontrado");
- 
+
             try {
                 const handle = await p.preliminarFolder.getFileHandle(fileData.fileName);
                 window.open(URL.createObjectURL(await handle.getFile()), '_blank');
@@ -1169,63 +1169,63 @@
                 alert("Error al abrir el archivo");
             }
         };
- 
+
         function limpiarNombreProyecto(nombre) {
         return nombre
             .replace(/^\d+(\.\d+)?\.\s*/, '')
             .replace(/^PROYECTO\s+/i, '')
             .trim();
         }
- 
+
         window.generarActa = async (docId, projectId) => {
             console.log('=== INICIO generarActa ===', { docId, projectId });
             const p = projects.find(x => x.id === projectId);
             console.log('Proyecto encontrado:', p);
- 
+
             if (!p || !p.actFolder) {
                 console.error('FALLO: proyecto o actFolder no existe', { p });
                 alert('Carpeta 5. INFORME DE SEGUIMIENTO/1. ACTAS no encontrada.');
                 return;
             }
- 
+
             const info = await getProjectInfo(projectId);
             console.log('Info del proyecto:', info);
- 
+
             if (!info || !info.dueno) {
                 console.error('FALLO: falta info.dueno', { info });
                 alert('Faltan datos del proyecto (dueño, etc.) para generar el acta.');
                 return;
             }
- 
+
             try {
                 console.log('Paso 1: buscando carpeta Plantillas dentro de currentHandle...');
                 console.log('currentHandle actual:', currentHandle?.name);
                 const plantillasFolder = await currentHandle.getDirectoryHandle('Plantillas');
                 console.log('Paso 1 OK - carpeta Plantillas encontrada:', plantillasFolder.name);
- 
+
                 const actaConfig = CONFIG.act.find(a => a.id === docId);
                 const nombreActa = actaConfig ? actaConfig.label : docId;
                 const nombreArchivoPlantilla = `${docId} ${nombreActa}.docx`;
                 console.log('Paso 2: buscando archivo exacto:', JSON.stringify(nombreArchivoPlantilla));
- 
+
                 console.log('Listando TODO lo que hay dentro de Plantillas:');
                 for await (const entry of plantillasFolder.values()) {
                 console.log(' -> encontrado:', JSON.stringify(entry.name), entry.kind);
                 }
- 
+
                 const plantillaHandle = await plantillasFolder.getFileHandle(nombreArchivoPlantilla);
                 console.log('Paso 2 OK');
- 
+
                 const arrayBuffer = await (await plantillaHandle.getFile()).arrayBuffer();
- 
+
                 const nombreLimpio = limpiarNombreProyecto(p.name);
                 console.log('Nombre limpio del proyecto:', nombreLimpio);
- 
+
                 const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
                 const hoy = new Date();
                 const fechaLarga = `${hoy.getDate()} de ${meses[hoy.getMonth()]} del ${hoy.getFullYear()}`;
                 console.log('Fecha larga generada:', fechaLarga);
- 
+
                 const zip = new PizZip(arrayBuffer);
                 const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
                 doc.render({
@@ -1235,7 +1235,7 @@
                 potenciaac: info.potenciaAC || ''
                 });
                 console.log('Paso 3 OK: render completado');
- 
+
                 const buf = doc.getZip().generate({ type: 'uint8array' });
                 const fileName = `${docId} ${nombreActa} - ${nombreLimpio}.docx`;
                 console.log('Paso 4: guardando como', fileName);
@@ -1244,7 +1244,7 @@
                 await writable.write(buf);
                 await writable.close();
                 console.log('Paso 4 OK - archivo guardado');
- 
+
                 await scan();
                 showToast('Acta generada correctamente');
             } catch (e) {
@@ -1254,7 +1254,7 @@
                 alert('No se pudo generar el acta: ' + e.message + ' (' + e.name + ')');
             }
         };
- 
+
         // Actualizar nombres de archivos al seleccionar
         ['kickoff', 'visita', 'material', 'recibo', 'contrato'].forEach(type => {
             document.getElementById(`${type}File`).onchange = e => {
@@ -1264,7 +1264,7 @@
                 }
             };
         });
- 
+
         // Verificar si estamos en un entorno de archivo local
         const isLocalFile = window.location.protocol === 'file:';
         if (isLocalFile) {
@@ -1278,7 +1278,7 @@
         let db, currentHandle, selectedProjectId, projects = [], activeTramiteType = null, currentPendingFile = null;
         let currentTramiteExistingFiles = [];
         let lastProjectView = 'hub'; // recuerda en qué sección (Documentación/Desarrollo/Preeliminar) estaba el usuario
- 
+
         // ==========================================================
         // GOOGLE DRIVE — acceso desde celular / navegadores sin
         // File System Access API. currentHandle termina siendo un
@@ -1290,19 +1290,19 @@
         const DRIVE_API_KEY = 'AIzaSyDq0HZ05CxOqQmS-nd0hKYZEoQ82d1s7fY';
         const DRIVE_APP_ID = '242185480634';
         const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive';
- 
+
         let driveAccessToken = null;
         let driveTokenClient = null;
         let driveGapiReady = false;
         let scanIntervalId = null; // evita crear varios setInterval de scan() duplicados
         let pendingDriveFolder = null; // {id, name} guardado de una sesión anterior, pendiente de reconectar
         let driveConnectMode = 'picker'; // 'picker' (elegir carpeta nueva) | 'reconnect' (retomar la guardada)
- 
+
         function startAutoScan() {
             if (scanIntervalId) clearInterval(scanIntervalId);
             scanIntervalId = setInterval(scan, 60000);
         }
- 
+
         async function driveRefreshToken() {
             if (!driveTokenClient) return false;
             return new Promise((resolve) => {
@@ -1316,7 +1316,7 @@
                 driveTokenClient.requestAccessToken({ prompt: '' });
             });
         }
- 
+
         async function driveAuthedFetch(url, opts = {}) {
             opts.headers = Object.assign({}, opts.headers, { Authorization: `Bearer ${driveAccessToken}` });
             let res = await fetch(url, opts);
@@ -1332,25 +1332,25 @@
             }
             return res;
         }
- 
+
         async function driveCreateFolder(name, parentId) {
-            const res = await driveAuthedFetch('https://www.googleapis.com/drive/v3/files', {
+            const res = await driveAuthedFetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] })
             });
             return res.json();
         }
- 
+
         async function driveCreateEmptyFile(name, parentId) {
-            const res = await driveAuthedFetch('https://www.googleapis.com/drive/v3/files', {
+            const res = await driveAuthedFetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, parents: [parentId] })
             });
             return res.json();
         }
- 
+
         class DriveFileHandle {
             constructor(id, name) {
                 this.kind = 'file';
@@ -1358,7 +1358,7 @@
                 this.name = name;
             }
             async getFile() {
-                const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files/${this.id}?alt=media`);
+                const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files/${this.id}?alt=media&supportsAllDrives=true`);
                 const blob = await res.blob();
                 return new File([blob], this.name);
             }
@@ -1369,7 +1369,7 @@
                     async write(data) { parts.push(data); },
                     async close() {
                         const blob = parts[0] instanceof Blob ? parts[0] : new Blob(parts);
-                        await driveAuthedFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+                        await driveAuthedFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media&supportsAllDrives=true`, {
                             method: 'PATCH',
                             body: blob
                         });
@@ -1377,7 +1377,7 @@
                 };
             }
         }
- 
+
         class DriveFolderHandle {
             constructor(id, name) {
                 this.kind = 'directory';
@@ -1388,8 +1388,15 @@
             async _listChildren() {
                 if (this._cache) return this._cache;
                 const q = encodeURIComponent(`'${this.id}' in parents and trashed = false`);
-                const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType)&pageSize=1000`);
+                // supportsAllDrives + includeItemsFromAllDrives: sin esto, la API de Drive
+                // devuelve una lista VACÍA (sin error) para cualquier carpeta que viva dentro
+                // de una Unidad Compartida (Shared Drive), en vez de "Mi unidad".
+                const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType)&pageSize=1000&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives`);
                 const data = await res.json();
+                if (data.error) {
+                    console.error('Drive _listChildren error:', data.error);
+                    throw new Error(data.error.message || 'Error listando archivos de Drive');
+                }
                 this._cache = data.files || [];
                 return this._cache;
             }
@@ -1424,7 +1431,7 @@
                 throw new DOMException('Archivo no encontrado en Drive', 'NotFoundError');
             }
         }
- 
+
         function setGoogleDriveState(isConnected) {
             const button = document.getElementById('btnGoogleDrive');
             const connectedPanel = document.getElementById('googleDriveConnected');
@@ -1437,7 +1444,7 @@
                 ? 'rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700'
                 : 'rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600';
         }
- 
+
         function openSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -1447,7 +1454,7 @@
                 overlay.classList.remove('hidden');
             }
         }
- 
+
         function closeSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -1455,13 +1462,13 @@
             sidebar.classList.remove('mobile-open');
             overlay.classList.add('hidden');
         }
- 
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             if (!sidebar) return;
             sidebar.classList.contains('mobile-open') ? closeSidebar() : openSidebar();
         }
- 
+
         function driveInitTokenClient() {
             if (driveTokenClient || !window.google) return;
             driveTokenClient = google.accounts.oauth2.initTokenClient({
@@ -1485,22 +1492,31 @@
                 }
             });
         }
- 
+
         function connectGoogleDrive() {
             driveConnectMode = 'picker';
             driveInitTokenClient();
             if (!driveTokenClient) { showToast('Google aún está cargando, intenta de nuevo en un segundo.'); return; }
             driveTokenClient.requestAccessToken({ prompt: 'consent' });
         }
- 
+
         function driveOpenPicker() {
             gapi.load('picker', () => {
                 driveGapiReady = true;
-                const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+                // Vista normal: carpetas de "Mi unidad".
+                const viewMiUnidad = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
                     .setSelectFolderEnabled(true)
                     .setIncludeFolders(true);
+                // Vista aparte: carpetas dentro de Unidades Compartidas (Shared Drives).
+                // Sin esto, el Picker solo deja navegar "Mi unidad" y las carpetas que
+                // viven en una Unidad Compartida ni siquiera aparecen para seleccionarlas.
+                const viewUnidadesCompartidas = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+                    .setSelectFolderEnabled(true)
+                    .setIncludeFolders(true)
+                    .setEnableDrives(true);
                 const picker = new google.picker.PickerBuilder()
-                    .addView(view)
+                    .addView(viewMiUnidad)
+                    .addView(viewUnidadesCompartidas)
                     .setOAuthToken(driveAccessToken)
                     .setDeveloperKey(DRIVE_API_KEY)
                     .setAppId(DRIVE_APP_ID)
@@ -1509,7 +1525,7 @@
                 picker.setVisible(true);
             });
         }
- 
+
         function driveOnFolderPicked(data) {
             if (data.action !== google.picker.Action.PICKED) return;
             const folder = data.docs[0];
@@ -1522,14 +1538,14 @@
             scan();
             startAutoScan();
         }
- 
+
         // Estados posibles por tipo de trámite. OR: ciclo real de inscripción ante el Operador de Red.
         // RETIE: proceso de inspección técnica, es un flujo distinto al de OR.
         const TRAMITE_STATES = {
             or: ['NO INSCRITO', 'INSCRITO', 'CONFORME', 'DE BAJA'],
             retie: ['POR AGENDAR', 'EN TRÁMITE', 'AGENDADO', 'OBSERVACIONES', 'APROBADO']
         };
- 
+
         const CONFIG = {
             ing: [
                 { id: "1.", label: "Diagrama Unifilar" }, { id: "2.", label: "Certificación Inversor" },
@@ -1548,7 +1564,7 @@
                 { id: "5.", label: "Capacitación" }
             ]
         };
- 
+
         async function init() {
             db = await new Promise(res => {
                 const req = indexedDB.open(DB_NAME, 5);
@@ -1558,20 +1574,20 @@
                 };
                 req.onsuccess = () => res(req.result);
             });
- 
+
             await intentarReconexionSilenciosa();
- 
+
             document.getElementById('devExpFile').onchange = e => {
                 document.getElementById('devFileName').innerText = e.target.files[0]?.name || "ADJUNTAR FACTURA (PDF)";
             };
- 
+
             document.getElementById('newDevExpenseForm').onsubmit = e => {
                 e.preventDefault();
                 handleNewExpense();
             };
         }
- 
- 
+
+
         // Navegación
         window.switchView = (view) => {
             ['emptyState', 'projectHub', 'documentationView', 'developmentView', 'preliminarView'].forEach(id => {
@@ -1583,12 +1599,12 @@
             if (view === 'development' && p) renderDevelopment();
             if (view === 'preliminar' && p) renderPreliminar();
             if (view === 'documentation' && p) { renderDocModule(p); switchDocTab('boveda'); }
- 
+
             if (['hub', 'documentation', 'development', 'preliminar'].includes(view)) {
                 lastProjectView = view;
             }
         };
- 
+
         // Pestañas dentro del Módulo de Documentación (Bóveda Técnica / Actas / Información del Proyecto)
         window.switchDocTab = (tab) => {
             ['boveda', 'actas', 'info'].forEach(t => {
@@ -1596,7 +1612,7 @@
                 document.getElementById(`docTabBtn-${t}`).classList.toggle('active', t === tab);
             });
         };
- 
+
         // Escaneo y Lógica de Datos
         async function scan() {
             if (!currentHandle) return;
@@ -1625,9 +1641,12 @@
                         if (!document.getElementById('developmentView').classList.contains('hidden')) renderDevelopment();
                     }
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error('Error en scan():', e);
+                showToast('No se pudo leer la carpeta: ' + (e && e.message ? e.message : e));
+            }
         }
- 
+
         async function analyze(handle) {
             const states = await getStates(handle.name);
             let ingFolder, actFolder, budgetFolder, preliminarFolder, estadosFolder, retieFolder, orFolder;
@@ -1649,24 +1668,24 @@
                     }
                 }
             } catch(e) {}
- 
+
             const getFiles = async (f) => {
                 if (!f) return [];
                 const r = [];
                 try { for await (const x of f.values()) if (x.kind === 'file') r.push({n: x.name, h: x}); } catch(e) {}
                 return r;
             };
- 
+
             const filesIng = await getFiles(ingFolder);
             const filesAct = await getFiles(actFolder);
             const filesRetieConf = await getFiles(retieFolder);
             const filesOrConf = await getFiles(orFolder);
- 
+
             const mapItems = (cfg, files) => cfg.map(c => {
             const f = files.find(x => x.n.trim().startsWith(c.id));
             return {...c, found: !!f, handle: f?.h};
             });
- 
+
             const mapActItems = (cfg, files) => cfg.map(c => {
             const matches = files.filter(x => x.n.trim().startsWith(c.id));
             const pdfFile = matches.find(x => x.n.toLowerCase().endsWith('.pdf'));
@@ -1679,16 +1698,16 @@
                 docxHandle: docxFile?.h
             };
             });
- 
+
             const ingItems = mapItems(CONFIG.ing, filesIng);
             const actItems = mapActItems(CONFIG.act, filesAct);
- 
+
             let info = null;
             try {
                 const hiddenFolder = await getOrCreateHiddenFolder(handle, '_data');
                 info = await readJson(hiddenFolder, 'data.json');
             } catch (e) {}
- 
+
             return {
                 id: handle.name,
                 name: handle.name.replace(/^\d+\.\s*/, ''),
@@ -1702,20 +1721,20 @@
                 states
             };
         }
- 
+
         // Renderizado
         // Event listener para el buscador
         document.getElementById('projectSearch').addEventListener('input', renderSidebar);
- 
+
         function renderSidebar() {
             const searchTerm = document.getElementById('projectSearch').value.toLowerCase();
- 
+
             // Filtrar proyectos por búsqueda
             let filteredProjects = projects.filter(p => p.name.toLowerCase().includes(searchTerm));
- 
+
             // Ordenar proyectos por nombre (alfabéticamente)
             const sortedProjects = [...filteredProjects].sort((a, b) => a.name.localeCompare(b.name));
- 
+
             // Agrupar por año (usa el año real de la carpeta 0.N. AAAA que contiene el proyecto)
             const groupedByYear = {};
             sortedProjects.forEach(p => {
@@ -1723,7 +1742,7 @@
                 if (!groupedByYear[year]) groupedByYear[year] = [];
                 groupedByYear[year].push(p);
             });
- 
+
             // Generar HTML agrupado
             const html = Object.keys(groupedByYear).sort((a, b) => b.localeCompare(a)).map(year => `
                 <div class="mb-4">
@@ -1739,10 +1758,10 @@
                     `).join('')}
                 </div>
             `).join('');
- 
+
             document.getElementById('projectList').innerHTML = html;
         }
- 
+
         window.selectProject = (id) => {
             selectedProjectId = id;
             const p = projects.find(x => x.id === id);
@@ -1772,21 +1791,21 @@
             }
             return `<button onclick="generarActa('${docId}','${p.id}')" class="btn-action btn-upload">Generar</button>`;
             };
- 
+
             document.getElementById('listIng').innerHTML = p.ingItems.map(i => `
                 <div class="flex items-center justify-between p-4 bg-white border ${i.found ? 'border-blue-100' : 'border-slate-100'} rounded-xl shadow-sm">
                     <span class="text-xs font-bold text-slate-700 truncate pr-2">${i.label}</span>
                     ${actionBtn(i.found, 'ing', i.id)}
                 </div>
             `).join('');
- 
+
             document.getElementById('listAct').innerHTML = p.actItems.map(i => `
                 <div class="flex items-center justify-between p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors">
                     <span class="text-[10px] font-bold text-slate-500">${i.label}</span>
                     ${actActionBtn(i.found, i.id, i.generated)}
                 </div>
             `).join('');
- 
+
             // Trámites Estados
             // Si hay archivos de conformidad detectados y el estado sigue en su valor base
             // (nunca se ha tocado manualmente), lo mostramos ya avanzado automáticamente.
@@ -1794,7 +1813,7 @@
             const orStatus = (orStatusReal === 'NO INSCRITO' && p.orConforme) ? 'CONFORME' : orStatusReal;
             const retieStatusReal = p.states.retie.status;
             const retieStatus = (retieStatusReal === 'POR AGENDAR' && p.retieConforme) ? 'APROBADO' : retieStatusReal;
- 
+
             const statusOrColors = {
                 'NO INSCRITO': 'text-slate-500',
                 'INSCRITO': 'text-blue-600',
@@ -1812,23 +1831,23 @@
             statusOrEl.innerText = orStatus;
             statusOrEl.className = `text-sm font-bold ${statusOrColors[orStatus] || 'text-slate-800'}`;
             document.getElementById('badge-or').classList.toggle('hidden', orStatusReal !== 'DE BAJA');
- 
+
             const statusRetieEl = document.getElementById('status-retie');
             statusRetieEl.innerText = retieStatus;
             statusRetieEl.className = `text-sm font-bold ${statusRetieColors[retieStatus] || 'text-slate-800'}`;
- 
+
             document.getElementById('date-or').innerText = `Última act: ${p.states.or.date || '--/--'}`;
             document.getElementById('date-retie').innerText = `Última act: ${p.states.retie.date || '--/--'}`;
- 
+
             await renderInfoProyecto(p.id);
         }
- 
+
         // --- Datos del Proyecto (nombre dueño, potencias, contacto) ---
         async function getProjectInfo(id) {
             const datos = await getProjectData(id);
             return datos.project_info || null;
         }
- 
+
         async function getProjectFolderById(id) {
             if (!currentHandle) return null;
             for await (const entry of currentHandle.values()) {
@@ -1836,7 +1855,7 @@
             }
             return null;
         }
- 
+
         async function saveProjectInfo(id, data) {
             await saveProjectField(id, 'project_info', data);
             try {
@@ -1851,7 +1870,7 @@
             const idx = projects.findIndex(x => x.id === id);
             if (idx >= 0) projects[idx] = { ...projects[idx], info: data };
         }
- 
+
         async function renderInfoProyecto(projectId) {
             const project = projects.find(x => x.id === projectId);
             const info = (project && project.info) || (await getProjectInfo(projectId));
@@ -1880,9 +1899,9 @@
                 campo('Dirección', info.direccion),
             ].join('');
         }
- 
+
         let modalMode = 'create';
- 
+
         window.abrirModalNuevoProyecto = () => {
             modalMode = 'create';
             document.getElementById('proyectoInfoModalTitle').innerText = 'Nuevo Proyecto';
@@ -1892,7 +1911,7 @@
             document.getElementById('infoNombreProyectoHint').classList.remove('hidden');
             document.getElementById('proyectoInfoModal').classList.remove('hidden');
         };
- 
+
         window.abrirModalEditarInfo = async () => {
             if (!selectedProjectId) return;
             modalMode = 'edit';
@@ -1911,7 +1930,7 @@
             document.getElementById('infoDireccion').value = info.direccion || '';
             document.getElementById('proyectoInfoModal').classList.remove('hidden');
         };
- 
+
         document.getElementById('proyectoInfoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = {
@@ -1923,7 +1942,7 @@
                 direccion: document.getElementById('infoDireccion').value.trim(),
             };
             const btn = document.getElementById('proyectoInfoSubmitBtn');
- 
+
             if (modalMode === 'create') {
                 const nombreProyecto = document.getElementById('infoNombreProyecto').value.trim();
                 if (!nombreProyecto) return;
@@ -1945,7 +1964,7 @@
                 showToast('Datos guardados');
             }
         });
- 
+
         // Busca la carpeta de año actual (0.N. AAAA); si no existe, crea la siguiente disponible
         async function getOrCreateYearFolder(year) {
             for await (const entry of currentHandle.values()) {
@@ -1961,7 +1980,7 @@
             const folderName = `0.${maxNum + 1}. ${year}`;
             return await currentHandle.getDirectoryHandle(folderName, { create: true });
         }
- 
+
         // Crea toda la estructura estándar de carpetas para un proyecto nuevo, vacía
         async function crearNuevoProyecto(nombreProyecto, data) {
             if (!currentHandle) {
@@ -1971,7 +1990,7 @@
             const year = new Date().getFullYear();
             const yearFolder = await getOrCreateYearFolder(year);
             const projectFolder = await yearFolder.getDirectoryHandle(nombreProyecto, { create: true });
- 
+
             await projectFolder.getDirectoryHandle('0. DOCUMENTACION CONTRACTUAL', { create: true });
             await projectFolder.getDirectoryHandle('1. INGENIERIA DE DETALLE', { create: true });
             const estadosFolder = await projectFolder.getDirectoryHandle('2. ESTADOS OR Y RETIE', { create: true });
@@ -1983,12 +2002,12 @@
             const seguimientoFolder = await projectFolder.getDirectoryHandle('5. INFORME DE SEGUIMIENTO', { create: true });
             await seguimientoFolder.getDirectoryHandle('1. ACTAS', { create: true });
             await projectFolder.getDirectoryHandle('6. ESTADOS DE PAGO', { create: true });
- 
+
             await saveProjectInfo(projectFolder.name, data);
             await scan();
             selectProject(projectFolder.name);
         }
- 
+
         // Muestra los archivos encontrados en las subcarpetas de conformidad (2. ESTADOS OR Y RETIE)
         window.verConformidad = (type) => {
             const p = projects.find(x => x.id === selectedProjectId);
@@ -2008,28 +2027,28 @@
             }
             document.getElementById('conformidadModal').classList.remove('hidden');
         };
- 
+
         window.abrirArchivoConformidad = async (type, idx) => {
             const p = projects.find(x => x.id === selectedProjectId);
             const files = type === 'or' ? p.filesOrConf : p.filesRetieConf;
             const f = files[idx];
             if (f?.h) window.open(URL.createObjectURL(await f.h.getFile()), '_blank');
         };
- 
+
         // (Módulo de Empleados/Actividades eliminado: ya no se usa)
- 
+
         // --- DESARROLLO / PRESUPUESTO ---
         async function renderDevelopment() {
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p) return;
- 
+
             const budgetData = await getBudgetData(selectedProjectId);
             const projectBudgetItem = budgetData.find(item => item.type === 'project_budget');
             const projectBudget = projectBudgetItem ? projectBudgetItem.value : 0;
             document.getElementById('projectBudgetInput').value = projectBudget;
- 
+
             const filesInFolder = [];
- 
+
             if (p.budgetFolder) {
                 try {
                     for await (const entry of p.budgetFolder.values()) {
@@ -2039,20 +2058,20 @@
                     }
                 } catch(e) {}
             }
- 
+
             const history = [];
             const pending = [];
- 
+
             filesInFolder.forEach(fileName => {
                 const record = budgetData.find(b => b.fileName === fileName);
                 if (record) history.push(record);
                 else pending.push(fileName);
             });
- 
+
             // Ordenar alfabéticamente
             pending.sort((a, b) => a.localeCompare(b));
             history.sort((a, b) => a.fileName.localeCompare(b.fileName));
- 
+
             const pendingSection = document.getElementById('pendingFilesSection');
             if (pending.length > 0) {
                 pendingSection.classList.remove('hidden');
@@ -2068,7 +2087,7 @@
             } else {
                 pendingSection.classList.add('hidden');
             }
- 
+
             let total = 0;
             const historyContainer = document.getElementById('devHistoryList');
             if (history.length === 0) {
@@ -2094,34 +2113,34 @@
                 }).join('');
             }
             document.getElementById('totalDevBudget').innerText = `$ ${total.toLocaleString()}`;
- 
+
             const difference = projectBudget - total;
             const differenceElement = document.getElementById('budgetDifference');
             differenceElement.innerText = `$ ${difference.toLocaleString()}`;
             differenceElement.className = difference >= 0 ? 'text-lg font-black text-green-600' : 'text-lg font-black text-red-600';
         }
- 
+
         async function handleNewExpense() {
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p || !p.budgetFolder) return alert("Carpeta 3. Presupuesto no encontrada.");
- 
+
             const label = document.getElementById('devExpLabel').value;
             const value = parseFloat(document.getElementById('devExpValue').value);
             const file = document.getElementById('devExpFile').files[0];
- 
+
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
             const fileName = `${label}_${timestamp}.pdf`;
- 
+
             try {
                 const handle = await p.budgetFolder.getFileHandle(fileName, { create: true });
                 const writable = await handle.createWritable();
                 await writable.write(file);
                 await writable.close();
- 
+
                 const data = await getBudgetData(selectedProjectId);
                 data.push({ id: Date.now().toString(), label, value, fileName });
                 await saveBudgetData(selectedProjectId, data);
- 
+
                 document.getElementById('newDevExpenseForm').reset();
                 document.getElementById('devFileName').innerText = "ADJUNTAR FACTURA (PDF)";
                 renderDevelopment();
@@ -2129,22 +2148,22 @@
                 alert("Error al guardar archivo en la carpeta local.");
             }
         }
- 
+
         window.openAssignModal = (fileName) => {
             currentPendingFile = fileName;
             document.getElementById('assignFileName').innerText = fileName;
             document.getElementById('assignInput').value = '';
             document.getElementById('assignValueModal').classList.remove('hidden');
         };
- 
+
         window.closeAssignModal = () => {
             document.getElementById('assignValueModal').classList.add('hidden');
         };
- 
+
         window.confirmAssignValue = async () => {
             const val = parseFloat(document.getElementById('assignInput').value);
             if (isNaN(val) || val <= 0) return alert("Ingrese un valor válido");
- 
+
             const data = await getBudgetData(selectedProjectId);
             data.push({
                 id: Date.now().toString(),
@@ -2152,28 +2171,28 @@
                 value: val,
                 fileName: currentPendingFile
             });
- 
+
             await saveBudgetData(selectedProjectId, data);
             closeAssignModal();
             renderDevelopment();
         };
- 
+
         window.deleteBudgetRecord = async (id) => {
             const data = await getBudgetData(selectedProjectId);
             await saveBudgetData(selectedProjectId, data.filter(d => d.id !== id));
             renderDevelopment();
         };
- 
+
         // --- DATABASE HELPERS ---
         async function getBudgetData(id) {
             const datos = await getProjectData(id);
             return datos.budget || [];
         }
- 
+
         async function saveBudgetData(id, data) {
             await saveProjectField(id, 'budget', data);
         }
- 
+
         function updateTramiteSaveButtonState() {
             const select = document.getElementById('modalStateSelect');
             const saveBtn = document.getElementById('saveTramiteUpdateBtn');
@@ -2183,9 +2202,9 @@
             const status = select?.value;
             let valid = true;
             let reason = '';
- 
+
             if (!type) return { valid: false, reason: 'No hay trámite activo.' };
- 
+
             if (type === 'or') {
                 if (status === 'INSCRITO' && prevStatus !== 'INSCRITO') {
                     const radicado = document.getElementById('modalRadicadoInput')?.value?.trim();
@@ -2213,14 +2232,14 @@
                     reason = 'Debe subir al menos un archivo para aprobar el trámite.';
                 }
             }
- 
+
             saveBtn.disabled = !valid;
             saveBtn.classList.toggle('opacity-60', !valid);
             saveBtn.classList.toggle('cursor-not-allowed', !valid);
             saveBtn.innerText = valid ? 'Guardar Actualización' : 'Falta información';
             return { valid, reason };
         }
- 
+
         async function renderTramiteRequirementFields() {
             const container = document.getElementById('tramiteRequirementFields');
             const select = document.getElementById('modalStateSelect');
@@ -2229,7 +2248,7 @@
             const prevStatus = p?.states?.[type]?.status;
             const status = select?.value;
             let html = '';
- 
+
             if (type === 'or') {
                 if (status === 'INSCRITO' && prevStatus !== 'INSCRITO') {
                     html = `
@@ -2265,17 +2284,17 @@
                         </div>`;
                 }
             }
- 
+
             container.innerHTML = html;
             updateTramiteSaveButtonState();
         }
- 
+
         async function createOrGetTramiteFolder(project, type) {
             if (!project?.rootHandle) return null;
             const parent = await project.rootHandle.getDirectoryHandle('6. Trámites', { create: true });
             return parent.getDirectoryHandle(type === 'or' ? 'OR' : 'RETIE', { create: true });
         }
- 
+
         async function saveTramiteFiles(project, type, files) {
             if (!files?.length) return [];
             const folder = await createOrGetTramiteFolder(project, type);
@@ -2291,22 +2310,22 @@
             }
             return saved;
         }
- 
+
         window.openTramiteModal = async (type) => {
             activeTramiteType = type;
             const p = projects.find(x => x.id === selectedProjectId);
             const state = p.states[type];
- 
+
             document.getElementById('modalTramiteType').innerText = type === 'or' ? 'Trámite Operador de Red' : 'Inspección RETIE';
- 
+
             const select = document.getElementById('modalStateSelect');
             select.innerHTML = TRAMITE_STATES[type].map(s => `<option value="${s}">${s}</option>`).join('');
- 
+
             let estadoMostrado = state.status;
             if (type === 'or' && state.status === 'NO INSCRITO' && p.orConforme) estadoMostrado = 'CONFORME';
             if (type === 'retie' && state.status === 'POR AGENDAR' && p.retieConforme) estadoMostrado = 'APROBADO';
             select.value = estadoMostrado;
- 
+
             document.getElementById('modalCommentInput').value = '';
             document.getElementById('tramiteModal').classList.remove('hidden');
             
@@ -2314,16 +2333,16 @@
             await renderTramiteRequirementFields();
             select.onchange = () => renderTramiteRequirementFields();
         };
- 
+
         window.closeTramiteModal = () => {
             document.getElementById('tramiteModal').classList.add('hidden');
             activeTramiteType = null;
         };
- 
+
         async function renderHistory() {
             const datos = await getProjectData(selectedProjectId);
             const history = (datos.history && datos.history[activeTramiteType]) || [];
- 
+
             document.getElementById('modalHistoryList').innerHTML = history.slice().reverse().map(h => `
                 <div class="relative pl-8">
                     <div class="absolute left-0 top-1.5 w-6 h-6 bg-slate-100 border-4 border-white rounded-full z-10"></div>
@@ -2337,21 +2356,21 @@
                 </div>
             `).join('') || '<p class="text-center text-slate-400 text-xs py-10">Sin historial registrado aún.</p>';
         }
- 
+
         window.saveTramiteUpdate = async () => {
             const validation = updateTramiteSaveButtonState();
             if (!validation.valid) {
                 alert(validation.reason);
                 return;
             }
- 
+
             const comment = document.getElementById('modalCommentInput').value.trim();
             const status = document.getElementById('modalStateSelect').value;
             if (!comment) {
                 alert('Debe escribir un comentario o hito para guardar la actualización.');
                 return;
             }
- 
+
             const date = new Date().toLocaleString('es-CO', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
             const p = projects.find(x => x.id === selectedProjectId);
             const previousState = p?.states?.[activeTramiteType] || {};
@@ -2359,12 +2378,12 @@
             const appointmentDate = document.getElementById('modalAgendaDateInput')?.value?.trim() || previousState.appointmentDate || '';
             const observations = document.getElementById('modalObservacionesInput')?.value?.trim() || previousState.observations || '';
             const selectedFiles = Array.from(document.getElementById('modalTramiteFiles')?.files || []);
- 
+
             let uploadedFiles = [];
             if (selectedFiles.length > 0) {
                 uploadedFiles = await saveTramiteFiles(p, activeTramiteType, selectedFiles);
             }
- 
+
             const pStates = await getStates(selectedProjectId);
             pStates[activeTramiteType] = {
                 status,
@@ -2374,13 +2393,13 @@
                 observations: activeTramiteType === 'retie' ? observations : previousState.observations || ''
             };
             await saveProjectField(selectedProjectId, 'states', pStates);
- 
+
             const datosActuales = await getProjectData(selectedProjectId, { fresh: true });
             const historyPorTipo = (datosActuales.history && datosActuales.history[activeTramiteType]) || [];
             historyPorTipo.push({ status, comment, date, metadata: { radicado, appointmentDate, observations, uploadedFiles } });
             const historyCompleto = { ...(datosActuales.history || {}), [activeTramiteType]: historyPorTipo };
             await saveProjectField(selectedProjectId, 'history', historyCompleto);
- 
+
             await scan();
             await renderHistory();
             document.getElementById('modalCommentInput').value = '';
@@ -2390,19 +2409,19 @@
             if (document.getElementById('modalTramiteFiles')) document.getElementById('modalTramiteFiles').value = '';
             await renderTramiteRequirementFields();
         };
- 
+
         // Helpers de DB y Archivos
         async function getStates(id) {
             const datos = await getProjectData(id);
             return datos.states || { or: { status: 'NO INSCRITO', date: '' }, retie: { status: 'POR AGENDAR', date: '' } };
         }
- 
+
         window.openFile = async (pId, dId, type) => {
             const p = projects.find(x => x.id === pId);
             const item = (type === 'ing' ? p.ingItems : p.actItems).find(i => i.id === dId);
             if (item.handle) window.open(URL.createObjectURL(await item.handle.getFile()), '_blank');
         };
- 
+
         window.openBudgetFile = async (fileName) => {
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p || !p.budgetFolder) return alert("Carpeta 3. Presupuesto no encontrada.");
@@ -2413,7 +2432,7 @@
                 alert("Archivo no encontrado.");
             }
         };
- 
+
         window.updateProjectBudget = async () => {
             const budget = parseFloat(document.getElementById('projectBudgetInput').value) || 0;
             const budgetData = await getBudgetData(selectedProjectId);
@@ -2426,7 +2445,7 @@
             await saveBudgetData(selectedProjectId, budgetData);
             renderDevelopment();
         };
- 
+
         async function pickLocalFile() {
             if ('showOpenFilePicker' in window) {
                 const [h] = await window.showOpenFilePicker({ types: [{ description: 'PDF', accept: {'application/pdf': ['.pdf']} }] });
@@ -2441,7 +2460,7 @@
                 input.click();
             });
         }
- 
+
         window.uploadFile = async (pId, dId, type) => {
             try {
                 const file = await pickLocalFile();
@@ -2455,7 +2474,7 @@
                 await scan();
             } catch(e){}
         };
- 
+
         document.getElementById('btnGoogleDrive').onclick = () => connectGoogleDrive();
         document.getElementById('toggleSidebarBtn').onclick = () => toggleSidebar();
         document.getElementById('sidebarOverlay').onclick = () => closeSidebar();
@@ -2463,7 +2482,7 @@
             if (window.innerWidth >= 768) closeSidebar();
         });
         setGoogleDriveState(false);
- 
+
         document.getElementById('btnSettings').onclick = async () => {
             if (!('showDirectoryPicker' in window)) {
                 showToast('Tu navegador no soporta abrir carpetas locales. Usa el botón "Iniciar con Google" para conectar Drive.');
@@ -2480,7 +2499,7 @@
                 showToast('No se pudo abrir la carpeta: ' + (e && e.message ? e.message : e));
             }
         };
- 
+
         document.getElementById('btnReactivate').addEventListener('click', async () => {
             if (pendingDriveFolder) {
                 driveConnectMode = 'reconnect';
@@ -2509,16 +2528,16 @@
                 }
             };
         });
- 
+
         function start() {
             document.getElementById('btnReactivate').classList.add('hidden');
             document.getElementById('pathDisplay').innerText = currentHandle.name;
             scan();
             startAutoScan();
         }
- 
+
         init();
     </script>
- 
+
 </body>
 </html>
