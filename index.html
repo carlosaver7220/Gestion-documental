@@ -274,9 +274,9 @@
                 <!-- Barra de Pestañas -->
                 <div class="px-10 pt-6 bg-slate-50/50 border-b border-slate-200">
                     <div class="flex gap-2 max-w-7xl mx-auto">
+                        <button id="docTabBtn-info" onclick="switchDocTab('info')" class="doc-tab-btn px-5 py-3 text-[11px] font-black uppercase tracking-widest rounded-t-xl transition-colors">Información del Proyecto</button>
                         <button id="docTabBtn-boveda" onclick="switchDocTab('boveda')" class="doc-tab-btn px-5 py-3 text-[11px] font-black uppercase tracking-widest rounded-t-xl transition-colors">Bóveda Técnica</button>
                         <button id="docTabBtn-actas" onclick="switchDocTab('actas')" class="doc-tab-btn px-5 py-3 text-[11px] font-black uppercase tracking-widest rounded-t-xl transition-colors">Actas</button>
-                        <button id="docTabBtn-info" onclick="switchDocTab('info')" class="doc-tab-btn px-5 py-3 text-[11px] font-black uppercase tracking-widest rounded-t-xl transition-colors">Información del Proyecto</button>
                     </div>
                 </div>
 
@@ -306,27 +306,58 @@
 
                         <!-- PESTAÑA: INFORMACIÓN DEL PROYECTO (Datos + OR/RETIE) -->
                         <div id="docTab-info" class="doc-tab-panel hidden">
-                            <div class="grid grid-cols-12 gap-8">
-                                <div class="col-span-5">
+
+                            <!-- CABECERA: Nombre + accesos rápidos + % de información -->
+                            <div class="glass-card p-6 mb-6 flex items-center justify-between gap-6 flex-wrap">
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nombre de Proyecto</p>
+                                    <h2 id="infoHeaderNombre" class="text-2xl font-black text-slate-900 tracking-tight">---</h2>
+                                </div>
+                                <div class="flex items-center gap-6">
+                                    <div class="flex flex-col gap-2">
+                                        <div class="flex gap-2">
+                                            <button title="Exportar a Excel (próximamente)" class="px-3 py-1.5 bg-slate-100 text-slate-400 text-[10px] font-black uppercase rounded border border-slate-200 cursor-not-allowed">Excel</button>
+                                            <button onclick="openTramiteModal('or')" class="px-3 py-1.5 bg-blue-50 text-blue-700 text-[10px] font-black uppercase rounded border border-blue-200 hover:bg-blue-100">OR</button>
+                                            <button onclick="openTramiteModal('retie')" class="px-3 py-1.5 bg-orange-50 text-orange-700 text-[10px] font-black uppercase rounded border border-orange-200 hover:bg-orange-100">RETIE</button>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button onclick="switchDocTab('actas')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">Actas</button>
+                                            <button onclick="switchDocTab('boveda')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">Bóveda Técnica</button>
+                                        </div>
+                                    </div>
+                                    <div class="relative w-16 h-16 shrink-0">
+                                        <svg class="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+                                            <path class="text-slate-100" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                            <path id="infoCargaCircle" class="text-blue-600" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="0, 100" stroke-linecap="round" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        </svg>
+                                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                            <span id="infoCargaPct" class="text-xs font-black text-slate-900">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-12 gap-6">
+                                <div class="col-span-12">
                                     <!-- SECCIÓN DATOS DEL PROYECTO (para copiar/pegar en la inscripción OR) -->
                                     <div class="glass-card overflow-hidden">
                                         <div class="bg-slate-900 p-4 flex justify-between items-center">
                                             <h3 class="text-[11px] font-black text-white uppercase tracking-[0.2em]">Datos del Proyecto</h3>
                                             <button onclick="abrirModalEditarInfo()" class="text-[9px] font-black text-blue-300 hover:text-blue-200 uppercase">Editar</button>
                                         </div>
-                                        <div id="infoProyectoList" class="p-4 space-y-2 text-xs">
+                                        <div id="infoProyectoList" class="p-5">
                                             <!-- Generado dinámicamente -->
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="col-span-7">
+                                <div class="col-span-12">
                                     <!-- SECCIÓN TRÁMITES -->
                                     <div class="glass-card overflow-hidden">
                                         <div class="bg-slate-900 p-4">
                                             <h3 class="text-[11px] font-black text-white uppercase tracking-[0.2em]">Gestión de Trámites</h3>
                                         </div>
-                                        <div id="tramitesList" class="p-4 space-y-4">
+                                        <div id="tramitesList" class="p-4 grid grid-cols-2 gap-4">
                                             <!-- OR Trámite -->
                                             <div id="card-or" onclick="openTramiteModal('or')" class="p-4 rounded-md border border-slate-100 bg-white hover:border-blue-500 cursor-pointer transition-all shadow-sm">
                                                 <div class="flex justify-between items-start">
@@ -453,33 +484,91 @@
                             <input id="infoNombreProyecto" required class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Choles Vivienda">
                             <p id="infoNombreProyectoHint" class="text-[10px] text-slate-400 mt-1">Se usará para nombrar la carpeta principal y la carpeta DOSSIER.</p>
                         </div>
-                        <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase">Nombre completo del dueño del proyecto</label>
-                            <input id="infoDueno" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
+
+                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest pt-2 border-t border-slate-100">Datos Técnicos</p>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Potencia AC (kW)</label>
-                                <input id="infoPotenciaAC" type="number" step="0.01" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Capacidad DC (kWDC)</label>
+                                <input id="infoCapacidadDC" type="number" step="0.01" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Potencia DC (kWp)</label>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Potencia (kWp)</label>
                                 <input id="infoPotenciaDC" type="number" step="0.01" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Teléfono</label>
-                                <input id="infoTelefono" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Marca de Paneles</label>
+                                <input id="infoMarcaPaneles" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Correo</label>
-                                <input id="infoCorreo" type="email" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <label class="text-[10px] font-black text-slate-400 uppercase">N° de Paneles</label>
+                                <input id="infoNumPaneles" type="number" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
                         <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase">Dirección</label>
-                            <input id="infoDireccion" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Panel</label>
+                            <input id="infoReferenciaPanel" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Marca/Fabricante Inversor</label>
+                                <input id="infoMarcaFabricante" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">N° de Inversores</label>
+                                <input id="infoNumInversores" type="number" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Inversor</label>
+                            <input id="infoReferenciaInversor" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">NIC/TRF</label>
+                                <input id="infoNicTrf" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Medidor</label>
+                                <input id="infoReferenciaMedidor" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Radicado</label>
+                            <input id="infoRadicado" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest pt-2 border-t border-slate-100">Datos del Cliente</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Nombre Completo</label>
+                                <input id="infoDueno" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Departamento</label>
+                                <input id="infoDepartamento" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Municipio</label>
+                                <input id="infoMunicipio" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Teléfono</label>
+                                <input id="infoTelefono" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Gmail</label>
+                                <input id="infoCorreo" type="email" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Dirección</label>
+                                <input id="infoDireccion" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
                         </div>
                         <p class="text-[10px] text-slate-400">Solo el nombre del proyecto es obligatorio. El resto lo puedes completar después.</p>
                         <button id="proyectoInfoSubmitBtn" type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-md hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Crear Proyecto</button>
@@ -1149,7 +1238,7 @@
                 proyecto: nombreLimpio,
                 dueno: info.dueno,
                 fecha: fechaLarga,
-                potenciaac: info.potenciaAC || ''
+                potenciaac: info.potenciaDC || ''
                 });
                 console.log('Paso 3 OK: render completado');
 
@@ -1255,7 +1344,7 @@
             const p = projects.find(x => x.id === selectedProjectId);
             if (view === 'development' && p) renderDevelopment();
             if (view === 'preliminar' && p) renderPreliminar();
-            if (view === 'documentation' && p) { renderDocModule(p); switchDocTab('boveda'); }
+            if (view === 'documentation' && p) { renderDocModule(p); switchDocTab('info'); }
 
             if (['hub', 'documentation', 'development', 'preliminar'].includes(view)) {
                 lastProjectView = view;
@@ -1536,31 +1625,57 @@
 
         async function renderInfoProyecto(projectId) {
             const project = projects.find(x => x.id === projectId);
-            const info = (project && project.info) || (await getProjectInfo(projectId));
+            const info = (project && project.info) || (await getProjectInfo(projectId)) || {};
             const list = document.getElementById('infoProyectoList');
             if (!list) return;
+
+            document.getElementById('infoHeaderNombre').innerText = project ? project.name : '---';
+            const pct = project ? project.prog : 0;
+            document.getElementById('infoCargaPct').innerText = `${pct}%`;
+            document.getElementById('infoCargaCircle').setAttribute('stroke-dasharray', `${pct}, 100`);
+
             const campo = (label, valor) => `
-                <div class="flex items-center justify-between gap-2 py-1.5 border-b border-slate-50 last:border-0">
-                    <div class="min-w-0">
-                        <p class="text-[9px] font-black text-slate-400 uppercase">${label}</p>
-                        <p class="text-xs font-semibold text-slate-700 truncate">${valor || '—'}</p>
-                    </div>
-                    ${valor ? `<button onclick="navigator.clipboard.writeText('${String(valor).replace(/'/g, "\\'")}'); showToast('Copiado')" class="shrink-0 p-1.5 hover:bg-slate-100 rounded" title="Copiar">
-                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                    </button>` : ''}
+                <div class="min-w-0">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-wide">${label}</p>
+                    <div class="mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs font-bold text-slate-700 truncate" title="${valor ? String(valor).replace(/"/g,'&quot;') : ''}">${valor || '—'}</div>
                 </div>`;
-            if (!info) {
-                list.innerHTML = `<p class="text-center text-slate-400 text-xs py-6">Sin datos aún — dale a "Editar" para completarlos.</p>`;
-                return;
-            }
-            list.innerHTML = [
-                campo('Dueño del Proyecto', info.dueno),
-                campo('Potencia AC', info.potenciaAC ? `${info.potenciaAC} kW` : ''),
-                campo('Potencia DC', info.potenciaDC ? `${info.potenciaDC} kWp` : ''),
-                campo('Teléfono', info.telefono),
-                campo('Correo', info.correo),
-                campo('Dirección', info.direccion),
-            ].join('');
+
+            list.innerHTML = `
+                <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2">Datos Técnicos</p>
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    ${campo('Radicado', info.radicado)}
+                    ${campo('NIC/TRF', info.nicTrf)}
+                    ${campo('Potencia (kWp)', info.potenciaDC ? `${info.potenciaDC} kWp` : '')}
+                </div>
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    ${campo('Capacidad DC (kWDC)', info.capacidadDC ? `${info.capacidadDC} kWDC` : '')}
+                    ${campo('Marca/Fabricante Inversor', info.marcaFabricante)}
+                    ${campo('N° de Paneles', info.numPaneles)}
+                </div>
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    ${campo('Marca de Paneles', info.marcaPaneles)}
+                    ${campo('N° de Inversores', info.numInversores)}
+                    ${campo('Referencia Medidor', info.referenciaMedidor)}
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    ${campo('Referencia Panel', info.referenciaPanel)}
+                    ${campo('Referencia Inversor', info.referenciaInversor)}
+                </div>
+
+                <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2">Datos del Cliente</p>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    ${campo('Nombre Completo', info.dueno)}
+                    ${campo('Departamento', info.departamento)}
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    ${campo('Municipio', info.municipio)}
+                    ${campo('Teléfono', info.telefono)}
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    ${campo('Gmail', info.correo)}
+                    ${campo('Dirección', info.direccion)}
+                </div>
+            `;
         }
 
         let modalMode = 'create';
@@ -1585,9 +1700,20 @@
             document.getElementById('infoNombreProyecto').value = p.name;
             document.getElementById('infoNombreProyecto').disabled = true; // no soportamos renombrar la carpeta desde aquí
             document.getElementById('infoNombreProyectoHint').classList.add('hidden');
-            document.getElementById('infoDueno').value = info.dueno || '';
-            document.getElementById('infoPotenciaAC').value = info.potenciaAC || '';
+            document.getElementById('infoCapacidadDC').value = info.capacidadDC || '';
             document.getElementById('infoPotenciaDC').value = info.potenciaDC || '';
+            document.getElementById('infoMarcaPaneles').value = info.marcaPaneles || '';
+            document.getElementById('infoNumPaneles').value = info.numPaneles || '';
+            document.getElementById('infoReferenciaPanel').value = info.referenciaPanel || '';
+            document.getElementById('infoMarcaFabricante').value = info.marcaFabricante || '';
+            document.getElementById('infoNumInversores').value = info.numInversores || '';
+            document.getElementById('infoReferenciaInversor').value = info.referenciaInversor || '';
+            document.getElementById('infoNicTrf').value = info.nicTrf || '';
+            document.getElementById('infoReferenciaMedidor').value = info.referenciaMedidor || '';
+            document.getElementById('infoRadicado').value = info.radicado || '';
+            document.getElementById('infoDueno').value = info.dueno || '';
+            document.getElementById('infoDepartamento').value = info.departamento || '';
+            document.getElementById('infoMunicipio').value = info.municipio || '';
             document.getElementById('infoTelefono').value = info.telefono || '';
             document.getElementById('infoCorreo').value = info.correo || '';
             document.getElementById('infoDireccion').value = info.direccion || '';
@@ -1597,9 +1723,20 @@
         document.getElementById('proyectoInfoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = {
-                dueno: document.getElementById('infoDueno').value.trim(),
-                potenciaAC: document.getElementById('infoPotenciaAC').value.trim(),
+                capacidadDC: document.getElementById('infoCapacidadDC').value.trim(),
                 potenciaDC: document.getElementById('infoPotenciaDC').value.trim(),
+                marcaPaneles: document.getElementById('infoMarcaPaneles').value.trim(),
+                numPaneles: document.getElementById('infoNumPaneles').value.trim(),
+                referenciaPanel: document.getElementById('infoReferenciaPanel').value.trim(),
+                marcaFabricante: document.getElementById('infoMarcaFabricante').value.trim(),
+                numInversores: document.getElementById('infoNumInversores').value.trim(),
+                referenciaInversor: document.getElementById('infoReferenciaInversor').value.trim(),
+                nicTrf: document.getElementById('infoNicTrf').value.trim(),
+                referenciaMedidor: document.getElementById('infoReferenciaMedidor').value.trim(),
+                radicado: document.getElementById('infoRadicado').value.trim(),
+                dueno: document.getElementById('infoDueno').value.trim(),
+                departamento: document.getElementById('infoDepartamento').value.trim(),
+                municipio: document.getElementById('infoMunicipio').value.trim(),
                 telefono: document.getElementById('infoTelefono').value.trim(),
                 correo: document.getElementById('infoCorreo').value.trim(),
                 direccion: document.getElementById('infoDireccion').value.trim(),
