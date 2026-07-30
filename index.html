@@ -50,27 +50,25 @@
         }
 
         .project-card { 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+            border-radius: 0.375rem;
             border: 1px solid rgba(255, 255, 255, 0.05);
             background-color: rgba(255, 255, 255, 0.03);
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         .project-card:hover { 
-            background-color: rgba(59, 130, 246, 0.1);
-            transform: translateX(4px);
+            background-color: rgba(37, 99, 235, 0.1);
         }
         .project-card.active { 
-            background: linear-gradient(135deg, #1e40af, #1e3a8a);
-            border-color: #3b82f6;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            background: #1d4ed8;
+            border-color: #2563eb;
         }
 
         .glass-card {
             background: #ffffff;
-            border-radius: 1.25rem;
+            border-radius: 0.5rem;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         }
 
         .doc-tab-btn {
@@ -150,7 +148,7 @@
         <!-- Sidebar -->
         <aside class="w-80 sidebar-bg flex flex-col overflow-hidden shrink-0">
             <div class="p-8 flex items-center gap-4 border-b border-white/5">
-                <div class="bg-blue-600 p-2 rounded-lg shadow-lg shadow-blue-500/20">
+                <div class="bg-blue-600 p-2 rounded shadow-lg shadow-blue-500/20">
                     <img src="https://raw.githubusercontent.com/Jairluna16/AUDIOS/refs/heads/main/jjj.png" alt="Logo" class="w-6 h-6 brightness-0 invert">
                 </div>
                 <div>
@@ -160,9 +158,9 @@
             </div>
 
             <div class="p-6">
-                <button id="btnSettings" class="w-full flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:border-blue-500/50 transition-all group">
+                <button id="btnSettings" class="w-full flex items-center justify-between p-4 bg-white/5 rounded-md border border-white/10 hover:border-blue-500/50 transition-all group">
                     <div class="flex items-center gap-3">
-                        <div class="p-2 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
+                        <div class="p-2 bg-blue-500/10 rounded group-hover:bg-blue-500/20 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                             </svg>
@@ -173,17 +171,17 @@
                         </div>
                     </div>
                 </button>
-                <button id="btnReactivate" class="hidden w-full mt-3 py-3 bg-blue-600 text-white text-[10px] font-black uppercase rounded-lg shadow-lg shadow-blue-900/40 hover:bg-blue-500 active:scale-95 transition-all">Reconectar</button>
+                <button id="btnReactivate" class="hidden w-full mt-3 py-3 bg-blue-600 text-white text-[10px] font-black uppercase rounded shadow-lg shadow-blue-900/40 hover:bg-blue-500 active:scale-95 transition-all">Reconectar</button>
             </div>
 
             <!-- Buscador de Proyectos (fijo, no se oculta al hacer scroll) -->
             <div class="px-6 pb-4 shrink-0 flex items-center gap-2">
-                <input type="text" id="projectSearch" placeholder="Buscar proyecto..." class="flex-1 p-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <input type="text" id="projectSearch" placeholder="Buscar proyecto..." class="flex-1 p-3 bg-white/5 border border-white/10 rounded-md text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <div class="relative group shrink-0">
-                    <button onclick="abrirModalNuevoProyecto()" class="w-11 h-11 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-colors active:scale-95">
+                    <button onclick="abrirModalNuevoProyecto()" class="w-11 h-11 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-colors active:scale-95">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     </button>
-                    <div class="pointer-events-none absolute right-0 top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-xl z-10">Nuevo Proyecto</div>
+                    <div class="pointer-events-none absolute right-0 top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded shadow-xl z-10">Nuevo Proyecto</div>
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto px-6 space-y-1 pb-8">
@@ -197,7 +195,7 @@
             <!-- 0. Estado Vacío -->
             <div id="emptyState" class="flex-1 flex flex-col items-center justify-center view-transition">
                 <div class="text-center p-12 glass-card max-w-sm">
-                    <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <div class="w-16 h-16 bg-blue-50 rounded-lg flex items-center justify-center mx-auto mb-6">
                         <img src="https://raw.githubusercontent.com/Jairluna16/AUDIOS/refs/heads/main/jjj.png" alt="Logo" class="h-8 w-8 opacity-20">
                     </div>
                     <h3 class="text-slate-900 font-black text-sm uppercase tracking-widest">Esperando Selección</h3>
@@ -211,14 +209,14 @@
                     <header class="mb-12">
                         <div class="flex items-center gap-3">
                             <h2 id="hubProjectName" class="text-5xl font-black text-slate-900 tracking-tighter uppercase leading-none">---</h2>
-                            <span id="hubProjectYear" class="px-3 py-1.5 bg-slate-900 text-white text-xs font-black rounded-lg">----</span>
+                            <span id="hubProjectYear" class="px-3 py-1.5 bg-slate-900 text-white text-xs font-black rounded">----</span>
                         </div>
                         <p class="text-blue-600 font-bold uppercase tracking-[0.3em] text-xs mt-4">Panel Central de Operaciones</p>
                     </header>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1 content-center max-w-3xl mx-auto w-full">
                         <div onclick="switchView('documentation')" class="nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
-                            <div class="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/40 mb-8 group-hover:scale-110 transition-transform">
+                            <div class="w-20 h-20 bg-blue-600 rounded-xl flex items-center justify-center shadow-2xl shadow-blue-500/40 mb-8 group-hover:scale-110 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
@@ -229,7 +227,7 @@
                         </div>
 
                         <div onclick="switchView('development')" class="hidden nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
-                            <div class="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center shadow-2xl shadow-slate-900/40 mb-8 group-hover:scale-110 transition-transform">
+                            <div class="w-20 h-20 bg-slate-900 rounded-xl flex items-center justify-center shadow-2xl shadow-slate-900/40 mb-8 group-hover:scale-110 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                                 </svg>
@@ -240,7 +238,7 @@
                         </div>
 
                         <div onclick="switchView('preliminar')" class="nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
-                            <div class="w-20 h-20 bg-amber-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-amber-500/40 mb-8 group-hover:scale-110 transition-transform">
+                            <div class="w-20 h-20 bg-amber-600 rounded-xl flex items-center justify-center shadow-2xl shadow-amber-500/40 mb-8 group-hover:scale-110 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                 </svg>
@@ -257,7 +255,7 @@
             <div id="documentationView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
                 <header class="px-10 py-6 bg-white border-b border-slate-200 flex justify-between items-center">
                     <div class="flex items-center gap-4">
-                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-md transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                         </button>
                         <div>
@@ -330,39 +328,39 @@
                                         </div>
                                         <div id="tramitesList" class="p-4 space-y-4">
                                             <!-- OR Trámite -->
-                                            <div onclick="openTramiteModal('or')" class="p-4 rounded-xl border border-slate-100 bg-white hover:border-blue-500 cursor-pointer transition-all shadow-sm">
+                                            <div id="card-or" onclick="openTramiteModal('or')" class="p-4 rounded-md border border-slate-100 bg-white hover:border-blue-500 cursor-pointer transition-all shadow-sm">
                                                 <div class="flex justify-between items-start">
                                                     <div>
                                                         <p class="text-[10px] font-black text-blue-600 uppercase">Operador Red (OR)</p>
                                                         <h4 id="status-or" class="text-sm font-bold text-slate-800">Cargando...</h4>
                                                     </div>
-                                                    <div class="p-2 bg-blue-50 rounded-lg"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                                    <div class="p-2 bg-blue-50 rounded"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                                                 </div>
                                                 <div class="mt-3 flex items-center gap-2">
                                                     <span id="date-or" class="text-[9px] text-slate-400 font-medium">Última act: --/--</span>
                                                 </div>
-                                                <div id="badge-or" class="hidden mt-2 px-2 py-1 bg-red-50 border border-red-200 rounded-lg text-[9px] font-black text-red-600 uppercase w-fit">⚠ Requiere reinscripción</div>
+                                                <div id="badge-or" class="hidden mt-2 px-2 py-1 bg-red-50 border border-red-200 rounded text-[9px] font-black text-red-600 uppercase w-fit">⚠ Requiere reinscripción</div>
                                                 <div class="mt-2 flex items-center justify-end">
-                                                    <button onclick="event.stopPropagation(); verConformidad('or')" class="p-1.5 hover:bg-slate-100 rounded-lg flex items-center gap-1.5" title="Ver archivos de conformidad">
+                                                    <button onclick="event.stopPropagation(); verConformidad('or')" class="p-1.5 hover:bg-slate-100 rounded flex items-center gap-1.5" title="Ver archivos de conformidad">
                                                         <span class="text-[9px] font-bold text-slate-400 uppercase">Ver archivos</span>
                                                         <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                                     </button>
                                                 </div>
                                             </div>
                                             <!-- RETIE Trámite -->
-                                            <div onclick="openTramiteModal('retie')" class="p-4 rounded-xl border border-slate-100 bg-white hover:border-orange-500 cursor-pointer transition-all shadow-sm">
+                                            <div id="card-retie" onclick="openTramiteModal('retie')" class="p-4 rounded-md border border-slate-100 bg-white hover:border-orange-500 cursor-pointer transition-all shadow-sm">
                                                 <div class="flex justify-between items-start">
                                                     <div>
                                                         <p class="text-[10px] font-black text-orange-600 uppercase">Inspección RETIE</p>
                                                         <h4 id="status-retie" class="text-sm font-bold text-slate-800">Cargando...</h4>
                                                     </div>
-                                                    <div class="p-2 bg-orange-50 rounded-lg"><svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                                    <div class="p-2 bg-orange-50 rounded"><svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                                                 </div>
                                                 <div class="mt-3 flex items-center gap-2">
                                                     <span id="date-retie" class="text-[9px] text-slate-400 font-medium">Última act: --/--</span>
                                                 </div>
                                                 <div class="mt-2 flex items-center justify-end">
-                                                    <button onclick="event.stopPropagation(); verConformidad('retie')" class="p-1.5 hover:bg-slate-100 rounded-lg flex items-center gap-1.5" title="Ver archivos de conformidad">
+                                                    <button onclick="event.stopPropagation(); verConformidad('retie')" class="p-1.5 hover:bg-slate-100 rounded flex items-center gap-1.5" title="Ver archivos de conformidad">
                                                         <span class="text-[9px] font-bold text-slate-400 uppercase">Ver archivos</span>
                                                         <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                                     </button>
@@ -395,7 +393,7 @@
                         <!-- Cambio de Estado -->
                         <div class="space-y-3">
                             <label class="text-[10px] font-black text-slate-400 uppercase">Estado Actual</label>
-                            <select id="modalStateSelect" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                            <select id="modalStateSelect" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none">
                                 <!-- Opciones generadas dinámicamente según el trámite (OR o RETIE) -->
                             </select>
                         </div>
@@ -403,9 +401,9 @@
                         <!-- Nuevo Comentario -->
                         <div class="space-y-3">
                             <label class="text-[10px] font-black text-slate-400 uppercase">Añadir Comentario / Hito</label>
-                            <textarea id="modalCommentInput" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm min-h-[100px] outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Visita programada para el lunes..."></textarea>
+                            <textarea id="modalCommentInput" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[100px] outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Visita programada para el lunes..."></textarea>
                             <div id="tramiteRequirementFields" class="space-y-3"></div>
-                            <button id="saveTramiteUpdateBtn" onclick="saveTramiteUpdate()" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Guardar Actualización</button>
+                            <button id="saveTramiteUpdateBtn" onclick="saveTramiteUpdate()" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-md hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Guardar Actualización</button>
                         </div>
 
                         <!-- Línea de Tiempo -->
@@ -421,7 +419,7 @@
 
             <!-- Modal para ver archivos de conformidad (detectados en 2. ESTADOS OR Y RETIE) -->
             <div id="conformidadModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center">
-                <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl flex flex-col max-h-[80vh]">
+                <div class="w-full max-w-md bg-white rounded-lg shadow-2xl flex flex-col max-h-[80vh]">
                     <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <p id="conformidadModalType" class="text-[10px] font-black text-blue-600 uppercase tracking-widest">TRÁMITE</p>
@@ -439,7 +437,7 @@
 
             <!-- Modal Nuevo Proyecto / Editar Datos del Proyecto (comparten el mismo formulario) -->
             <div id="proyectoInfoModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-                <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+                <div class="w-full max-w-lg bg-white rounded-lg shadow-2xl flex flex-col max-h-[90vh]">
                     <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Proyecto</p>
@@ -452,39 +450,39 @@
                     <form id="proyectoInfoForm" class="flex-1 overflow-y-auto p-6 space-y-4">
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase">Nombre del Proyecto <span class="text-red-500">*</span></label>
-                            <input id="infoNombreProyecto" required class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Choles Vivienda">
+                            <input id="infoNombreProyecto" required class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Choles Vivienda">
                             <p id="infoNombreProyectoHint" class="text-[10px] text-slate-400 mt-1">Se usará para nombrar la carpeta principal y la carpeta DOSSIER.</p>
                         </div>
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase">Nombre completo del dueño del proyecto</label>
-                            <input id="infoDueno" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            <input id="infoDueno" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase">Potencia AC (kW)</label>
-                                <input id="infoPotenciaAC" type="number" step="0.01" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <input id="infoPotenciaAC" type="number" step="0.01" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase">Potencia DC (kWp)</label>
-                                <input id="infoPotenciaDC" type="number" step="0.01" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <input id="infoPotenciaDC" type="number" step="0.01" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase">Teléfono</label>
-                                <input id="infoTelefono" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <input id="infoTelefono" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase">Correo</label>
-                                <input id="infoCorreo" type="email" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <input id="infoCorreo" type="email" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase">Dirección</label>
-                            <input id="infoDireccion" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            <input id="infoDireccion" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <p class="text-[10px] text-slate-400">Solo el nombre del proyecto es obligatorio. El resto lo puedes completar después.</p>
-                        <button id="proyectoInfoSubmitBtn" type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Crear Proyecto</button>
+                        <button id="proyectoInfoSubmitBtn" type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-md hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Crear Proyecto</button>
                     </form>
                 </div>
             </div>
@@ -493,21 +491,21 @@
             <div id="developmentView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
                 <header class="px-10 py-6 bg-white border-b flex justify-between items-center">
                     <div class="flex items-center gap-4">
-                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-xl">
+                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-md">
                             <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2"/></svg>
                         </button>
                         <div>
                             <h2 id="devProjectName" class="text-xl font-black text-slate-900 uppercase">---</h2>
                             <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Módulo de Desarrollo</p>
                             <div class="flex gap-2 mt-2">
-                                <button id="devBudgetTab" class="px-4 py-1 bg-emerald-600 text-white text-[9px] font-black uppercase rounded-lg">Presupuesto</button>
+                                <button id="devBudgetTab" class="px-4 py-1 bg-emerald-600 text-white text-[9px] font-black uppercase rounded">Presupuesto</button>
                             </div>
                         </div>
                     </div>
                     <div class="text-right space-y-2">
                         <div>
                             <p class="text-[9px] font-black text-slate-400 uppercase">Presupuesto Proyecto</p>
-                            <input type="number" id="projectBudgetInput" placeholder="0" class="w-32 p-2 bg-slate-50 border rounded-lg text-sm font-black outline-none focus:ring-2 focus:ring-emerald-500 text-center" onchange="updateProjectBudget()">
+                            <input type="number" id="projectBudgetInput" placeholder="0" class="w-32 p-2 bg-slate-50 border rounded text-sm font-black outline-none focus:ring-2 focus:ring-emerald-500 text-center" onchange="updateProjectBudget()">
                         </div>
                         <div class="flex gap-4">
                             <div>
@@ -529,13 +527,13 @@
                             <div class="glass-card p-6">
                                 <h4 class="text-[11px] font-black text-slate-900 uppercase mb-4 tracking-widest">Registrar Nuevo Gasto</h4>
                                 <form id="newDevExpenseForm" class="space-y-4">
-                                    <input type="text" id="devExpLabel" placeholder="Nombre del Item" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" required>
-                                    <input type="number" id="devExpValue" placeholder="Valor $" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                    <input type="text" id="devExpLabel" placeholder="Nombre del Item" class="w-full p-3 bg-slate-50 border rounded-md text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                    <input type="number" id="devExpValue" placeholder="Valor $" class="w-full p-3 bg-slate-50 border rounded-md text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" required>
                                     <div class="relative group">
                                         <input type="file" id="devExpFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10" required>
-                                        <div id="devFileName" class="p-4 border-2 border-dashed border-slate-200 rounded-xl text-center text-[10px] font-bold text-slate-400 group-hover:border-emerald-500">ADJUNTAR FACTURA (PDF)</div>
+                                        <div id="devFileName" class="p-4 border-2 border-dashed border-slate-200 rounded-md text-center text-[10px] font-bold text-slate-400 group-hover:border-emerald-500">ADJUNTAR FACTURA (PDF)</div>
                                     </div>
-                                    <button type="submit" class="w-full py-3 bg-slate-900 text-white font-black text-[10px] uppercase rounded-xl hover:bg-emerald-600 transition-colors">Guardar Documento</button>
+                                    <button type="submit" class="w-full py-3 bg-slate-900 text-white font-black text-[10px] uppercase rounded-md hover:bg-emerald-600 transition-colors">Guardar Documento</button>
                                 </form>
                             </div>
                         </div>
@@ -555,14 +553,14 @@
 
             <!-- Modal para asignar valor -->
             <div id="assignValueModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-                <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
+                <div class="bg-white rounded-xl p-8 w-full max-w-sm shadow-2xl">
                     <h3 class="text-xl font-black text-slate-900 uppercase mb-2">Asignar Valor</h3>
                     <p id="assignFileName" class="text-xs text-slate-500 mb-6 truncate font-mono"></p>
                     <div class="space-y-4">
-                        <input type="number" id="assignInput" placeholder="Valor $" class="w-full p-4 bg-slate-50 border rounded-2xl text-lg font-black outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="number" id="assignInput" placeholder="Valor $" class="w-full p-4 bg-slate-50 border rounded-lg text-lg font-black outline-none focus:ring-2 focus:ring-emerald-500">
                         <div class="flex gap-2">
-                            <button onclick="closeAssignModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-xs uppercase">Cancelar</button>
-                            <button onclick="confirmAssignValue()" class="flex-1 py-3 bg-emerald-600 text-white font-black rounded-xl text-xs uppercase shadow-lg shadow-emerald-500/20">Asignar</button>
+                            <button onclick="closeAssignModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-md text-xs uppercase">Cancelar</button>
+                            <button onclick="confirmAssignValue()" class="flex-1 py-3 bg-emerald-600 text-white font-black rounded-md text-xs uppercase shadow-lg shadow-emerald-500/20">Asignar</button>
                         </div>
                     </div>
                 </div>
@@ -572,7 +570,7 @@
             <div id="preliminarView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
                 <header class="px-10 py-6 bg-white border-b flex justify-between items-center">
                     <div class="flex items-center gap-4">
-                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-xl">
+                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-md">
                             <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2"/></svg>
                         </button>
                         <div>
@@ -594,67 +592,67 @@
                                 <h4 class="text-[11px] font-black text-slate-900 uppercase mb-6 tracking-widest">Documentos Preeliminares</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <!-- Kick-Off -->
-                                    <div class="p-4 border border-slate-200 rounded-xl">
+                                    <div class="p-4 border border-slate-200 rounded-md">
                                         <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Kick-Off</h5>
                                         <div class="relative group">
                                             <input type="file" id="kickoffFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                                            <div id="kickoffFileName" class="p-3 border-2 border-dashed border-slate-200 rounded-lg text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR KICK-OFF (PDF)</div>
+                                            <div id="kickoffFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR KICK-OFF (PDF)</div>
                                         </div>
                                         <div class="mt-3 flex gap-2">
-                                            <button onclick="uploadPreliminarFile('kickoff')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded-lg">Subir</button>
-                                            <button onclick="viewPreliminarFile('kickoff')" id="kickoffViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
+                                            <button onclick="uploadPreliminarFile('kickoff')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded">Subir</button>
+                                            <button onclick="viewPreliminarFile('kickoff')" id="kickoffViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded" disabled>Ver PDF</button>
                                         </div>
                                     </div>
 
                                     <!-- Acta Visita Técnica -->
-                                    <div class="p-4 border border-slate-200 rounded-xl">
+                                    <div class="p-4 border border-slate-200 rounded-md">
                                         <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Acta Visita Técnica</h5>
                                         <div class="relative group">
                                             <input type="file" id="visitaFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                                            <div id="visitaFileName" class="p-3 border-2 border-dashed border-slate-200 rounded-lg text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR ACTA VISITA (PDF)</div>
+                                            <div id="visitaFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR ACTA VISITA (PDF)</div>
                                         </div>
                                         <div class="mt-3 flex gap-2">
-                                            <button onclick="uploadPreliminarFile('visita')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded-lg">Subir</button>
-                                            <button onclick="viewPreliminarFile('visita')" id="visitaViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
+                                            <button onclick="uploadPreliminarFile('visita')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded">Subir</button>
+                                            <button onclick="viewPreliminarFile('visita')" id="visitaViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded" disabled>Ver PDF</button>
                                         </div>
                                     </div>
 
                                     <!-- Lista de Material -->
-                                    <div class="p-4 border border-slate-200 rounded-xl">
+                                    <div class="p-4 border border-slate-200 rounded-md">
                                         <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Lista de Material</h5>
                                         <div class="relative group">
                                             <input type="file" id="materialFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                                            <div id="materialFileName" class="p-3 border-2 border-dashed border-slate-200 rounded-lg text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR LISTA MATERIAL (PDF)</div>
+                                            <div id="materialFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR LISTA MATERIAL (PDF)</div>
                                         </div>
                                         <div class="mt-3 flex gap-2">
-                                            <button onclick="uploadPreliminarFile('material')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded-lg">Subir</button>
-                                            <button onclick="viewPreliminarFile('material')" id="materialViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
+                                            <button onclick="uploadPreliminarFile('material')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded">Subir</button>
+                                            <button onclick="viewPreliminarFile('material')" id="materialViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded" disabled>Ver PDF</button>
                                         </div>
                                     </div>
 
                                     <!-- Recibo -->
-                                    <div class="p-4 border border-slate-200 rounded-xl">
+                                    <div class="p-4 border border-slate-200 rounded-md">
                                         <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Recibo</h5>
                                         <div class="relative group">
                                             <input type="file" id="reciboFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                                            <div id="reciboFileName" class="p-3 border-2 border-dashed border-slate-200 rounded-lg text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR RECIBO (PDF)</div>
+                                            <div id="reciboFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR RECIBO (PDF)</div>
                                         </div>
                                         <div class="mt-3 flex gap-2">
-                                            <button onclick="uploadPreliminarFile('recibo')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded-lg">Subir</button>
-                                            <button onclick="viewPreliminarFile('recibo')" id="reciboViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
+                                            <button onclick="uploadPreliminarFile('recibo')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded">Subir</button>
+                                            <button onclick="viewPreliminarFile('recibo')" id="reciboViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded" disabled>Ver PDF</button>
                                         </div>
                                     </div>
 
                                     <!-- Contrato -->
-                                    <div class="p-4 border border-slate-200 rounded-xl">
+                                    <div class="p-4 border border-slate-200 rounded-md">
                                         <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Contrato</h5>
                                         <div class="relative group">
                                             <input type="file" id="contratoFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                                            <div id="contratoFileName" class="p-3 border-2 border-dashed border-slate-200 rounded-lg text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR CONTRATO (PDF)</div>
+                                            <div id="contratoFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR CONTRATO (PDF)</div>
                                         </div>
                                         <div class="mt-3 flex gap-2">
-                                            <button onclick="uploadPreliminarFile('contrato')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded-lg">Subir</button>
-                                            <button onclick="viewPreliminarFile('contrato')" id="contratoViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded-lg" disabled>Ver PDF</button>
+                                            <button onclick="uploadPreliminarFile('contrato')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded">Subir</button>
+                                            <button onclick="viewPreliminarFile('contrato')" id="contratoViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded" disabled>Ver PDF</button>
                                         </div>
                                     </div>
                                 </div>
@@ -675,21 +673,21 @@
                                         <div>
                                             <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Latitud</label>
                                             <input type="text" id="mapLat" placeholder="Ej: 4.6097"
-                                                class="w-full p-2 bg-slate-50 border rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500 text-center font-mono">
+                                                class="w-full p-2 bg-slate-50 border rounded text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500 text-center font-mono">
                                         </div>
                                         <div>
                                             <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Longitud</label>
                                             <input type="text" id="mapLng" placeholder="Ej: -74.0817"
-                                                class="w-full p-2 bg-slate-50 border rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500 text-center font-mono">
+                                                class="w-full p-2 bg-slate-50 border rounded text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500 text-center font-mono">
                                         </div>
                                     </div>
 
                                     <div class="flex gap-2">
-                                        <button onclick="saveCoordinates()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black text-[9px] uppercase rounded-lg transition-colors shadow-lg active:scale-95">Guardar</button>
-                                        <button onclick="searchCoordinates()" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-black text-[9px] uppercase rounded-lg transition-colors active:scale-95">
+                                        <button onclick="saveCoordinates()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black text-[9px] uppercase rounded transition-colors shadow-lg active:scale-95">Guardar</button>
+                                        <button onclick="searchCoordinates()" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-black text-[9px] uppercase rounded transition-colors active:scale-95">
                                             <i class="fa-solid fa-search"></i>
                                         </button>
-                                        <button onclick="copyCoordinates()" class="px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white font-black text-[9px] uppercase rounded-lg transition-colors active:scale-95">
+                                        <button onclick="copyCoordinates()" class="px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white font-black text-[9px] uppercase rounded transition-colors active:scale-95">
                                             <i class="fa-solid fa-copy"></i>
                                         </button>
                                     </div>
@@ -697,7 +695,7 @@
 
                                 <!-- Controles de Vista del Mapa -->
                                 <div class="space-y-3">
-                                    <button onclick="openInGoogleMaps()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase rounded-lg transition-colors flex items-center justify-center">
+                                    <button onclick="openInGoogleMaps()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase rounded transition-colors flex items-center justify-center">
                                         <i class="fa-solid fa-external-link-alt mr-2"></i> Abrir en Google Maps
                                     </button>
                                 </div>
@@ -714,7 +712,7 @@
                                 </div>
 
                                 <!-- Contenedor de Imagen del Proyecto -->
-                                <div id="imageContainer" class="w-full h-80 bg-slate-100 rounded-xl border mt-4 flex items-center justify-center relative overflow-hidden">
+                                <div id="imageContainer" class="w-full h-80 bg-slate-100 rounded-md border mt-4 flex items-center justify-center relative overflow-hidden">
                                     <img id="projectImage" src="" alt="Imagen del proyecto" class="max-w-full max-h-full object-contain hidden">
                                     <div id="imagePlaceholder" class="text-center text-slate-500">
                                         <i class="fa-solid fa-image text-4xl mb-2"></i>
@@ -1401,15 +1399,15 @@
 
             // Generar HTML agrupado
             const html = Object.keys(groupedByYear).sort((a, b) => b.localeCompare(a)).map(year => `
-                <div class="mb-4">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-2">${year}</h4>
+                <div class="mb-3">
+                    <h4 class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5 px-2">${year}</h4>
                     ${groupedByYear[year].map(p => `
-                        <div onclick="selectProject('${p.id}')" class="project-card p-4 cursor-pointer ${selectedProjectId === p.id ? 'active' : ''}">
-                            <div class="flex justify-between items-center mb-1 text-[9px] font-black ${selectedProjectId === p.id ? 'text-blue-300' : 'text-slate-500'}">
+                        <div onclick="selectProject('${p.id}')" class="project-card px-3 py-2 cursor-pointer ${selectedProjectId === p.id ? 'active' : ''}">
+                            <div class="flex justify-between items-center text-[8px] font-black ${selectedProjectId === p.id ? 'text-blue-300' : 'text-slate-500'}">
                                 <span>${p.prog}% DOCS</span>
                                 <div class="w-1.5 h-1.5 rounded-full ${p.prog === 100 ? 'bg-emerald-400' : 'bg-blue-500'}"></div>
                             </div>
-                            <h3 class="text-xs font-bold uppercase truncate tracking-wide ${selectedProjectId === p.id ? 'text-white' : 'text-slate-300'}">${p.name}</h3>
+                            <h3 class="text-[11px] font-bold uppercase truncate tracking-wide ${selectedProjectId === p.id ? 'text-white' : 'text-slate-300'}">${p.name}</h3>
                         </div>
                     `).join('')}
                 </div>
@@ -1448,7 +1446,7 @@
             };
 
             document.getElementById('listIng').innerHTML = p.ingItems.map(i => `
-                <div class="flex items-center justify-between p-4 bg-white border ${i.found ? 'border-blue-100' : 'border-slate-100'} rounded-xl shadow-sm">
+                <div class="flex items-center justify-between p-4 bg-white border ${i.found ? 'border-blue-100' : 'border-slate-100'} rounded-md shadow-sm">
                     <span class="text-xs font-bold text-slate-700 truncate pr-2">${i.label}</span>
                     ${actionBtn(i.found, 'ing', i.id)}
                 </div>
@@ -1486,10 +1484,20 @@
             statusOrEl.innerText = orStatus;
             statusOrEl.className = `text-sm font-bold ${statusOrColors[orStatus] || 'text-slate-800'}`;
             document.getElementById('badge-or').classList.toggle('hidden', orStatusReal !== 'DE BAJA');
+            const cardOr = document.getElementById('card-or');
+            cardOr.classList.toggle('bg-emerald-50', orStatus === 'CONFORME');
+            cardOr.classList.toggle('border-emerald-300', orStatus === 'CONFORME');
+            cardOr.classList.toggle('bg-white', orStatus !== 'CONFORME');
+            cardOr.classList.toggle('border-slate-100', orStatus !== 'CONFORME');
 
             const statusRetieEl = document.getElementById('status-retie');
             statusRetieEl.innerText = retieStatus;
             statusRetieEl.className = `text-sm font-bold ${statusRetieColors[retieStatus] || 'text-slate-800'}`;
+            const cardRetie = document.getElementById('card-retie');
+            cardRetie.classList.toggle('bg-emerald-50', retieStatus === 'APROBADO');
+            cardRetie.classList.toggle('border-emerald-300', retieStatus === 'APROBADO');
+            cardRetie.classList.toggle('bg-white', retieStatus !== 'APROBADO');
+            cardRetie.classList.toggle('border-slate-100', retieStatus !== 'APROBADO');
 
             document.getElementById('date-or').innerText = `Última act: ${p.states.or.date || '--/--'}`;
             document.getElementById('date-retie').innerText = `Última act: ${p.states.retie.date || '--/--'}`;
@@ -1537,7 +1545,7 @@
                         <p class="text-[9px] font-black text-slate-400 uppercase">${label}</p>
                         <p class="text-xs font-semibold text-slate-700 truncate">${valor || '—'}</p>
                     </div>
-                    ${valor ? `<button onclick="navigator.clipboard.writeText('${String(valor).replace(/'/g, "\\'")}'); showToast('Copiado')" class="shrink-0 p-1.5 hover:bg-slate-100 rounded-lg" title="Copiar">
+                    ${valor ? `<button onclick="navigator.clipboard.writeText('${String(valor).replace(/'/g, "\\'")}'); showToast('Copiado')" class="shrink-0 p-1.5 hover:bg-slate-100 rounded" title="Copiar">
                         <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                     </button>` : ''}
                 </div>`;
@@ -1674,7 +1682,7 @@
                 list.innerHTML = `<p class="text-sm text-slate-400 text-center py-8">Todavía no hay archivos en esta carpeta.</p>`;
             } else {
                 list.innerHTML = files.map((f, idx) => `
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-md border border-slate-100">
                         <span class="text-xs font-semibold text-slate-700 truncate mr-2">${f.n}</span>
                         <button onclick="abrirArchivoConformidad('${type}', ${idx})" class="btn-action btn-view shrink-0">Abrir</button>
                     </div>
@@ -1731,11 +1739,11 @@
             if (pending.length > 0) {
                 pendingSection.classList.remove('hidden');
                 document.getElementById('pendingFilesList').innerHTML = pending.map(f => `
-                    <div class="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-100">
+                    <div class="flex items-center justify-between p-3 bg-amber-50 rounded-md border border-amber-100">
                         <span class="text-[10px] font-mono text-amber-800 truncate pr-4">${f}</span>
                         <div class="flex gap-2">
                             <button onclick="openBudgetFile('${f}')" class="px-2 py-1 bg-blue-600 text-white text-[9px] font-black uppercase rounded">Ver PDF</button>
-                            <button onclick="openAssignModal('${f}')" class="px-3 py-1 bg-amber-600 text-white text-[9px] font-black uppercase rounded-lg">Asignar $</button>
+                            <button onclick="openAssignModal('${f}')" class="px-3 py-1 bg-amber-600 text-white text-[9px] font-black uppercase rounded">Asignar $</button>
                         </div>
                     </div>
                 `).join('');
@@ -1909,7 +1917,7 @@
                     html = `
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase">Número de radicado</label>
-                            <input id="modalRadicadoInput" type="text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ingrese el radicado" oninput="updateTramiteSaveButtonState()">
+                            <input id="modalRadicadoInput" type="text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ingrese el radicado" oninput="updateTramiteSaveButtonState()">
                         </div>`;
                 } else if (status === 'CONFORME' && prevStatus !== 'CONFORME') {
                     html = `
@@ -1923,13 +1931,13 @@
                     html = `
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase">Fecha de agendamiento</label>
-                            <input id="modalAgendaDateInput" type="date" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" onchange="updateTramiteSaveButtonState()">
+                            <input id="modalAgendaDateInput" type="date" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" onchange="updateTramiteSaveButtonState()">
                         </div>`;
                 } else if (status === 'OBSERVACIONES' && prevStatus !== 'OBSERVACIONES') {
                     html = `
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase">Observaciones realizadas</label>
-                            <textarea id="modalObservacionesInput" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm min-h-[90px] outline-none focus:ring-2 focus:ring-blue-500" placeholder="Describa las observaciones" oninput="updateTramiteSaveButtonState()"></textarea>
+                            <textarea id="modalObservacionesInput" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[90px] outline-none focus:ring-2 focus:ring-blue-500" placeholder="Describa las observaciones" oninput="updateTramiteSaveButtonState()"></textarea>
                         </div>`;
                 } else if (status === 'APROBADO' && prevStatus !== 'APROBADO') {
                     html = `
@@ -2001,7 +2009,7 @@
             document.getElementById('modalHistoryList').innerHTML = history.slice().reverse().map(h => `
                 <div class="relative pl-8">
                     <div class="absolute left-0 top-1.5 w-6 h-6 bg-slate-100 border-4 border-white rounded-full z-10"></div>
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div class="bg-slate-50 p-4 rounded-md border border-slate-100">
                         <div class="flex justify-between mb-2">
                             <span class="text-[9px] font-black text-blue-600 uppercase">${h.status}</span>
                             <span class="text-[8px] text-slate-400 font-bold">${h.date}</span>
