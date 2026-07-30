@@ -42,7 +42,6 @@
         
         .app-wrapper {
             display: flex;
-            flex-direction: column;
             height: 100vh;
             width: 100vw;
         }
@@ -50,16 +49,6 @@
         .sidebar-bg { 
             background-color: #020617; 
             border-right: 1px solid #1e293b; 
-        }
-
-        .mobile-topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.85rem 1rem;
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            z-index: 20;
         }
 
         .project-card { 
@@ -155,54 +144,13 @@
 
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-        @media (min-width: 768px) {
-            .app-wrapper { flex-direction: row; }
-            .mobile-topbar { display: none; }
-        }
-
-        @media (max-width: 767px) {
-            body { overflow: hidden; }
-            .app-wrapper { height: 100dvh; }
-            .sidebar-bg {
-                position: fixed;
-                left: 0;
-                top: 0;
-                bottom: 0;
-                width: min(86vw, 320px);
-                z-index: 50;
-                transform: translateX(-100%);
-                transition: transform 0.25s ease;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-            }
-            .sidebar-bg.mobile-open { transform: translateX(0); }
-            .mobile-topbar { display: flex; }
-            #projectHub { padding: 1rem !important; }
-            #documentationView header { padding: 1rem !important; flex-wrap: wrap; }
-            #documentationView > .flex-1 { padding: 1rem !important; }
-            .ing-grid { grid-template-columns: 1fr; }
-            .btn-action { width: 100%; justify-content: center; }
-        }
     </style>
 </head>
 <body class="antialiased">
 
-    <div id="sidebarOverlay" class="hidden fixed inset-0 bg-slate-950/60 z-40 md:hidden"></div>
-
     <div class="app-wrapper">
-        <header class="mobile-topbar md:hidden">
-            <button id="toggleSidebarBtn" class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-            <div class="flex items-center gap-2">
-                <div id="mobileDriveBadge" class="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Conectar Drive</div>
-            </div>
-        </header>
-
         <!-- Sidebar -->
-        <aside id="sidebar" class="w-80 sidebar-bg flex flex-col overflow-hidden shrink-0">
+        <aside class="w-80 sidebar-bg flex flex-col overflow-hidden shrink-0">
             <div class="p-8 flex items-center gap-4 border-b border-white/5">
                 <div class="bg-blue-600 p-2 rounded-lg shadow-lg shadow-blue-500/20">
                     <img src="https://raw.githubusercontent.com/Jairluna16/AUDIOS/refs/heads/main/jjj.png" alt="Logo" class="w-6 h-6 brightness-0 invert">
@@ -228,21 +176,10 @@
                     </div>
                 </button>
                 <button id="btnReactivate" class="hidden w-full mt-3 py-3 bg-blue-600 text-white text-[10px] font-black uppercase rounded-lg shadow-lg shadow-blue-900/40 hover:bg-blue-500 active:scale-95 transition-all">Reconectar</button>
-                <div class="mt-3">
-                    <button id="btnGoogleDrive" class="w-full flex items-center justify-center gap-2 py-3 bg-white text-slate-700 text-[10px] font-black uppercase rounded-lg shadow-lg hover:bg-slate-100 active:scale-95 transition-all">
-                        <svg class="w-4 h-4" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
-                        Iniciar con Google
-                    </button>
-                    <div id="googleDriveConnected" class="hidden mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-left">
-                        <div class="flex items-center gap-2 text-emerald-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span class="text-[10px] font-black uppercase tracking-[0.2em]">Sesión Google activa</span>
-                        </div>
-                        <p class="mt-1 text-[10px] text-emerald-200/80">Tu cuenta ya está lista para usar Google Drive.</p>
-                    </div>
-                </div>
+                <button id="btnGoogleDrive" class="w-full mt-3 flex items-center justify-center gap-2 py-3 bg-white text-slate-700 text-[10px] font-black uppercase rounded-lg shadow-lg hover:bg-slate-100 active:scale-95 transition-all">
+                    <svg class="w-4 h-4" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+                    Iniciar con Google
+                </button>
             </div>
 
             <!-- Buscador de Proyectos (fijo, no se oculta al hacer scroll) -->
@@ -443,41 +380,6 @@
                             </div>
                         </div>
 
-                    </div>
-                </div>
-            </div>
-
-            <!-- Explorador de carpetas de Google Drive (propio, sin depender del Picker de Google) -->
-            <div id="driveFolderPickerModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl flex flex-col view-transition" style="max-height: 85vh;">
-                    <div class="p-5 border-b border-slate-100 flex justify-between items-center shrink-0">
-                        <div class="min-w-0">
-                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Elegir Carpeta de Drive</p>
-                            <p id="dfpBreadcrumb" class="text-xs text-slate-500 truncate mt-0.5"></p>
-                        </div>
-                        <button onclick="closeCustomDriveFolderPicker()" class="p-2 hover:bg-slate-100 rounded-xl shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
-
-                    <div id="dfpRootChoice" class="p-5 space-y-3">
-                        <button onclick="dfpEnterRoot('mydrive')" class="w-full flex items-center gap-3 p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all">
-                            <svg class="w-5 h-5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
-                            <span class="text-sm font-bold text-slate-800">Mi unidad</span>
-                        </button>
-                        <button onclick="dfpEnterRoot('shared')" class="w-full flex items-center gap-3 p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all">
-                            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/></svg>
-                            <span class="text-sm font-bold text-slate-800">Compartido conmigo</span>
-                        </button>
-                    </div>
-
-                    <div id="dfpListWrap" class="flex-1 overflow-y-auto px-3 pb-3">
-                        <div id="dfpList" class="space-y-1"></div>
-                    </div>
-
-                    <div class="p-4 border-t border-slate-100 flex gap-2 shrink-0">
-                        <button id="dfpBackBtn" onclick="dfpGoBack()" class="hidden px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-black uppercase text-slate-600 hover:bg-slate-50">Atrás</button>
-                        <button id="dfpUseBtn" onclick="dfpSelectCurrent()" class="hidden flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-black uppercase hover:bg-blue-700">Usar esta carpeta</button>
                     </div>
                 </div>
             </div>
@@ -995,18 +897,6 @@
             rootReq.onsuccess = async () => {
             const saved = rootReq.result;
             if (!saved) { resolve(); return; }
-
-            // Carpeta de Google Drive guardada de una sesión anterior: el access token
-            // NUNCA sobrevive un refresh, así que no podemos reconectar solos. Dejamos
-            // todo listo para que un clic en "Reactivar" pida el token y retome la carpeta.
-            if (saved.type === 'drive') {
-                pendingDriveFolder = { id: saved.id, name: saved.name };
-                document.getElementById('pathDisplay').innerText = saved.name + ' (Drive - reconectar)';
-                document.getElementById('btnReactivate').classList.remove('hidden');
-                resolve();
-                return;
-            }
-
             const permiso = await saved.queryPermission({ mode: 'readwrite' });
             if (permiso === 'granted') {
                 currentHandle = saved;
@@ -1329,47 +1219,14 @@
         let driveAccessToken = null;
         let driveTokenClient = null;
         let driveGapiReady = false;
-        let scanIntervalId = null; // evita crear varios setInterval de scan() duplicados
-        let pendingDriveFolder = null; // {id, name} guardado de una sesión anterior, pendiente de reconectar
-        let driveConnectMode = 'picker'; // 'picker' (elegir carpeta nueva) | 'reconnect' (retomar la guardada)
 
-        function startAutoScan() {
-            if (scanIntervalId) clearInterval(scanIntervalId);
-            scanIntervalId = setInterval(scan, 60000);
-        }
-
-        async function driveRefreshToken() {
-            if (!driveTokenClient) return false;
-            return new Promise((resolve) => {
-                const prevCallback = driveTokenClient.callback;
-                driveTokenClient.callback = (resp) => {
-                    driveTokenClient.callback = prevCallback;
-                    if (resp.error) { resolve(false); return; }
-                    driveAccessToken = resp.access_token;
-                    resolve(true);
-                };
-                driveTokenClient.requestAccessToken({ prompt: '' });
-            });
-        }
-
-        async function driveAuthedFetch(url, opts = {}) {
+        function driveAuthedFetch(url, opts = {}) {
             opts.headers = Object.assign({}, opts.headers, { Authorization: `Bearer ${driveAccessToken}` });
-            let res = await fetch(url, opts);
-            if (res.status === 401) {
-                // El access token expira ~1h. Intentamos refrescarlo en silencio y reintentar una vez.
-                const refreshed = await driveRefreshToken();
-                if (refreshed) {
-                    opts.headers.Authorization = `Bearer ${driveAccessToken}`;
-                    res = await fetch(url, opts);
-                } else {
-                    showToast('Tu sesión de Google Drive expiró. Vuelve a conectar desde el botón "Iniciar con Google".');
-                }
-            }
-            return res;
+            return fetch(url, opts);
         }
 
         async function driveCreateFolder(name, parentId) {
-            const res = await driveAuthedFetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
+            const res = await driveAuthedFetch('https://www.googleapis.com/drive/v3/files', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] })
@@ -1378,34 +1235,12 @@
         }
 
         async function driveCreateEmptyFile(name, parentId) {
-            const res = await driveAuthedFetch('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', {
+            const res = await driveAuthedFetch('https://www.googleapis.com/drive/v3/files', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, parents: [parentId] })
             });
             return res.json();
-        }
-
-        // Si un elemento es un acceso directo (shortcut), lo cambiamos por su destino real:
-        // un shortcut no tiene contenido propio, así que si no lo resolvemos, cualquier
-        // carpeta que llegue como shortcut se ve "vacía" aunque sí tenga archivos adentro.
-        function resolveDriveShortcut(item) {
-            if (item.mimeType === 'application/vnd.google-apps.shortcut' && item.shortcutDetails) {
-                return {
-                    id: item.shortcutDetails.targetId,
-                    name: item.name,
-                    mimeType: item.shortcutDetails.targetMimeType
-                };
-            }
-            return item;
-        }
-
-        async function driveResolveIfShortcut(id, name) {
-            const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files/${id}?fields=id,name,mimeType,shortcutDetails&supportsAllDrives=true`);
-            const data = await res.json();
-            if (data.error) { console.error('driveResolveIfShortcut error:', data.error); return { id, name }; }
-            const resolved = resolveDriveShortcut(data);
-            return { id: resolved.id, name: name || resolved.name };
         }
 
         class DriveFileHandle {
@@ -1415,7 +1250,7 @@
                 this.name = name;
             }
             async getFile() {
-                const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files/${this.id}?alt=media&supportsAllDrives=true`);
+                const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files/${this.id}?alt=media`);
                 const blob = await res.blob();
                 return new File([blob], this.name);
             }
@@ -1426,7 +1261,7 @@
                     async write(data) { parts.push(data); },
                     async close() {
                         const blob = parts[0] instanceof Blob ? parts[0] : new Blob(parts);
-                        await driveAuthedFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media&supportsAllDrives=true`, {
+                        await driveAuthedFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
                             method: 'PATCH',
                             body: blob
                         });
@@ -1445,18 +1280,9 @@
             async _listChildren() {
                 if (this._cache) return this._cache;
                 const q = encodeURIComponent(`'${this.id}' in parents and trashed = false`);
-                // supportsAllDrives + includeItemsFromAllDrives: no hacen daño en cuentas
-                // personales, y evitan sorpresas si algún día esto corre en una cuenta de
-                // Workspace con Unidades Compartidas. shortcutDetails: para poder resolver
-                // accesos directos (típico cuando alguien te comparte una carpeta y a ti
-                // te aparece como "acceso directo" en vez de la carpeta real).
-                const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,shortcutDetails)&pageSize=1000&supportsAllDrives=true&includeItemsFromAllDrives=true`);
+                const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType)&pageSize=1000`);
                 const data = await res.json();
-                if (data.error) {
-                    console.error('Drive _listChildren error:', data.error);
-                    throw new Error(data.error.message || 'Error listando archivos de Drive');
-                }
-                this._cache = (data.files || []).map(resolveDriveShortcut);
+                this._cache = data.files || [];
                 return this._cache;
             }
             async *values() {
@@ -1491,43 +1317,6 @@
             }
         }
 
-        function setGoogleDriveState(isConnected) {
-            const button = document.getElementById('btnGoogleDrive');
-            const connectedPanel = document.getElementById('googleDriveConnected');
-            const mobileBadge = document.getElementById('mobileDriveBadge');
-            if (!button || !connectedPanel || !mobileBadge) return;
-            button.classList.toggle('hidden', isConnected);
-            connectedPanel.classList.toggle('hidden', !isConnected);
-            mobileBadge.textContent = isConnected ? 'Drive activo' : 'Conectar Drive';
-            mobileBadge.className = isConnected
-                ? 'rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700'
-                : 'rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600';
-        }
-
-        function openSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (!sidebar || !overlay) return;
-            if (window.innerWidth < 768) {
-                sidebar.classList.add('mobile-open');
-                overlay.classList.remove('hidden');
-            }
-        }
-
-        function closeSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (!sidebar || !overlay) return;
-            sidebar.classList.remove('mobile-open');
-            overlay.classList.add('hidden');
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            if (!sidebar) return;
-            sidebar.classList.contains('mobile-open') ? closeSidebar() : openSidebar();
-        }
-
         function driveInitTokenClient() {
             if (driveTokenClient || !window.google) return;
             driveTokenClient = google.accounts.oauth2.initTokenClient({
@@ -1536,152 +1325,42 @@
                 callback: (resp) => {
                     if (resp.error) { showToast('Error al conectar con Google Drive: ' + resp.error); return; }
                     driveAccessToken = resp.access_token;
-                    setGoogleDriveState(true);
-                    if (driveConnectMode === 'reconnect' && pendingDriveFolder) {
-                        currentHandle = new DriveFolderHandle(pendingDriveFolder.id, pendingDriveFolder.name);
-                        pendingDriveFolder = null;
-                        document.getElementById('btnReactivate').classList.add('hidden');
-                        document.getElementById('pathDisplay').innerText = currentHandle.name + ' (Drive)';
-                        closeSidebar();
-                        scan();
-                        startAutoScan();
-                    } else {
-                        openCustomDriveFolderPicker();
-                    }
+                    driveOpenPicker();
                 }
             });
         }
 
         function connectGoogleDrive() {
-            driveConnectMode = 'picker';
             driveInitTokenClient();
             if (!driveTokenClient) { showToast('Google aún está cargando, intenta de nuevo en un segundo.'); return; }
             driveTokenClient.requestAccessToken({ prompt: 'consent' });
         }
 
-        // Elige la carpeta indicada (id + nombre ya resueltos) como raíz del proyecto y arranca el scan.
-        async function selectDriveRootFolder(id, name) {
-            currentHandle = new DriveFolderHandle(id, name);
-            db.transaction(STORES.SETTINGS, 'readwrite').objectStore(STORES.SETTINGS).put({ type: 'drive', id, name }, 'root');
-            document.getElementById('btnReactivate').classList.add('hidden');
-            document.getElementById('pathDisplay').innerText = name + ' (Drive)';
-            setGoogleDriveState(true);
-            closeSidebar();
-            scan();
-            startAutoScan();
-        }
-
-        // ==========================================================
-        // EXPLORADOR DE CARPETAS DE DRIVE (propio, sin Picker de Google)
-        // El Picker de Google resultó poco confiable en móvil (mostraba
-        // listas planas/repetidas en vez de navegar por carpetas). Este
-        // explorador usa la misma API de Drive (files.list) que ya usa
-        // scan(), así que si scan() funciona, esto también funciona.
-        // ==========================================================
-        let dfpStack = [];   // [{id, name}, ...] ruta actual (breadcrumb)
-        let dfpMode = null;  // 'mydrive' | 'shared' | null (pantalla inicial)
-
-        function openCustomDriveFolderPicker() {
-            dfpStack = [];
-            dfpMode = null;
-            document.getElementById('driveFolderPickerModal').classList.remove('hidden');
-            renderDriveFolderPicker();
-        }
-
-        function closeCustomDriveFolderPicker() {
-            document.getElementById('driveFolderPickerModal').classList.add('hidden');
-        }
-
-        function dfpEnterRoot(mode) {
-            dfpMode = mode;
-            dfpStack = [{ id: mode === 'mydrive' ? 'root' : 'shared', name: mode === 'mydrive' ? 'Mi unidad' : 'Compartido conmigo' }];
-            renderDriveFolderPicker();
-        }
-
-        function dfpEnterFolder(id, name) {
-            dfpStack.push({ id, name });
-            renderDriveFolderPicker();
-        }
-
-        function dfpGoBack() {
-            if (dfpStack.length <= 1) { dfpStack = []; dfpMode = null; }
-            else dfpStack.pop();
-            renderDriveFolderPicker();
-        }
-
-        async function dfpListCurrent() {
-            const current = dfpStack[dfpStack.length - 1];
-            let q;
-            if (dfpMode === 'shared' && dfpStack.length === 1) {
-                // Nivel superior de "Compartido conmigo": es plano, igual que en la propia Drive.
-                q = `sharedWithMe = true and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
-            } else {
-                q = `'${current.id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
-            }
-            const res = await driveAuthedFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,shortcutDetails)&pageSize=200&orderBy=name&supportsAllDrives=true&includeItemsFromAllDrives=true`);
-            const data = await res.json();
-            if (data.error) {
-                console.error('dfpListCurrent error:', data.error);
-                showToast('Error listando Drive: ' + data.error.message);
-                return [];
-            }
-            return (data.files || []).map(resolveDriveShortcut);
-        }
-
-        let dfpCurrentItems = [];
-
-        async function renderDriveFolderPicker() {
-            const listEl = document.getElementById('dfpList');
-            const breadcrumbEl = document.getElementById('dfpBreadcrumb');
-            const rootChoiceEl = document.getElementById('dfpRootChoice');
-            const useBtnEl = document.getElementById('dfpUseBtn');
-            const backBtnEl = document.getElementById('dfpBackBtn');
-
-            if (!dfpMode) {
-                rootChoiceEl.classList.remove('hidden');
-                listEl.innerHTML = '';
-                breadcrumbEl.textContent = 'Elige dónde buscar';
-                useBtnEl.classList.add('hidden');
-                backBtnEl.classList.add('hidden');
-                return;
-            }
-            rootChoiceEl.classList.add('hidden');
-            useBtnEl.classList.remove('hidden');
-            backBtnEl.classList.remove('hidden');
-            breadcrumbEl.textContent = dfpStack.map(s => s.name).join(' / ');
-            listEl.innerHTML = '<div class="p-6 text-center text-xs text-slate-400 font-bold uppercase">Cargando...</div>';
-            const items = await dfpListCurrent();
-            dfpCurrentItems = items;
-            if (!items.length) {
-                listEl.innerHTML = '<div class="p-6 text-center text-xs text-slate-400">No hay subcarpetas aquí. Si es la que buscas, usa el botón de abajo.</div>';
-                return;
-            }
-            listEl.innerHTML = items.map((it, idx) => `
-                <button onclick="dfpEnterFolderByIndex(${idx})" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 text-left transition-colors">
-                    <svg class="w-5 h-5 text-blue-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
-                    <span class="text-sm text-slate-800 truncate"></span>
-                </button>
-            `).join('');
-            // Texto del nombre se inserta aparte (textContent) para no depender de escapar HTML/JS a la vez.
-            [...listEl.querySelectorAll('button')].forEach((btn, idx) => {
-                btn.querySelector('span').textContent = items[idx].name;
+        function driveOpenPicker() {
+            gapi.load('picker', () => {
+                driveGapiReady = true;
+                const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+                    .setSelectFolderEnabled(true)
+                    .setIncludeFolders(true);
+                const picker = new google.picker.PickerBuilder()
+                    .addView(view)
+                    .setOAuthToken(driveAccessToken)
+                    .setDeveloperKey(DRIVE_API_KEY)
+                    .setAppId(DRIVE_APP_ID)
+                    .setCallback(driveOnFolderPicked)
+                    .build();
+                picker.setVisible(true);
             });
         }
 
-        function dfpEnterFolderByIndex(idx) {
-            const it = dfpCurrentItems[idx];
-            if (!it) return;
-            dfpEnterFolder(it.id, it.name);
-        }
-
-        function dfpSelectCurrent() {
-            const current = dfpStack[dfpStack.length - 1];
-            if (!current || current.id === 'root' || current.id === 'shared') {
-                showToast('Entra a una carpeta primero (toca alguna de la lista).');
-                return;
-            }
-            closeCustomDriveFolderPicker();
-            selectDriveRootFolder(current.id, current.name);
+        function driveOnFolderPicked(data) {
+            if (data.action !== google.picker.Action.PICKED) return;
+            const folder = data.docs[0];
+            currentHandle = new DriveFolderHandle(folder.id, folder.name);
+            document.getElementById('btnReactivate').classList.add('hidden');
+            document.getElementById('pathDisplay').innerText = folder.name + ' (Drive)';
+            scan();
+            setInterval(scan, 60000);
         }
 
         // Estados posibles por tipo de trámite. OR: ciclo real de inscripción ante el Operador de Red.
@@ -1786,10 +1465,7 @@
                         if (!document.getElementById('developmentView').classList.contains('hidden')) renderDevelopment();
                     }
                 }
-            } catch(e) {
-                console.error('Error en scan():', e);
-                showToast('No se pudo leer la carpeta: ' + (e && e.message ? e.message : e));
-            }
+            } catch(e) {}
         }
 
         async function analyze(handle) {
@@ -1910,7 +1586,6 @@
         window.selectProject = (id) => {
             selectedProjectId = id;
             const p = projects.find(x => x.id === id);
-            closeSidebar();
             document.getElementById('hubProjectName').innerText = p.name;
             document.getElementById('hubProjectYear').innerText = p.year || '----';
             document.getElementById('docProjectName').innerText = p.name;
@@ -2621,12 +2296,6 @@
         };
 
         document.getElementById('btnGoogleDrive').onclick = () => connectGoogleDrive();
-        document.getElementById('toggleSidebarBtn').onclick = () => toggleSidebar();
-        document.getElementById('sidebarOverlay').onclick = () => closeSidebar();
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 768) closeSidebar();
-        });
-        setGoogleDriveState(false);
 
         document.getElementById('btnSettings').onclick = async () => {
             if (!('showDirectoryPicker' in window)) {
@@ -2646,13 +2315,6 @@
         };
 
         document.getElementById('btnReactivate').addEventListener('click', async () => {
-            if (pendingDriveFolder) {
-                driveConnectMode = 'reconnect';
-                driveInitTokenClient();
-                if (!driveTokenClient) { showToast('Google aún está cargando, intenta de nuevo en un segundo.'); return; }
-                driveTokenClient.requestAccessToken({ prompt: '' });
-                return;
-            }
             const rootReq = db.transaction(STORES.SETTINGS).objectStore(STORES.SETTINGS).get('root');
             rootReq.onsuccess = async () => {
                 const saved = rootReq.result;
@@ -2678,7 +2340,7 @@
             document.getElementById('btnReactivate').classList.add('hidden');
             document.getElementById('pathDisplay').innerText = currentHandle.name;
             scan();
-            startAutoScan();
+            setInterval(scan, 60000);
         }
 
         init();
