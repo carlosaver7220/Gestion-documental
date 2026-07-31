@@ -248,7 +248,38 @@
                     <span class="text-[10px] font-black text-blue-700 uppercase tracking-widest">Sincronizando carpeta...</span>
                 </div>
 
-                <div class="flex-1 overflow-y-auto p-10 bg-slate-50/50">
+                <!-- CABECERA FIJA: Nombre + accesos rápidos + % de información (no se mueve con el scroll) -->
+                <div class="shrink-0 bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between gap-6 flex-wrap">
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nombre de Proyecto</p>
+                        <h2 id="infoHeaderNombre" class="text-xl font-black text-slate-900 tracking-tight">---</h2>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="flex flex-col gap-1.5">
+                            <div class="flex gap-2">
+                                <button title="Exportar a Excel (próximamente)" class="px-3 py-1.5 bg-slate-100 text-slate-400 text-[10px] font-black uppercase rounded border border-slate-200 cursor-not-allowed">Excel</button>
+                                <button id="card-or" onclick="clickTramite('or')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">OR</button>
+                                <button id="card-retie" onclick="clickTramite('retie')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">RETIE</button>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="switchDocTab('actas')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">Actas</button>
+                                <button onclick="switchDocTab('boveda')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">Bóveda Técnica</button>
+                                <button onclick="switchDocTab('preliminar')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">Preliminar</button>
+                            </div>
+                        </div>
+                        <div class="relative w-14 h-14 shrink-0">
+                            <svg class="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                                <path class="text-slate-100" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path id="infoCargaCircle" class="text-blue-600" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="0, 100" stroke-linecap="round" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span id="infoCargaPct" class="text-xs font-black text-slate-900">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-5 bg-slate-50/50">
                     <div class="max-w-7xl mx-auto">
 
                         <!-- PESTAÑA: BÓVEDA TÉCNICA -->
@@ -274,37 +305,6 @@
 
                         <!-- PESTAÑA: INFORMACIÓN DEL PROYECTO (Datos + OR/RETIE) -->
                         <div id="docTab-info" class="doc-tab-panel hidden">
-
-                            <!-- CABECERA: Nombre + accesos rápidos + % de información -->
-                            <div class="glass-card p-6 mb-6 flex items-center justify-between gap-6 flex-wrap">
-                                <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nombre de Proyecto</p>
-                                    <h2 id="infoHeaderNombre" class="text-2xl font-black text-slate-900 tracking-tight">---</h2>
-                                </div>
-                                <div class="flex items-center gap-6">
-                                    <div class="flex flex-col gap-2">
-                                        <div class="flex gap-2">
-                                            <button title="Exportar a Excel (próximamente)" class="px-3 py-1.5 bg-slate-100 text-slate-400 text-[10px] font-black uppercase rounded border border-slate-200 cursor-not-allowed">Excel</button>
-                                            <button id="card-or" onclick="openTramiteModal('or')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">OR</button>
-                                            <button id="card-retie" onclick="openTramiteModal('retie')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">RETIE</button>
-                                        </div>
-                                        <div class="flex gap-2">
-                                            <button onclick="switchDocTab('actas')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">Actas</button>
-                                            <button onclick="switchDocTab('boveda')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">Bóveda Técnica</button>
-                                            <button onclick="switchDocTab('preliminar')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">Preliminar</button>
-                                        </div>
-                                    </div>
-                                    <div class="relative w-16 h-16 shrink-0">
-                                        <svg class="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
-                                            <path class="text-slate-100" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                            <path id="infoCargaCircle" class="text-blue-600" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="0, 100" stroke-linecap="round" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                        </svg>
-                                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                            <span id="infoCargaPct" class="text-xs font-black text-slate-900">0%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
                             <div class="grid grid-cols-12 gap-6">
                                 <div class="col-span-12">
@@ -1707,6 +1707,21 @@
         }
 
         // Muestra los archivos encontrados en las subcarpetas de conformidad (2. ESTADOS OR Y RETIE)
+        window.clickTramite = (type) => {
+            const p = projects.find(x => x.id === selectedProjectId);
+            if (!p) return;
+            const statusReal = type === 'or' ? p.states.or.status : p.states.retie.status;
+            const conformeAuto = type === 'or' ? p.orConforme : p.retieConforme;
+            const esConforme = type === 'or'
+                ? (statusReal === 'CONFORME' || (statusReal === 'NO INSCRITO' && conformeAuto))
+                : (statusReal === 'APROBADO' || (statusReal === 'POR AGENDAR' && conformeAuto));
+            if (esConforme) {
+                verConformidad(type);
+            } else {
+                openTramiteModal(type);
+            }
+        };
+
         window.verConformidad = (type) => {
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p) return;
