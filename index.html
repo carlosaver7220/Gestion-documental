@@ -1286,8 +1286,13 @@
                 projects = temp.sort((a,b) => b.id.localeCompare(a.id));
                 renderSidebar();
                 if (!selectedProjectId && projects.length) {
-                    // Al conectar por primera vez, entra directo al primer proyecto (ya no hay hub que elegir)
-                    selectProject(projects[0].id);
+                    // Al conectar por primera vez, entra directo al primer proyecto del año más reciente
+                    // (mismo orden alfabético/agrupación que se ve en el sidebar) — ya no hay hub que elegir.
+                    const years = [...new Set(projects.map(p => p.year || 'Sin Año'))].sort((a, b) => b.localeCompare(a));
+                    const topYearProjects = projects
+                        .filter(p => (p.year || 'Sin Año') === years[0])
+                        .sort((a, b) => a.name.localeCompare(b.name));
+                    selectProject(topYearProjects[0].id);
                 } else if (selectedProjectId) {
                     const p = projects.find(x => x.id === selectedProjectId);
                     if (p) {
@@ -1423,7 +1428,6 @@
             document.getElementById('hubProjectName').innerText = p.name;
             document.getElementById('hubProjectYear').innerText = p.year || '----';
             document.getElementById('devProjectName').innerText = p.name;
-            document.getElementById('headProgIng').innerText = `${p.prog}%`;
             renderDocModule(p);
             // Si empleados era la última vista (no es una sección de proyecto),
             // al elegir un proyecto lo natural es caer en el hub.
