@@ -86,6 +86,20 @@
             border-bottom: 3px solid #2563eb;
         }
 
+        .chip-btn {
+            background: #ffffff;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .chip-btn:hover {
+            border-color: #93c5fd;
+        }
+        .chip-btn.chip-active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+        }
+
         .nav-hub-card {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
@@ -568,9 +582,15 @@
                                 <input id="infoNumPaneles" type="number" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
-                        <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Panel</label>
-                            <input id="infoReferenciaPanel" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Panel</label>
+                                <input id="infoReferenciaPanel" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Inversor</label>
+                                <input id="infoReferenciaInversor" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
@@ -581,10 +601,6 @@
                                 <label class="text-[10px] font-black text-slate-400 uppercase">N° de Inversores</label>
                                 <input id="infoNumInversores" type="number" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Inversor</label>
-                            <input id="infoReferenciaInversor" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
@@ -601,6 +617,36 @@
                             <input id="infoRadicado" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
 
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de Proyecto</label>
+                            <input type="hidden" id="infoTipoProyecto" value="">
+                            <div id="infoTipoProyectoChips" class="flex flex-wrap gap-2 mt-1">
+                                <button type="button" data-value="On-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">On-Grid</button>
+                                <button type="button" data-value="Off-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Off-Grid</button>
+                                <button type="button" data-value="Híbrido" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Híbrido</button>
+                                <button type="button" data-value="Aislado" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Aislado</button>
+                                <button type="button" data-value="Otro" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Otro</button>
+                            </div>
+                            <div id="infoTipoProyectoOtroWrap" class="hidden mt-2">
+                                <input id="infoTipoProyectoOtro" placeholder="Especifica el tipo de proyecto" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Clasificación del Servicio</label>
+                            <input type="hidden" id="infoClasificacionServicio" value="">
+                            <div id="infoClasificacionServicioChips" class="flex flex-wrap gap-2 mt-1">
+                                <button type="button" data-value="Residencial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Residencial</button>
+                                <button type="button" data-value="Comercial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Comercial</button>
+                                <button type="button" data-value="Industrial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Industrial</button>
+                                <button type="button" data-value="Oficial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Oficial</button>
+                                <button type="button" data-value="Otro" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Otro</button>
+                            </div>
+                            <div id="infoClasificacionServicioOtroWrap" class="hidden mt-2">
+                                <input id="infoClasificacionServicioOtro" placeholder="Especifica la clasificación del servicio" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
                         <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest pt-2 border-t border-slate-100">Datos del Cliente</p>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
@@ -608,18 +654,19 @@
                                 <input id="infoDueno" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Departamento</label>
-                                <input id="infoDepartamento" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Municipio</label>
-                                <input id="infoMunicipio" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase">Teléfono</label>
                                 <input id="infoTelefono" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Departamento / Ciudad</label>
+                            <div class="mt-1 p-2 bg-slate-50 border border-slate-200 rounded-md space-y-2">
+                                <select id="infoDepartamento" onchange="poblarMunicipios()" class="w-full p-2.5 bg-white border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Selecciona un departamento...</option>
+                                </select>
+                                <select id="infoMunicipio" class="w-full p-2.5 bg-white border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Selecciona primero el departamento...</option>
+                                </select>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
@@ -1535,6 +1582,10 @@
                     <div class="mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs font-bold text-slate-700 truncate" title="${valor ? String(valor).replace(/"/g,'&quot;') : ''}">${valor || '—'}</div>
                 </div>`;
 
+            const tipoProyectoTxt = info.tipoProyecto === 'Otro' ? (info.tipoProyectoOtro || 'Otro') : info.tipoProyecto;
+            const clasificacionTxt = info.clasificacionServicio === 'Otro' ? (info.clasificacionServicioOtro || 'Otro') : info.clasificacionServicio;
+            const depMunTxt = [info.departamento, info.municipio].filter(Boolean).join(' / ');
+
             list.innerHTML = `
                 <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2">Datos Técnicos</p>
                 <div class="grid grid-cols-3 gap-3 mb-4">
@@ -1552,25 +1603,96 @@
                     ${campo('N° de Inversores', info.numInversores)}
                     ${campo('Referencia Medidor', info.referenciaMedidor)}
                 </div>
-                <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="grid grid-cols-2 gap-3 mb-4">
                     ${campo('Referencia Panel', info.referenciaPanel)}
                     ${campo('Referencia Inversor', info.referenciaInversor)}
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    ${campo('Tipo de Proyecto', tipoProyectoTxt)}
+                    ${campo('Clasificación del Servicio', clasificacionTxt)}
                 </div>
 
                 <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2">Datos del Cliente</p>
                 <div class="grid grid-cols-2 gap-3 mb-3">
                     ${campo('Nombre Completo', info.dueno)}
-                    ${campo('Departamento', info.departamento)}
-                </div>
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    ${campo('Municipio', info.municipio)}
                     ${campo('Teléfono', info.telefono)}
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    ${campo('Departamento / Ciudad', depMunTxt)}
                     ${campo('Gmail', info.correo)}
+                </div>
+                <div class="grid grid-cols-2 gap-3">
                     ${campo('Dirección', info.direccion)}
                 </div>
             `;
+        }
+
+        // ==========================================================
+        // DATOS DE COLOMBIA (Departamento -> Municipios) para la casilla
+        // combinada "Departamento / Ciudad".
+        // ==========================================================
+        const COLOMBIA = {"Amazonas":["Leticia","Puerto Nariño"],"Antioquia":["Abejorral","Abriaquí","Alejandría","Amagá","Amalfi","Andes","Angelópolis","Angostura","Anorí","Anzá","Apartadó","Arboletes","Argelia","Armenia","Barbosa","Bello","Belmira","Betania","Betulia","Briceño","Buriticá","Cáceres","Caicedo","Caldas","Campamento","Cañasgordas","Caracolí","Caramanta","Carepa","Carolina del Príncipe","Caucasia","Chigorodó","Cisneros","Ciudad Bolívar","Cocorná","Concepción","Concordia","Copacabana","Dabeiba","Donmatías","Ebéjico","El Bagre","El Carmen de Viboral","El Peñol","El Retiro","El Santuario","Entrerríos","Envigado","Fredonia","Frontino","Giraldo","Girardota","Gómez Plata","Granada","Guadalupe","Guarne","Guatapé","Heliconia","Hispania","Itagüí","Ituango","Jardín","Jericó","La Ceja","La Estrella","La Pintada","La Unión","Liborina","Maceo","Marinilla","Medellín","Montebello","Murindó","Mutatá","Nariño","Nechí","Necoclí","Olaya","Peque","Pueblorrico","Puerto Berrío","Puerto Nare","Puerto Triunfo","Remedios","Rionegro","Sabanalarga","Sabaneta","Salgar","San Andrés de Cuerquia","San Carlos","San Francisco","San Jerónimo","San José de la Montaña","San Juan de Urabá","San Luis","San Pedro de Urabá","San Pedro de los Milagros","San Rafael","San Roque","San Vicente","Santa Bárbara","Santa Fe de Antioquia","Santa Rosa de Osos","Santo Domingo","Segovia","Sonsón","Sopetrán","Támesis","Tarazá","Tarso","Titiribí","Toledo","Turbo","Uramita","Urrao","Valdivia","Valparaíso","Vegachí","Venecia","Vigía del Fuerte","Yalí","Yarumal","Yolombó","Yondó","Zaragoza"],"Arauca":["Arauca","Arauquita","Cravo Norte","Fortul","Puerto Rondón","Saravena","Tame"],"Atlántico":["Baranoa","Barranquilla","Campo de la Cruz","Candelaria","Galapa","Juan de Acosta","Luruaco","Malambo","Manatí","Palmar de Varela","Piojó","Polonuevo","Ponedera","Puerto Colombia","Repelón","Sabanagrande","Sabanalarga","Santa Lucía","Santo Tomás","Soledad","Suán","Tubará","Usiacurí"],"Bogotá D.C.":["Bogotá"],"Bolívar":["Achí","Altos del Rosario","Arenal","Arjona","Arroyohondo","Barranco de Loba","Brazuelo de Papayal","Calamar","Cantagallo","Cartagena de Indias","Cicuco","Clemencia","Córdoba","El Carmen de Bolívar","El Guamo","El Peñón","Hatillo de Loba","Magangué","Mahates","Margarita","María la Baja","Mompós","Montecristo","Morales","Norosí","Pinillos","Regidor","Río Viejo","San Cristóbal","San Estanislao","San Fernando","San Jacinto del Cauca","San Jacinto","San Juan Nepomuceno","San Martín de Loba","San Pablo","Santa Catalina","Santa Rosa","Santa Rosa del Sur","Simití","Soplaviento","Talaigua Nuevo","Tiquisio","Turbaco","Turbaná","Villanueva","Zambrano"],"Boyacá":["Almeida","Aquitania","Arcabuco","Belén","Berbeo","Betéitiva","Boavita","Boyacá","Briceño","Buenavista","Busbanzá","Caldas","Campohermoso","Cerinza","Chinavita","Chiquinquirá","Chíquiza","Chiscas","Chita","Chitaraque","Chivatá","Chivor","Ciénega","Cómbita","Coper","Corrales","Covarachía","Cubará","Cucaita","Cuítiva","Duitama","El Cocuy","El Espino","Firavitoba","Floresta","Gachantivá","Gámeza","Garagoa","Guacamayas","Guateque","Guayatá","Güicán","Iza","Jenesano","Jericó","La Capilla","La Uvita","La Victoria","Labranzagrande","Macanal","Maripí","Miraflores","Mongua","Monguí","Moniquirá","Motavita","Muzo","Nobsa","Nuevo Colón","Oicatá","Otanche","Pachavita","Páez","Paipa","Pajarito","Panqueba","Pauna","Paya","Paz del Río","Pesca","Pisba","Puerto Boyacá","Quípama","Ramiriquí","Ráquira","Rondón","Saboyá","Sáchica","Samacá","San Eduardo","San José de Pare","San Luis de Gaceno","San Mateo","San Miguel de Sema","San Pablo de Borbur","Santa María","Santa Rosa de Viterbo","Santa Sofía","Santana","Sativanorte","Sativasur","Siachoque","Soatá","Socha","Socotá","Sogamoso","Somondoco","Sora","Soracá","Sotaquirá","Susacón","Sutamarchán","Sutatenza","Tasco","Tenza","Tibaná","Tibasosa","Tinjacá","Tipacoque","Toca","Togüí","Tópaga","Tota","Tunja","Tununguá","Turmequé","Tuta","Tutazá","Úmbita","Ventaquemada","Villa de Leyva","Viracachá","Zetaquira"],"Caldas":["Aguadas","Anserma","Aranzazu","Belalcázar","Chinchiná","Filadelfia","La Dorada","La Merced","Manizales","Manzanares","Marmato","Marquetalia","Marulanda","Neira","Norcasia","Pácora","Palestina","Pensilvania","Riosucio","Risaralda","Salamina","Samaná","San José","Supía","Victoria","Villamaría","Viterbo"],"Caquetá":["Albania","Belén de los Andaquíes","Cartagena del Chairá","Curillo","El Doncello","El Paujil","Florencia","La Montañita","Milán","Morelia","Puerto Rico","San José del Fragua","San Vicente del Caguán","Solano","Solita","Valparaíso"],"Casanare":["Aguazul","Chámeza","Hato Corozal","La Salina","Maní","Monterrey","Nunchía","Orocué","Paz de Ariporo","Pore","Recetor","Sabanalarga","Sácama","San Luis de Palenque","Támara","Tauramena","Trinidad","Villanueva","Yopal"],"Cauca":["Almaguer","Argelia","Balboa","Bolívar","Buenos Aires","Cajibío","Caldono","Caloto","Corinto","El Tambo","Florencia","Guachené","Guapí","Inzá","Jambaló","La Sierra","La Vega","López de Micay","Mercaderes","Miranda","Morales","Padilla","Páez","Patía","Piamonte","Piendamó","Popayán","Puerto Tejada","Puracé","Rosas","San Sebastián","Santa Rosa","Santander de Quilichao","Silvia","Sotará","Suárez","Sucre","Timbío","Timbiquí","Toribío","Totoró","Villa Rica"],"Cesar":["Aguachica","Agustín Codazzi","Astrea","Becerril","Bosconia","Chimichagua","Chiriguaná","Curumaní","El Copey","El Paso","Gamarra","González","La Gloria (Cesar)","La Jagua de Ibirico","La Paz","Manaure Balcón del Cesar","Pailitas","Pelaya","Pueblo Bello","Río de Oro","San Alberto","San Diego","San Martín","Tamalameque","Valledupar"],"Chocó":["Acandí","Alto Baudó","Bagadó","Bahía Solano","Bajo Baudó","Bojayá","Cantón de San Pablo","Cértegui","Condoto","El Atrato","El Carmen de Atrato","El Carmen del Darién","Istmina","Juradó","Litoral de San Juan","Lloró","Medio Atrato","Medio Baudó","Medio San Juan","Nóvita","Nuquí","Quibdó","Río Iró","Río Quito","Riosucio","San José del Palmar","Sipí","Tadó","Unión Panamericana","Unguía"],"Cundinamarca":["Agua de Dios","Albán","Anapoima","Anolaima","Apulo","Arbeláez","Beltrán","Bituima","Bogotá","Bojacá","Cabrera","Cachipay","Cajicá","Caparrapí","Cáqueza","Carmen de Carupa","Chaguaní","Chía","Chipaque","Choachí","Chocontá","Cogua","Cota","Cucunubá","El Colegio","El Peñón","El Rosal","Facatativá","Fómeque","Fosca","Funza","Fúquene","Fusagasugá","Gachalá","Gachancipá","Gachetá","Gama","Girardot","Granada","Guachetá","Guaduas","Guasca","Guataquí","Guatavita","Guayabal de Síquima","Guayabetal","Gutiérrez","Jerusalén","Junín","La Calera","La Mesa","La Palma","La Peña","La Vega","Lenguazaque","Machetá","Madrid","Manta","Medina","Mosquera","Nariño","Nemocón","Nilo","Nimaima","Nocaima","Pacho","Paime","Pandi","Paratebueno","Pasca","Puerto Salgar","Pulí","Quebradanegra","Quetame","Quipile","Ricaurte","San Antonio del Tequendama","San Bernardo","San Cayetano","San Francisco","San Juan de Rioseco","Sasaima","Sesquilé","Sibaté","Silvania","Simijaca","Soacha","Sopó","Subachoque","Suesca","Supatá","Susa","Sutatausa","Tabio","Tausa","Tena","Tenjo","Tibacuy","Tibirita","Tocaima","Tocancipá","Topaipí","Ubalá","Ubaque","Ubaté","Une","Útica","Venecia","Vergara","Vianí","Villagómez","Villapinzón","Villeta","Viotá","Yacopí","Zipacón","Zipaquirá"],"Córdoba":["Ayapel","Buenavista","Canalete","Cereté","Chimá","Chinú","Ciénaga de Oro","Cotorra","La Apartada","Lorica","Los Córdobas","Momil","Montelíbano","Montería","Moñitos","Planeta Rica","Pueblo Nuevo","Puerto Escondido","Puerto Libertador","Purísima","Sahagún","San Andrés de Sotavento","San Antero","San Bernardo del Viento","San Carlos","San José de Uré","San Pelayo","Tierralta","Tuchín","Valencia"],"Guainía":["Inírida"],"Guaviare":["Calamar","El Retorno","Miraflores","San José del Guaviare"],"Huila":["Acevedo","Agrado","Aipe","Algeciras","Altamira","Baraya","Campoalegre","Colombia","El Pital","Elías","Garzón","Gigante","Guadalupe","Hobo","Íquira","Isnos","La Argentina","La Plata","Nátaga","Neiva","Oporapa","Paicol","Palermo","Palestina","Pitalito","Rivera","Saladoblanco","San Agustín","Santa María","Suaza","Tarqui","Tello","Teruel","Tesalia","Timaná","Villavieja","Yaguará"],"La Guajira":["Albania","Barrancas","Dibulla","Distracción","El Molino","Fonseca","Hatonuevo","La Jagua del Pilar","Maicao","Manaure","Riohacha","San Juan del Cesar","Uribia","Urumita","Villanueva"],"Magdalena":["Algarrobo","Aracataca","Ariguaní","Cerro de San Antonio","Chibolo","Chibolo","Ciénaga","Concordia","El Banco","El Piñón","El Retén","Fundación","Guamal","Nueva Granada","Pedraza","Pijiño del Carmen","Pivijay","Plato","Pueblo Viejo","Remolino","Sabanas de San Ángel","Salamina","San Sebastián de Buenavista","San Zenón","Santa Ana","Santa Bárbara de Pinto","Santa Marta","Sitionuevo","Tenerife","Zapayán","Zona Bananera"],"Meta":["Acacías","Barranca de Upía","Cabuyaro","Castilla la Nueva","Cubarral","Cumaral","El Calvario","El Castillo","El Dorado","Fuente de Oro","Granada","Guamal","La Macarena","La Uribe","Lejanías","Mapiripán","Mesetas","Puerto Concordia","Puerto Gaitán","Puerto Lleras","Puerto López","Puerto Rico","Restrepo","San Carlos de Guaroa","San Juan de Arama","San Juanito","San Martín","Villavicencio","Vista Hermosa"],"Nariño":["Aldana","Ancuyá","Arboleda","Barbacoas","Belén","Buesaco","Chachagüí","Colón","Consacá","Contadero","Córdoba","Cuaspud","Cumbal","Cumbitara","El Charco","El Peñol","El Rosario","El Tablón","El Tambo","Francisco Pizarro","Funes","Guachucal","Guaitarilla","Gualmatán","Iles","Imués","Ipiales","La Cruz","La Florida","La Llanada","La Tola","La Unión","Leiva","Linares","Los Andes","Magüí Payán","Mallama","Mosquera","Nariño","Olaya Herrera","Ospina","Pasto","Policarpa","Potosí","Providencia","Puerres","Pupiales","Ricaurte","Roberto Payán","Samaniego","San Bernardo","San José de Albán","San Lorenzo","San Pablo","San Pedro de Cartago","Sandoná","Santa Bárbara","Santacruz","Sapuyes","Taminango","Tangua","Tumaco","Túquerres","Yacuanquer"],"Norte de Santander":["Ábrego","Arboledas","Bochalema","Bucarasica","Cáchira","Cácota","Chinácota","Chitagá","Convención","Cúcuta","Cucutilla","Duranía","El Carmen","El Tarra","El Zulia","Gramalote","Hacarí","Herrán","La Esperanza","La Playa de Belén","Labateca","Los Patios","Lourdes","Mutiscua","Ocaña","Pamplona","Pamplonita","Puerto Santander","Ragonvalia","Salazar de Las Palmas","San Calixto","San Cayetano","Santiago","Santo Domingo de Silos","Sardinata","Teorama","Tibú","Toledo","Villa Caro","Villa del Rosario"],"Putumayo":["Colón","Mocoa","Orito","Puerto Asís","Puerto Caicedo","Puerto Guzmán","Puerto Leguízamo","San Francisco","San Miguel","Santiago","Sibundoy","Valle del Guamuez","Villagarzón"],"Quindío":["Armenia","Buenavista","Calarcá","Circasia","Córdoba","Filandia","Génova","La Tebaida","Montenegro","Pijao","Quimbaya","Salento"],"Risaralda":["Apía","Balboa","Belén de Umbría","Dosquebradas","Guática","La Celia","La Virginia","Marsella","Mistrató","Pereira","Pueblo Rico","Quinchía","Santa Rosa de Cabal","Santuario"],"San Andrés y Providencia":["Providencia y Santa Catalina Islas","San Andrés"],"Santander":["Aguada","Albania","Aratoca","Barbosa","Barichara","Barrancabermeja","Betulia","Bolívar","Bucaramanga","Cabrera","California","Capitanejo","Carcasí","Cepitá","Cerrito","Charalá","Charta","Chima","Chipatá","Cimitarra","Concepción","Confines","Contratación","Coromoro","Curití","El Carmen de Chucurí","El Guacamayo","El Peñón","El Playón","El Socorro","Encino","Enciso","Florián","Floridablanca","Galán","Gámbita","Girón","Guaca","Guadalupe","Guapotá","Guavatá","Güepsa","Hato","Jesús María","Jordán","La Belleza","La Paz","Landázuri","Lebrija","Los Santos","Macaravita","Málaga","Matanza","Mogotes","Molagavita","Ocamonte","Oiba","Onzaga","Palmar","Palmas del Socorro","Páramo","Piedecuesta","Pinchote","Puente Nacional","Puerto Parra","Puerto Wilches","Rionegro","Sabana de Torres","San Andrés","San Benito","San Gil","San Joaquín","San José de Miranda","San Miguel","San Vicente de Chucurí","Santa Bárbara","Santa Helena del Opón","Simacota","Suaita","Sucre","Suratá","Tona","Valle de San José","Vélez","Vetas","Villanueva","Zapatoca"],"Sucre":["Buenavista","Caimito","Chalán","Colosó","Corozal","Coveñas","El Roble","Galeras","Guaranda","La Unión","Los Palmitos","Majagual","Morroa","Ovejas","Sampués","San Antonio de Palmito","San Benito Abad","San Juan de Betulia","San Marcos","San Onofre","San Pedro","Sincé","Sincelejo","Sucre","Tolú","Tolú Viejo"],"Tolima":["Alpujarra","Alvarado","Ambalema","Anzoátegui","Armero","Ataco","Cajamarca","Carmen de Apicalá","Casabianca","Chaparral","Coello","Coyaima","Cunday","Dolores","El Espinal","Falán","Flandes","Fresno","Guamo","Herveo","Honda","Ibagué","Icononzo","Lérida","Líbano","Mariquita","Melgar","Murillo","Natagaima","Ortega","Palocabildo","Piedras","Planadas","Prado","Purificación","Rioblanco","Roncesvalles","Rovira","Saldaña","San Antonio","San Luis","Santa Isabel","Suárez","Valle de San Juan","Venadillo","Villahermosa","Villarrica"],"Valle del Cauca":["Alcalá","Andalucía","Ansermanuevo","Argelia","Bolívar","Buenaventura","Buga","Bugalagrande","Caicedonia","Cali","Calima","Candelaria","Cartago","Dagua","El Águila","El Cairo","El Cerrito","El Dovio","Florida","Ginebra","Guacarí","Jamundí","La Cumbre","La Unión","La Victoria","Obando","Palmira","Pradera","Restrepo","Riofrío","Roldanillo","San Pedro","Sevilla","Toro","Trujillo","Tuluá","Ulloa","Versalles","Vijes","Yotoco","Yumbo","Zarzal"],"Vaupés":["Carurú","Mitú","Taraira"],"Vichada":["Cumaribo","La Primavera","Puerto Carreño","Santa Rosalía"]};
+
+        function poblarDepartamentos() {
+            const sel = document.getElementById('infoDepartamento');
+            if (!sel || sel.options.length > 1) return; // ya poblado
+            Object.keys(COLOMBIA).sort().forEach(dep => {
+                const opt = document.createElement('option');
+                opt.value = dep;
+                opt.textContent = dep;
+                sel.appendChild(opt);
+            });
+        }
+
+        function poblarMunicipios(municipioSeleccionado) {
+            const depSel = document.getElementById('infoDepartamento');
+            const munSel = document.getElementById('infoMunicipio');
+            const dep = depSel.value;
+            munSel.innerHTML = '<option value="">Selecciona un municipio...</option>';
+            if (!dep || !COLOMBIA[dep]) return;
+            COLOMBIA[dep].forEach(mun => {
+                const opt = document.createElement('option');
+                opt.value = mun;
+                opt.textContent = mun;
+                munSel.appendChild(opt);
+            });
+            if (municipioSeleccionado) munSel.value = municipioSeleccionado;
+        }
+
+        // Selector tipo "checklist" reusable (chips): marca el botón elegido,
+        // guarda su valor en el input oculto, y muestra/oculta el campo "Otro".
+        function seleccionarChip(hiddenId, containerId, btnEl, otroWrapId) {
+            const container = document.getElementById(containerId);
+            [...container.querySelectorAll('.chip-btn')].forEach(b => b.classList.remove('chip-active'));
+            btnEl.classList.add('chip-active');
+            const value = btnEl.dataset.value;
+            document.getElementById(hiddenId).value = value;
+            const otroWrap = document.getElementById(otroWrapId);
+            if (value === 'Otro') {
+                otroWrap.classList.remove('hidden');
+            } else {
+                otroWrap.classList.add('hidden');
+                const otroInput = otroWrap.querySelector('input');
+                if (otroInput) otroInput.value = '';
+            }
+        }
+
+        function setChipValue(hiddenId, containerId, otroWrapId, value, otroTexto) {
+            const container = document.getElementById(containerId);
+            [...container.querySelectorAll('.chip-btn')].forEach(b => b.classList.remove('chip-active'));
+            document.getElementById(hiddenId).value = value || '';
+            const otroWrap = document.getElementById(otroWrapId);
+            if (value) {
+                const btn = [...container.querySelectorAll('.chip-btn')].find(b => b.dataset.value === value);
+                if (btn) btn.classList.add('chip-active');
+            }
+            if (value === 'Otro') {
+                otroWrap.classList.remove('hidden');
+                const otroInput = otroWrap.querySelector('input');
+                if (otroInput) otroInput.value = otroTexto || '';
+            } else {
+                otroWrap.classList.add('hidden');
+            }
         }
 
         let modalMode = 'create';
@@ -1582,6 +1704,10 @@
             document.getElementById('proyectoInfoForm').reset();
             document.getElementById('infoNombreProyecto').disabled = false;
             document.getElementById('infoNombreProyectoHint').classList.remove('hidden');
+            poblarDepartamentos();
+            poblarMunicipios();
+            setChipValue('infoTipoProyecto', 'infoTipoProyectoChips', 'infoTipoProyectoOtroWrap', '');
+            setChipValue('infoClasificacionServicio', 'infoClasificacionServicioChips', 'infoClasificacionServicioOtroWrap', '');
             document.getElementById('proyectoInfoModal').classList.remove('hidden');
         };
 
@@ -1607,8 +1733,11 @@
             document.getElementById('infoReferenciaMedidor').value = info.referenciaMedidor || '';
             document.getElementById('infoRadicado').value = info.radicado || '';
             document.getElementById('infoDueno').value = info.dueno || '';
+            poblarDepartamentos();
             document.getElementById('infoDepartamento').value = info.departamento || '';
-            document.getElementById('infoMunicipio').value = info.municipio || '';
+            poblarMunicipios(info.municipio || '');
+            setChipValue('infoTipoProyecto', 'infoTipoProyectoChips', 'infoTipoProyectoOtroWrap', info.tipoProyecto || '', info.tipoProyectoOtro || '');
+            setChipValue('infoClasificacionServicio', 'infoClasificacionServicioChips', 'infoClasificacionServicioOtroWrap', info.clasificacionServicio || '', info.clasificacionServicioOtro || '');
             document.getElementById('infoTelefono').value = info.telefono || '';
             document.getElementById('infoCorreo').value = info.correo || '';
             document.getElementById('infoDireccion').value = info.direccion || '';
@@ -1629,6 +1758,10 @@
                 nicTrf: document.getElementById('infoNicTrf').value.trim(),
                 referenciaMedidor: document.getElementById('infoReferenciaMedidor').value.trim(),
                 radicado: document.getElementById('infoRadicado').value.trim(),
+                tipoProyecto: document.getElementById('infoTipoProyecto').value.trim(),
+                tipoProyectoOtro: document.getElementById('infoTipoProyectoOtro').value.trim(),
+                clasificacionServicio: document.getElementById('infoClasificacionServicio').value.trim(),
+                clasificacionServicioOtro: document.getElementById('infoClasificacionServicioOtro').value.trim(),
                 dueno: document.getElementById('infoDueno').value.trim(),
                 departamento: document.getElementById('infoDepartamento').value.trim(),
                 municipio: document.getElementById('infoMunicipio').value.trim(),
