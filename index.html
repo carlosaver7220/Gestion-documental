@@ -198,6 +198,17 @@
                     <div class="pointer-events-none absolute right-0 top-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded shadow-xl z-10">Nuevo Proyecto</div>
                 </div>
             </div>
+
+            <!-- Navegador de Año: solo deja moverse a años que realmente tengan proyectos (según las carpetas leídas) -->
+            <div class="px-6 pb-3 shrink-0 flex items-center justify-between">
+                <button id="yearPrevBtn" onclick="cambiarAnioSidebar(-1)" class="p-1.5 rounded-md hover:bg-white/10 disabled:opacity-25 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors" title="Año anterior">
+                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <span id="yearCurrentLabel" class="text-sm font-black text-white tracking-widest">----</span>
+                <button id="yearNextBtn" onclick="cambiarAnioSidebar(1)" class="p-1.5 rounded-md hover:bg-white/10 disabled:opacity-25 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors" title="Año siguiente">
+                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
             <div class="flex-1 overflow-y-auto px-6 space-y-1 pb-8">
                 <div id="projectList" class="space-y-2"></div>
             </div>
@@ -1433,11 +1444,62 @@
         // Event listener para el buscador
         document.getElementById('projectSearch').addEventListener('input', renderSidebar);
 
+        let sidebarYear = null; // año activo del navegador (se inicializa la primera vez que hay datos)
+
+        function anioNumerico(p) {
+            const n = parseInt(p.year, 10);
+            return Number.isFinite(n) ? n : null;
+        }
+
+        window.cambiarAnioSidebar = (delta) => {
+            const anios = [...new Set(projects.map(anioNumerico).filter(n => n !== null))];
+            if (!anios.length) return;
+            const min = Math.min(...anios);
+            const max = Math.max(...anios);
+            let next = (sidebarYear ?? max) + delta;
+            if (next < min) next = min;
+            if (next > max) next = max;
+            sidebarYear = next;
+            renderSidebar();
+        };
+
         function renderSidebar() {
             const searchTerm = document.getElementById('projectSearch').value.toLowerCase();
 
+            // Años con proyectos reales (leídos de las carpetas 0.N. AAAA) — define los límites del navegador.
+            const anios = [...new Set(projects.map(anioNumerico).filter(n => n !== null))];
+            const minAnio = anios.length ? Math.min(...anios) : null;
+            const maxAnio = anios.length ? Math.max(...anios) : null;
+
+            // Por defecto, el año más reciente que sí tenga proyectos (ej: 2026). Si aún no hay
+            // datos cargados, se deja en null y se define en cuanto scan() termine.
+            if (sidebarYear === null && maxAnio !== null) sidebarYear = maxAnio;
+            if (sidebarYear !== null && minAnio !== null) {
+                if (sidebarYear < minAnio) sidebarYear = minAnio;
+                if (sidebarYear > maxAnio) sidebarYear = maxAnio;
+            }
+
+            const prevBtn = document.getElementById('yearPrevBtn');
+            const nextBtn = document.getElementById('yearNextBtn');
+            const label = document.getElementById('yearCurrentLabel');
+            if (sidebarYear !== null) {
+                label.innerText = sidebarYear;
+                prevBtn.disabled = sidebarYear <= minAnio;
+                nextBtn.disabled = sidebarYear >= maxAnio;
+            } else {
+                label.innerText = '----';
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+            }
+
             // Filtrar proyectos por búsqueda
             let filteredProjects = projects.filter(p => p.name.toLowerCase().includes(searchTerm));
+
+            // Mientras se está buscando, se ignora el filtro de año (para no esconder resultados);
+            // sin búsqueda activa, solo se muestra el año seleccionado en el navegador.
+            if (!searchTerm && sidebarYear !== null) {
+                filteredProjects = filteredProjects.filter(p => anioNumerico(p) === sidebarYear || anioNumerico(p) === null);
+            }
 
             // Ordenar proyectos por nombre (alfabéticamente)
             const sortedProjects = [...filteredProjects].sort((a, b) => a.name.localeCompare(b.name));
@@ -1463,7 +1525,7 @@
                 </div>
             `).join('');
 
-            document.getElementById('projectList').innerHTML = html;
+            document.getElementById('projectList').innerHTML = html || '<p class="text-[10px] text-slate-500 text-center py-6 uppercase font-bold">Sin proyectos en este año</p>';
         }
 
         window.selectProject = (id) => {
