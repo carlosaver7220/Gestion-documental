@@ -573,24 +573,44 @@
                         </div>
 
                         <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest pt-2 border-t border-slate-100">Datos Técnicos</p>
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Potencia (AC)</label>
-                                <input id="infoPotenciaAC" type="number" step="0.01" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <label class="text-[9px] font-black text-slate-400 uppercase">Radicado</label>
+                                <input id="infoRadicado" class="w-full p-2 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Potencia (DC)</label>
-                                <input id="infoPotenciaDC" type="number" step="0.01" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <label class="text-[9px] font-black text-slate-400 uppercase">NIC/TRF</label>
+                                <input id="infoNicTrf" class="w-full p-2 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase">Potencia (DC)</label>
+                                <input id="infoPotenciaDC" type="number" step="0.01" class="w-full p-2 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase">Potencia (AC)</label>
+                                <input id="infoPotenciaAC" type="number" step="0.01" class="w-full p-2 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase">Marca Inversor</label>
+                                <input id="infoMarcaFabricante" class="w-full p-2 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase">Marca Paneles</label>
+                                <input id="infoMarcaPaneles" class="w-full p-2 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Marca de Paneles</label>
-                                <input id="infoMarcaPaneles" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
+                        <div class="grid grid-cols-3 gap-3">
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase">N° de Paneles</label>
                                 <input id="infoNumPaneles" type="number" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">N° de Inversores</label>
+                                <input id="infoNumInversores" type="number" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Medidor</label>
+                                <input id="infoReferenciaMedidor" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
@@ -603,58 +623,47 @@
                                 <input id="infoReferenciaInversor" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Marca/Fabricante Inversor</label>
-                                <input id="infoMarcaFabricante" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">N° de Inversores</label>
-                                <input id="infoNumInversores" type="number" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">NIC/TRF</label>
-                                <input id="infoNicTrf" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Medidor</label>
-                                <input id="infoReferenciaMedidor" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase">Radicado</label>
-                            <input id="infoRadicado" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
 
-                        <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de Proyecto</label>
-                            <input type="hidden" id="infoTipoProyecto" value="">
-                            <div id="infoTipoProyectoChips" class="flex flex-wrap gap-2 mt-1">
-                                <button type="button" data-value="On-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">On-Grid</button>
-                                <button type="button" data-value="Off-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Off-Grid</button>
-                                <button type="button" data-value="Híbrido" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Híbrido</button>
-                                <button type="button" data-value="Aislado" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Aislado</button>
-                                <button type="button" data-value="Otro" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Otro</button>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de Proyecto</label>
+                                <input type="hidden" id="infoTipoProyecto" value="">
+                                <div id="infoTipoProyectoChips" class="flex flex-wrap gap-1.5 mt-1">
+                                    <button type="button" data-value="On-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">On-Grid</button>
+                                    <button type="button" data-value="Off-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Off-Grid</button>
+                                    <button type="button" data-value="Híbrido" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Híbrido</button>
+                                    <button type="button" data-value="Aislado" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Aislado</button>
+                                    <button type="button" data-value="Otro" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Otro</button>
+                                </div>
+                                <div id="infoTipoProyectoOtroWrap" class="hidden mt-2">
+                                    <input id="infoTipoProyectoOtro" placeholder="Especifica" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
                             </div>
-                            <div id="infoTipoProyectoOtroWrap" class="hidden mt-2">
-                                <input id="infoTipoProyectoOtro" placeholder="Especifica el tipo de proyecto" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
 
-                        <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase">Clasificación del Servicio</label>
-                            <input type="hidden" id="infoClasificacionServicio" value="">
-                            <div id="infoClasificacionServicioChips" class="flex flex-wrap gap-2 mt-1">
-                                <button type="button" data-value="Residencial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Residencial</button>
-                                <button type="button" data-value="Comercial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Comercial</button>
-                                <button type="button" data-value="Industrial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Industrial</button>
-                                <button type="button" data-value="Oficial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Oficial</button>
-                                <button type="button" data-value="Otro" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-3 py-2 rounded-md border border-slate-200 text-[11px] font-bold text-slate-600">Otro</button>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Clasificación</label>
+                                <input type="hidden" id="infoClasificacionServicio" value="">
+                                <div id="infoClasificacionServicioChips" class="flex flex-wrap gap-1.5 mt-1">
+                                    <button type="button" data-value="Residencial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Residencial</button>
+                                    <button type="button" data-value="Comercial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Comercial</button>
+                                    <button type="button" data-value="Industrial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Industrial</button>
+                                    <button type="button" data-value="Oficial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Oficial</button>
+                                    <button type="button" data-value="Otro" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Otro</button>
+                                </div>
+                                <div id="infoClasificacionServicioOtroWrap" class="hidden mt-2">
+                                    <input id="infoClasificacionServicioOtro" placeholder="Especifica" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
                             </div>
-                            <div id="infoClasificacionServicioOtroWrap" class="hidden mt-2">
-                                <input id="infoClasificacionServicioOtro" placeholder="Especifica la clasificación del servicio" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Diseñador</label>
+                                <input type="hidden" id="infoDisenador" value="">
+                                <div id="infoDisenadorOtroWrap" class="hidden"></div>
+                                <div id="infoDisenadorChips" class="flex flex-wrap gap-1.5 mt-1">
+                                    <button type="button" data-value="Samir Padilla" onclick="seleccionarChip('infoDisenador','infoDisenadorChips',this,'infoDisenadorOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Samir Padilla</button>
+                                    <button type="button" data-value="Oscar Godoy" onclick="seleccionarChip('infoDisenador','infoDisenadorChips',this,'infoDisenadorOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Oscar Godoy</button>
+                                    <button type="button" data-value="Hassith Mueges" onclick="seleccionarChip('infoDisenador','infoDisenadorChips',this,'infoDisenadorOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Hassith Mueges</button>
+                                </div>
                             </div>
                         </div>
 
@@ -665,8 +674,18 @@
                                 <input id="infoDueno" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Identificación</label>
+                                <input id="infoIdentificacion" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase">Teléfono</label>
                                 <input id="infoTelefono" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Gmail</label>
+                                <input id="infoCorreo" type="email" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
                         <div>
@@ -680,15 +699,9 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Gmail</label>
-                                <input id="infoCorreo" type="email" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Dirección</label>
-                                <input id="infoDireccion" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Dirección</label>
+                            <input id="infoDireccion" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <p class="text-[10px] text-slate-400">Solo el nombre del proyecto es obligatorio. El resto lo puedes completar después.</p>
                         <button id="proyectoInfoSubmitBtn" type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-md hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Crear Proyecto</button>
@@ -1644,24 +1657,28 @@
                     <div class="mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs font-bold text-slate-700 truncate" title="${valor ? String(valor).replace(/"/g,'&quot;') : ''}">${valor || '—'}</div>
                 </div>`;
 
+            const campoSmall = (label, valor) => `
+                <div class="min-w-0">
+                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-wide truncate">${label}</p>
+                    <div class="mt-1 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-[11px] font-bold text-slate-700 truncate" title="${valor ? String(valor).replace(/"/g,'&quot;') : ''}">${valor || '—'}</div>
+                </div>`;
+
             const tipoProyectoTxt = info.tipoProyecto === 'Otro' ? (info.tipoProyectoOtro || 'Otro') : info.tipoProyecto;
             const clasificacionTxt = info.clasificacionServicio === 'Otro' ? (info.clasificacionServicioOtro || 'Otro') : info.clasificacionServicio;
             const depMunTxt = [info.departamento, info.municipio].filter(Boolean).join(' / ');
 
             list.innerHTML = `
                 <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2">Datos Técnicos</p>
-                <div class="grid grid-cols-3 gap-3 mb-4">
-                    ${campo('Radicado', info.radicado)}
-                    ${campo('NIC/TRF', info.nicTrf)}
-                    ${campo('Potencia (DC)', info.potenciaDC ? `${info.potenciaDC} kWp` : '')}
+                <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
+                    ${campoSmall('Radicado', info.radicado)}
+                    ${campoSmall('NIC/TRF', info.nicTrf)}
+                    ${campoSmall('Potencia (DC)', info.potenciaDC ? `${info.potenciaDC} kWp` : '')}
+                    ${campoSmall('Potencia (AC)', info.potenciaAC ? `${info.potenciaAC} kW` : '')}
+                    ${campoSmall('Marca Inversor', info.marcaFabricante)}
+                    ${campoSmall('Marca Paneles', info.marcaPaneles)}
                 </div>
                 <div class="grid grid-cols-3 gap-3 mb-4">
-                    ${campo('Potencia (AC)', info.potenciaAC ? `${info.potenciaAC} kW` : '')}
-                    ${campo('Marca/Fabricante Inversor', info.marcaFabricante)}
                     ${campo('N° de Paneles', info.numPaneles)}
-                </div>
-                <div class="grid grid-cols-3 gap-3 mb-4">
-                    ${campo('Marca de Paneles', info.marcaPaneles)}
                     ${campo('N° de Inversores', info.numInversores)}
                     ${campo('Referencia Medidor', info.referenciaMedidor)}
                 </div>
@@ -1669,21 +1686,23 @@
                     ${campo('Referencia Panel', info.referenciaPanel)}
                     ${campo('Referencia Inversor', info.referenciaInversor)}
                 </div>
-                <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="grid grid-cols-3 gap-3 mb-6">
                     ${campo('Tipo de Proyecto', tipoProyectoTxt)}
-                    ${campo('Clasificación del Servicio', clasificacionTxt)}
+                    ${campo('Clasificación', clasificacionTxt)}
+                    ${campo('Diseñador', info.disenador)}
                 </div>
 
                 <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2">Datos del Cliente</p>
                 <div class="grid grid-cols-2 gap-3 mb-3">
                     ${campo('Nombre Completo', info.dueno)}
-                    ${campo('Teléfono', info.telefono)}
+                    ${campo('Identificación', info.identificacion)}
                 </div>
                 <div class="grid grid-cols-2 gap-3 mb-3">
-                    ${campo('Departamento / Ciudad', depMunTxt)}
+                    ${campo('Teléfono', info.telefono)}
                     ${campo('Gmail', info.correo)}
                 </div>
                 <div class="grid grid-cols-2 gap-3">
+                    ${campo('Departamento / Ciudad', depMunTxt)}
                     ${campo('Dirección', info.direccion)}
                 </div>
             `;
@@ -1770,6 +1789,7 @@
             poblarMunicipios();
             setChipValue('infoTipoProyecto', 'infoTipoProyectoChips', 'infoTipoProyectoOtroWrap', '');
             setChipValue('infoClasificacionServicio', 'infoClasificacionServicioChips', 'infoClasificacionServicioOtroWrap', '');
+            setChipValue('infoDisenador', 'infoDisenadorChips', 'infoDisenadorOtroWrap', '');
             document.getElementById('proyectoInfoModal').classList.remove('hidden');
         };
 
@@ -1795,11 +1815,13 @@
             document.getElementById('infoReferenciaMedidor').value = info.referenciaMedidor || '';
             document.getElementById('infoRadicado').value = info.radicado || '';
             document.getElementById('infoDueno').value = info.dueno || '';
+            document.getElementById('infoIdentificacion').value = info.identificacion || '';
             poblarDepartamentos();
             document.getElementById('infoDepartamento').value = info.departamento || '';
             poblarMunicipios(info.municipio || '');
             setChipValue('infoTipoProyecto', 'infoTipoProyectoChips', 'infoTipoProyectoOtroWrap', info.tipoProyecto || '', info.tipoProyectoOtro || '');
             setChipValue('infoClasificacionServicio', 'infoClasificacionServicioChips', 'infoClasificacionServicioOtroWrap', info.clasificacionServicio || '', info.clasificacionServicioOtro || '');
+            setChipValue('infoDisenador', 'infoDisenadorChips', 'infoDisenadorOtroWrap', info.disenador || '');
             document.getElementById('infoTelefono').value = info.telefono || '';
             document.getElementById('infoCorreo').value = info.correo || '';
             document.getElementById('infoDireccion').value = info.direccion || '';
@@ -1824,7 +1846,9 @@
                 tipoProyectoOtro: document.getElementById('infoTipoProyectoOtro').value.trim(),
                 clasificacionServicio: document.getElementById('infoClasificacionServicio').value.trim(),
                 clasificacionServicioOtro: document.getElementById('infoClasificacionServicioOtro').value.trim(),
+                disenador: document.getElementById('infoDisenador').value.trim(),
                 dueno: document.getElementById('infoDueno').value.trim(),
+                identificacion: document.getElementById('infoIdentificacion').value.trim(),
                 departamento: document.getElementById('infoDepartamento').value.trim(),
                 municipio: document.getElementById('infoMunicipio').value.trim(),
                 telefono: document.getElementById('infoTelefono').value.trim(),
