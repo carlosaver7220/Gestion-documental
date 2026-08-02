@@ -873,6 +873,59 @@
             _projectDataCache.set(codigo, current);
         }
 
+        // ----------------------------------------------------------
+        // LIMPIEZA DE PROYECTOS HUÉRFANOS
+        // ----------------------------------------------------------
+        // El navegador no puede "enterarse" al instante de que borraste una
+        // carpeta desde el explorador de archivos (no existe esa notificación
+        // para carpetas locales). Lo que sí podemos hacer es, cada vez que
+        // conectas o reconectas la Ruta Maestra, comparar los proyectos que
+        // hay en Supabase contra los que realmente existen en el disco, y
+        // si algún registro quedó "huérfano" (su carpeta ya no está),
+        // preguntarte si quieres borrar también esos datos.
+        const _orphanDismissed = new Set(JSON.parse(sessionStorage.getItem('orphanDismissed') || '[]'));
+        let _orphanCheckRunning = false;
+
+        async function limpiarProyectosHuerfanos() {
+            if (!supabaseClient || _orphanCheckRunning) return;
+            _orphanCheckRunning = true;
+            try {
+                const { data, error } = await supabaseClient.from('proyectos').select('codigo, nombre');
+                if (error || !data) return;
+                const idsEnDisco = new Set(projects.map(p => p.id));
+                const huerfanos = data.filter(row => row.codigo && !idsEnDisco.has(row.codigo) && !_orphanDismissed.has(row.codigo));
+                if (huerfanos.length === 0) return;
+
+                const listado = huerfanos.map(h => `- ${h.nombre || h.codigo}`).join('\n');
+                const confirmar = confirm(
+                    `Encontré ${huerfanos.length} proyecto(s) en la base de datos cuya carpeta ya no existe en el disco:\n\n${listado}\n\n¿Quieres borrar también esos datos de Supabase?`
+                );
+
+                if (!confirmar) {
+                    huerfanos.forEach(h => _orphanDismissed.add(h.codigo));
+                    sessionStorage.setItem('orphanDismissed', JSON.stringify([..._orphanDismissed]));
+                    return;
+                }
+
+                const { error: delError } = await supabaseClient
+                    .from('proyectos')
+                    .delete()
+                    .in('codigo', huerfanos.map(h => h.codigo));
+
+                if (delError) {
+                    console.error('Supabase delete orphans error:', delError);
+                    showToast('No se pudo borrar de Supabase: ' + delError.message);
+                } else {
+                    huerfanos.forEach(h => _projectDataCache.delete(h.codigo));
+                    showToast(`Se borraron ${huerfanos.length} proyecto(s) huérfano(s) de Supabase`);
+                }
+            } catch (e) {
+                console.error('Error revisando proyectos huérfanos:', e);
+            } finally {
+                _orphanCheckRunning = false;
+            }
+        }
+
         // --- PREELIMINAR / COORDINATES ---
         let googleMapsLoaded = false;
 
@@ -1937,6 +1990,19 @@
             return await currentHandle.getDirectoryHandle(folderName, { create: true });
         }
 
+        // Revisa las carpetas ya existentes dentro del año (ej: "27. PROYECTO X") y devuelve
+        // el siguiente número consecutivo a usar (28 en ese caso). Si no encuentra ninguna
+        // carpeta numerada, empieza en 1.
+        async function getNextProjectNumber(yearFolder) {
+            let maxNum = 0;
+            for await (const entry of yearFolder.values()) {
+                if (entry.kind !== 'directory') continue;
+                const m = entry.name.match(/^(\d+)\./);
+                if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+            }
+            return maxNum + 1;
+        }
+
         // Crea toda la estructura estándar de carpetas para un proyecto nuevo, vacía
         async function crearNuevoProyecto(nombreProyecto, data) {
             if (!currentHandle) {
@@ -1945,7 +2011,9 @@
             }
             const year = new Date().getFullYear();
             const yearFolder = await getOrCreateYearFolder(year);
-            const projectFolder = await yearFolder.getDirectoryHandle(nombreProyecto, { create: true });
+            const numeroProyecto = await getNextProjectNumber(yearFolder);
+            const nombreCarpeta = `${numeroProyecto}. ${nombreProyecto.trim()}`;
+            const projectFolder = await yearFolder.getDirectoryHandle(nombreCarpeta, { create: true });
 
             await projectFolder.getDirectoryHandle('0. DOCUMENTACION CONTRACTUAL', { create: true });
             await projectFolder.getDirectoryHandle('1. INGENIERIA DE DETALLE', { create: true });
@@ -2492,6 +2560,7 @@
                         document.getElementById('btnReactivate').classList.add('hidden');
                         document.getElementById('pathDisplay').innerText = currentHandle.name;
                         await scan();
+                        limpiarProyectosHuerfanos();
                     } else {
                         showToast('Permiso denegado para acceder a la carpeta.');
                     }
@@ -2505,7 +2574,7 @@
         function start() {
             document.getElementById('btnReactivate').classList.add('hidden');
             document.getElementById('pathDisplay').innerText = currentHandle.name;
-            scan();
+            scan().then(() => limpiarProyectosHuerfanos());
             setInterval(scan, 60000);
         }
 
