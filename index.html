@@ -602,18 +602,56 @@
                                 <input id="infoMarcaPaneles" class="w-full p-2 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
-                        <div class="grid grid-cols-3 gap-3">
+                        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">N° de Paneles</label>
-                                <input id="infoNumPaneles" type="number" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <label class="text-[9px] font-black text-slate-400 uppercase">N° de Paneles</label>
+                                <input id="infoNumPaneles" type="number" class="w-full p-2 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">N° de Inversores</label>
-                                <input id="infoNumInversores" type="number" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <label class="text-[9px] font-black text-slate-400 uppercase">N° de Inversores</label>
+                                <input id="infoNumInversores" type="number" class="w-full p-2 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Medidor</label>
-                                <input id="infoReferenciaMedidor" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                <label class="text-[9px] font-black text-slate-400 uppercase">Ref. Medidor</label>
+                                <input id="infoReferenciaMedidor" class="w-full p-2 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase">Tipo Proyecto</label>
+                                <input type="hidden" id="infoTipoProyecto" value="">
+                                <div id="infoTipoProyectoChips" class="flex flex-wrap gap-1 mt-1">
+                                    <button type="button" data-value="On-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">On-Grid</button>
+                                    <button type="button" data-value="Off-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Off-Grid</button>
+                                    <button type="button" data-value="Híbrido" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Híbrido</button>
+                                    <button type="button" data-value="Aislado" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Aislado</button>
+                                    <button type="button" data-value="Otro" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Otro</button>
+                                </div>
+                                <div id="infoTipoProyectoOtroWrap" class="hidden mt-1">
+                                    <input id="infoTipoProyectoOtro" placeholder="Especifica" class="w-full p-1.5 bg-slate-50 border border-slate-200 rounded-md text-[10px] outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase">Clasificación</label>
+                                <input type="hidden" id="infoClasificacionServicio" value="">
+                                <div id="infoClasificacionServicioChips" class="flex flex-wrap gap-1 mt-1">
+                                    <button type="button" data-value="Residencial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Residencial</button>
+                                    <button type="button" data-value="Comercial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Comercial</button>
+                                    <button type="button" data-value="Industrial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Industrial</button>
+                                    <button type="button" data-value="Oficial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Oficial</button>
+                                    <button type="button" data-value="Otro" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Otro</button>
+                                </div>
+                                <div id="infoClasificacionServicioOtroWrap" class="hidden mt-1">
+                                    <input id="infoClasificacionServicioOtro" placeholder="Especifica" class="w-full p-1.5 bg-slate-50 border border-slate-200 rounded-md text-[10px] outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase">Diseñador</label>
+                                <input type="hidden" id="infoDisenador" value="">
+                                <div id="infoDisenadorOtroWrap" class="hidden"></div>
+                                <div id="infoDisenadorChips" class="flex flex-wrap gap-1 mt-1">
+                                    <button type="button" data-value="Samir Padilla" onclick="seleccionarChip('infoDisenador','infoDisenadorChips',this,'infoDisenadorOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Samir P.</button>
+                                    <button type="button" data-value="Oscar Godoy" onclick="seleccionarChip('infoDisenador','infoDisenadorChips',this,'infoDisenadorOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Oscar G.</button>
+                                    <button type="button" data-value="Hassith Mueges" onclick="seleccionarChip('infoDisenador','infoDisenadorChips',this,'infoDisenadorOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Hassith M.</button>
+                                </div>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
@@ -624,49 +662,6 @@
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Inversor</label>
                                 <input id="infoReferenciaInversor" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-3">
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de Proyecto</label>
-                                <input type="hidden" id="infoTipoProyecto" value="">
-                                <div id="infoTipoProyectoChips" class="flex flex-wrap gap-1.5 mt-1">
-                                    <button type="button" data-value="On-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">On-Grid</button>
-                                    <button type="button" data-value="Off-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Off-Grid</button>
-                                    <button type="button" data-value="Híbrido" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Híbrido</button>
-                                    <button type="button" data-value="Aislado" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Aislado</button>
-                                    <button type="button" data-value="Otro" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Otro</button>
-                                </div>
-                                <div id="infoTipoProyectoOtroWrap" class="hidden mt-2">
-                                    <input id="infoTipoProyectoOtro" placeholder="Especifica" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Clasificación</label>
-                                <input type="hidden" id="infoClasificacionServicio" value="">
-                                <div id="infoClasificacionServicioChips" class="flex flex-wrap gap-1.5 mt-1">
-                                    <button type="button" data-value="Residencial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Residencial</button>
-                                    <button type="button" data-value="Comercial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Comercial</button>
-                                    <button type="button" data-value="Industrial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Industrial</button>
-                                    <button type="button" data-value="Oficial" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Oficial</button>
-                                    <button type="button" data-value="Otro" onclick="seleccionarChip('infoClasificacionServicio','infoClasificacionServicioChips',this,'infoClasificacionServicioOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Otro</button>
-                                </div>
-                                <div id="infoClasificacionServicioOtroWrap" class="hidden mt-2">
-                                    <input id="infoClasificacionServicioOtro" placeholder="Especifica" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase">Diseñador</label>
-                                <input type="hidden" id="infoDisenador" value="">
-                                <div id="infoDisenadorOtroWrap" class="hidden"></div>
-                                <div id="infoDisenadorChips" class="flex flex-wrap gap-1.5 mt-1">
-                                    <button type="button" data-value="Samir Padilla" onclick="seleccionarChip('infoDisenador','infoDisenadorChips',this,'infoDisenadorOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Samir Padilla</button>
-                                    <button type="button" data-value="Oscar Godoy" onclick="seleccionarChip('infoDisenador','infoDisenadorChips',this,'infoDisenadorOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Oscar Godoy</button>
-                                    <button type="button" data-value="Hassith Mueges" onclick="seleccionarChip('infoDisenador','infoDisenadorChips',this,'infoDisenadorOtroWrap')" class="chip-btn px-2 py-1.5 rounded-md border border-slate-200 text-[10px] font-bold text-slate-600">Hassith Mueges</button>
-                                </div>
                             </div>
                         </div>
 
@@ -1463,6 +1458,7 @@
                 id: handle.name,
                 name: handle.name.replace(/^\d+\.\s*/, ''),
                 ingItems, actItems, ingFolder, actFolder, budgetFolder, preliminarFolder,
+                orFolder, retieFolder,
                 info,
                 // Conformidad detectada automáticamente por archivos presentes en las subcarpetas
                 retieConforme: filesRetieConf.length >= 2,
@@ -1706,19 +1702,17 @@
                     ${campoSmall('Marca Inversor', info.marcaFabricante)}
                     ${campoSmall('Marca Paneles', info.marcaPaneles)}
                 </div>
-                <div class="grid grid-cols-3 gap-3 mb-4">
-                    ${campo('N° de Paneles', info.numPaneles)}
-                    ${campo('N° de Inversores', info.numInversores)}
-                    ${campo('Referencia Medidor', info.referenciaMedidor)}
+                <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
+                    ${campoSmall('N° Paneles', info.numPaneles)}
+                    ${campoSmall('N° Inversores', info.numInversores)}
+                    ${campoSmall('Ref. Medidor', info.referenciaMedidor)}
+                    ${campoSmall('Tipo Proyecto', tipoProyectoTxt)}
+                    ${campoSmall('Clasificación', clasificacionTxt)}
+                    ${campoSmall('Diseñador', info.disenador)}
                 </div>
-                <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="grid grid-cols-2 gap-3 mb-6">
                     ${campo('Referencia Panel', info.referenciaPanel)}
                     ${campo('Referencia Inversor', info.referenciaInversor)}
-                </div>
-                <div class="grid grid-cols-3 gap-3 mb-6">
-                    ${campo('Tipo de Proyecto', tipoProyectoTxt)}
-                    ${campo('Clasificación', clasificacionTxt)}
-                    ${campo('Diseñador', info.disenador)}
                 </div>
 
                 <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2">Datos del Cliente</p>
@@ -2251,24 +2245,51 @@
             updateTramiteSaveButtonState();
         }
 
+        // Antes esto intentaba usar "project.rootHandle" (que nunca existió) y crear una
+        // carpeta aparte "6. Trámites" — nada se guardaba de verdad. Ahora escribe
+        // directo en "2. ESTADOS OR Y RETIE / 1. RETIE" o "2. OR", que es la carpeta real
+        // que lee analyze() para detectar CONFORME/INSCRITO/APROBADO.
         async function createOrGetTramiteFolder(project, type) {
-            if (!project?.rootHandle) return null;
-            const parent = await project.rootHandle.getDirectoryHandle('6. Trámites', { create: true });
-            return parent.getDirectoryHandle(type === 'or' ? 'OR' : 'RETIE', { create: true });
+            return type === 'or' ? project.orFolder : project.retieFolder;
+        }
+
+        async function nombreArchivoUnico(folder, nombreBase, ext) {
+            const existentes = new Set();
+            try {
+                for await (const e of folder.values()) if (e.kind === 'file') existentes.add(e.name.toLowerCase());
+            } catch (e) {}
+            let candidato = `${nombreBase}${ext}`;
+            let i = 2;
+            while (existentes.has(candidato.toLowerCase())) {
+                candidato = `${nombreBase} (${i})${ext}`;
+                i++;
+            }
+            return candidato;
         }
 
         async function saveTramiteFiles(project, type, files) {
             if (!files?.length) return [];
             const folder = await createOrGetTramiteFolder(project, type);
-            if (!folder) return [];
+            if (!folder) {
+                showToast('No se encontró la carpeta "2. ESTADOS OR Y RETIE" de este proyecto.');
+                return [];
+            }
             const saved = [];
-            for (const file of files) {
-                const safeName = `${Date.now()}_${file.name.replace(/[\\/:*?\"<>|]/g, '_')}`;
-                const handle = await folder.getFileHandle(safeName, { create: true });
+            for (let idx = 0; idx < files.length; idx++) {
+                const file = files[idx];
+                const extMatch = file.name.match(/\.[^.]+$/);
+                const ext = extMatch ? extMatch[0] : '';
+                // Para OR/CONFORME el nombre siempre es "2. Carta de Conformidad {Proyecto}",
+                // igual que "1. Radicado {Proyecto}" ya usado para el estado INSCRITO.
+                const nombreBase = type === 'or'
+                    ? `2. Carta de Conformidad ${project.name}`
+                    : file.name.replace(/\.[^.]+$/, '');
+                const finalName = await nombreArchivoUnico(folder, nombreBase, ext);
+                const handle = await folder.getFileHandle(finalName, { create: true });
                 const writable = await handle.createWritable();
                 await writable.write(file);
                 await writable.close();
-                saved.push(safeName);
+                saved.push(finalName);
             }
             return saved;
         }
