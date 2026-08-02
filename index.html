@@ -740,6 +740,7 @@
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase">Equipos Instalados</label>
                             <textarea id="materialesEquiposInput" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[110px] outline-none focus:ring-2 focus:ring-blue-500" placeholder="Pega aquí los equipos, uno por línea. Ej:&#10;12 Paneles JA Solar 550W&#10;1 Inversor Huawei 6kW"></textarea>
+                            <p class="text-[10px] text-slate-400 mt-1">Un equipo por línea. Si pegas una lista con viñetas (•) de Word, no importa si quedan todas juntas: la app las separa sola.</p>
                         </div>
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase">Instalaciones y Componentes del Proyecto</label>
@@ -1350,6 +1351,17 @@
             document.getElementById('materialesModal').classList.remove('hidden');
         };
 
+        // Separa el texto pegado en materiales. Soporta tanto líneas reales (Enter)
+        // como texto pegado de Word donde los ítems quedaron separados solo por el
+        // símbolo de viñeta "•" en la misma línea (pasa seguido al copiar listas).
+        function parsearMateriales(raw) {
+            return raw
+                .replace(/\u2022/g, '\n')
+                .split(/\r?\n/)
+                .map(s => s.replace(/^[-*]\s*/, '').trim())
+                .filter(Boolean);
+        }
+
         document.getElementById('materialesModalForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const entrega = document.getElementById('materialesEntregaInput').value.trim();
@@ -1357,10 +1369,8 @@
                 alert('Escribe el nombre de quién hace la entrega.');
                 return;
             }
-            const equipos = document.getElementById('materialesEquiposInput').value
-                .split('\n').map(s => s.trim()).filter(Boolean);
-            const componentes = document.getElementById('materialesComponentesInput').value
-                .split('\n').map(s => s.trim()).filter(Boolean);
+            const equipos = parsearMateriales(document.getElementById('materialesEquiposInput').value);
+            const componentes = parsearMateriales(document.getElementById('materialesComponentesInput').value);
 
             const btn = document.getElementById('materialesModalSubmitBtn');
             btn.disabled = true;
