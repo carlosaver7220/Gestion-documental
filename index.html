@@ -742,7 +742,7 @@
                             <textarea id="materialesEquiposInput" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[110px] outline-none focus:ring-2 focus:ring-blue-500" placeholder="Pega aquí los equipos, uno por línea. Ej:&#10;12 Paneles JA Solar 550W&#10;1 Inversor Huawei 6kW"></textarea>
                             <p class="text-[10px] text-slate-400 mt-1">Un equipo por línea. Si pegas una lista con viñetas (•) de Word, no importa si quedan todas juntas: la app las separa sola.</p>
                         </div>
-                        <div>
+                        <div id="materialesComponentesWrap">
                             <label class="text-[10px] font-black text-slate-400 uppercase">Instalaciones y Componentes del Proyecto</label>
                             <textarea id="materialesComponentesInput" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[110px] outline-none focus:ring-2 focus:ring-blue-500" placeholder="Pega aquí los componentes, uno por línea. Ej:&#10;Estructura de montaje&#10;Cableado DC/AC"></textarea>
                         </div>
@@ -1329,6 +1329,7 @@
         // hizo la entrega) sí se pide cada vez porque puede cambiar.
         let materialesModalDocId = null;
         let materialesModalProjectId = null;
+        let materialesModalCombinar = false;
 
         async function getActaMateriales(projectId) {
             const datos = await getProjectData(projectId);
@@ -1343,6 +1344,7 @@
             const actaConfig = CONFIG.act.find(a => a.id === docId);
             materialesModalDocId = docId;
             materialesModalProjectId = projectId;
+            materialesModalCombinar = !!(actaConfig && actaConfig.combinarListas);
             document.getElementById('materialesModalTitle').innerText = actaConfig ? actaConfig.label : 'Acta';
             const guardado = await getActaMateriales(projectId);
             document.getElementById('materialesEntregaInput').value = guardado.entrega || '';
@@ -1387,11 +1389,10 @@
             btn.innerText = 'Generando...';
             try {
                 await saveActaMateriales(materialesModalProjectId, { entrega, equipos, componentes });
-                const ok = await renderActaTemplate(materialesModalDocId, materialesModalProjectId, {
-                    entrega,
-                    equipos: formatearListaBullets(equipos),
-                    componentes: formatearListaBullets(componentes)
-                });
+                const extraData = materialesModalCombinar
+                    ? { entrega, equipos: formatearListaBullets([...equipos, ...componentes]) }
+                    : { entrega, equipos: formatearListaBullets(equipos), componentes: formatearListaBullets(componentes) };
+                const ok = await renderActaTemplate(materialesModalDocId, materialesModalProjectId, extraData);
                 if (ok) document.getElementById('materialesModal').classList.add('hidden');
             } finally {
                 btn.disabled = false;
@@ -1453,7 +1454,7 @@
             act: [
                 { id: "1.", label: "Acta de Visita Tecnica", tipo: 'fotos' },
                 { id: "1.2.", label: "Acta de Vecindad", tipo: 'fotos' },
-                { id: "2.", label: "Acta de Entrega de Equipos", tipo: 'materiales' },
+                { id: "2.", label: "Acta de Entrega de Equipos", tipo: 'materiales', combinarListas: true },
                 { id: "3.", label: "Acta de Inicio", tipo: 'simple' },
                 { id: "4.", label: "Acta de Entrega de Proyectos", tipo: 'materiales' },
                 { id: "5.", label: "Acta de Entrega de Capacitacion", tipo: 'simple' },
