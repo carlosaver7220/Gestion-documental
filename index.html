@@ -550,6 +550,9 @@
                     <div id="conformidadModalList" class="flex-1 overflow-y-auto p-6 space-y-2">
                         <!-- Lista de archivos generada dinámicamente -->
                     </div>
+                    <div class="p-4 border-t border-slate-100">
+                        <button id="conformidadModalCambiarEstadoBtn" onclick="document.getElementById('conformidadModal').classList.add('hidden'); openTramiteModal(conformidadModalTipoActual);" class="w-full py-2.5 rounded-md border border-slate-200 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-50">Actualizar estado del trámite</button>
+                    </div>
                 </div>
             </div>
 
@@ -1445,7 +1448,9 @@
             // adicionales aparte del radicado, ahí sí se considera conforme (verde).
             // Si no hay ni un archivo pero el dato de "Radicado" ya está guardado en la
             // info del proyecto, es el mismo caso: inscrito, pero no conforme.
-            const esArchivoRadicado = (nombre) => /^1\.\s*radicado/i.test((nombre || '').trim());
+            // Se usa "radica" (no "radicado" completo) a propósito: cubre variantes/typos
+            // reales que aparecen en campo, como "RADICAADO" en vez de "RADICADO".
+            const esArchivoRadicado = (nombre) => /^1\.\s*radica/i.test((nombre || '').trim());
             const orFilesSinRadicado = filesOrConf.filter(x => !esArchivoRadicado(x.n));
             const orTieneSoloRadicado = filesOrConf.length > 0 && orFilesSinRadicado.length === 0;
             let orInfoSupabase = null;
@@ -1952,8 +1957,9 @@
             if (!p) return;
             const statusReal = type === 'or' ? p.states.or.status : p.states.retie.status;
             const conformeAuto = type === 'or' ? p.orConforme : p.retieConforme;
+            const inscritoAuto = type === 'or' ? p.orInscrito : false;
             const esConforme = type === 'or'
-                ? (statusReal === 'CONFORME' || (statusReal === 'NO INSCRITO' && conformeAuto))
+                ? (statusReal === 'CONFORME' || (statusReal === 'NO INSCRITO' && (conformeAuto || inscritoAuto)))
                 : (statusReal === 'APROBADO' || (statusReal === 'POR AGENDAR' && conformeAuto));
             if (esConforme) {
                 verConformidad(type);
@@ -1962,9 +1968,12 @@
             }
         };
 
+        let conformidadModalTipoActual = null;
+
         window.verConformidad = (type) => {
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p) return;
+            conformidadModalTipoActual = type;
             const files = type === 'or' ? p.filesOrConf : p.filesRetieConf;
             document.getElementById('conformidadModalType').innerText = type === 'or' ? 'OPERADOR DE RED (OR)' : 'RETIE';
             const list = document.getElementById('conformidadModalList');
