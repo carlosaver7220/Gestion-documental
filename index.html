@@ -1362,6 +1362,16 @@
                 .filter(Boolean);
         }
 
+        // Convierte la lista de materiales en un solo bloque de texto con viñetas
+        // manuales ("•\tItem"), separadas por saltos de línea reales. Junto con
+        // la opción linebreaks:true de docxtemplater, cada salto de línea se
+        // convierte en un párrafo nuevo dentro del Word, heredando el formato
+        // del párrafo donde está el tag. Así no dependemos del mecanismo de
+        // "loops" de Word, que es frágil si el tag no envuelve el párrafo entero.
+        function formatearListaBullets(items) {
+            return items.map(item => `•\t${item}`).join('\n');
+        }
+
         document.getElementById('materialesModalForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const entrega = document.getElementById('materialesEntregaInput').value.trim();
@@ -1379,8 +1389,8 @@
                 await saveActaMateriales(materialesModalProjectId, { entrega, equipos, componentes });
                 const ok = await renderActaTemplate(materialesModalDocId, materialesModalProjectId, {
                     entrega,
-                    equipos: equipos.map(nombre => ({ nombre })),
-                    componentes: componentes.map(nombre => ({ nombre }))
+                    equipos: formatearListaBullets(equipos),
+                    componentes: formatearListaBullets(componentes)
                 });
                 if (ok) document.getElementById('materialesModal').classList.add('hidden');
             } finally {
