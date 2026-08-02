@@ -1439,6 +1439,21 @@
                 info = await readJson(hiddenFolder, 'data.json');
             } catch (e) {}
 
+            // --- Detección de estado OR: no basta con "hay archivos" ---
+            // Un único archivo "1. RADICADO ..." solo significa que el proyecto quedó
+            // INSCRITO ante el Operador de Red, no que esté CONFORME. Si hay archivos
+            // adicionales aparte del radicado, ahí sí se considera conforme (verde).
+            // Si no hay ni un archivo pero el dato de "Radicado" ya está guardado en la
+            // info del proyecto, es el mismo caso: inscrito, pero no conforme.
+            const esArchivoRadicado = (nombre) => /^1\.\s*radicado/i.test((nombre || '').trim());
+            const orFilesSinRadicado = filesOrConf.filter(x => !esArchivoRadicado(x.n));
+            const orTieneSoloRadicado = filesOrConf.length > 0 && orFilesSinRadicado.length === 0;
+            let orInfoSupabase = null;
+            try { orInfoSupabase = await getProjectData(handle.name); } catch (e) {}
+            const orRadicadoEnInfo = !!(orInfoSupabase && orInfoSupabase.project_info && String(orInfoSupabase.project_info.radicado || '').trim());
+            const orConformeDetectado = orFilesSinRadicado.length >= 1;
+            const orInscritoDetectado = !orConformeDetectado && (orTieneSoloRadicado || (filesOrConf.length === 0 && orRadicadoEnInfo));
+
             return {
                 id: handle.name,
                 name: handle.name.replace(/^\d+\.\s*/, ''),
@@ -1446,7 +1461,8 @@
                 info,
                 // Conformidad detectada automáticamente por archivos presentes en las subcarpetas
                 retieConforme: filesRetieConf.length >= 2,
-                orConforme: filesOrConf.length >= 1,
+                orConforme: orConformeDetectado,
+                orInscrito: orInscritoDetectado,
                 filesRetieConf, filesOrConf,
                 prog: Math.round((ingItems.filter(i=>i.found).length / ingItems.length) * 100),
                 states
@@ -1585,8 +1601,13 @@
             // Trámites Estados
             // Si hay archivos de conformidad detectados y el estado sigue en su valor base
             // (nunca se ha tocado manualmente), lo mostramos ya avanzado automáticamente.
+            // OR tiene 3 lecturas visuales: CONFORME (verde, hay archivos además del
+            // radicado), INSCRITO (naranja, solo está el radicado, sea archivo o dato),
+            // o el estado real tal cual está guardado.
             const orStatusReal = p.states.or.status;
-            const orStatus = (orStatusReal === 'NO INSCRITO' && p.orConforme) ? 'CONFORME' : orStatusReal;
+            let orStatus = orStatusReal;
+            if (orStatusReal === 'NO INSCRITO' && p.orConforme) orStatus = 'CONFORME';
+            else if (orStatusReal === 'NO INSCRITO' && p.orInscrito) orStatus = 'INSCRITO';
             const retieStatusReal = p.states.retie.status;
             const retieStatus = (retieStatusReal === 'POR AGENDAR' && p.retieConforme) ? 'APROBADO' : retieStatusReal;
 
@@ -1594,9 +1615,12 @@
             cardOr.classList.toggle('bg-emerald-50', orStatus === 'CONFORME');
             cardOr.classList.toggle('text-emerald-700', orStatus === 'CONFORME');
             cardOr.classList.toggle('border-emerald-300', orStatus === 'CONFORME');
-            cardOr.classList.toggle('bg-slate-100', orStatus !== 'CONFORME');
-            cardOr.classList.toggle('text-slate-700', orStatus !== 'CONFORME');
-            cardOr.classList.toggle('border-slate-200', orStatus !== 'CONFORME');
+            cardOr.classList.toggle('bg-amber-50', orStatus === 'INSCRITO');
+            cardOr.classList.toggle('text-amber-700', orStatus === 'INSCRITO');
+            cardOr.classList.toggle('border-amber-300', orStatus === 'INSCRITO');
+            cardOr.classList.toggle('bg-slate-100', orStatus !== 'CONFORME' && orStatus !== 'INSCRITO');
+            cardOr.classList.toggle('text-slate-700', orStatus !== 'CONFORME' && orStatus !== 'INSCRITO');
+            cardOr.classList.toggle('border-slate-200', orStatus !== 'CONFORME' && orStatus !== 'INSCRITO');
             cardOr.title = `Operador Red (OR): ${orStatus}`;
 
             const cardRetie = document.getElementById('card-retie');
@@ -2252,6 +2276,7 @@
 
             let estadoMostrado = state.status;
             if (type === 'or' && state.status === 'NO INSCRITO' && p.orConforme) estadoMostrado = 'CONFORME';
+            else if (type === 'or' && state.status === 'NO INSCRITO' && p.orInscrito) estadoMostrado = 'INSCRITO';
             if (type === 'retie' && state.status === 'POR AGENDAR' && p.retieConforme) estadoMostrado = 'APROBADO';
             select.value = estadoMostrado;
 
