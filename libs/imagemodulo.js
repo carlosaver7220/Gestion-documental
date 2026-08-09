@@ -320,7 +320,7 @@ module.exports = function () {
 			}
 			var types = contentTypeDoc.getElementsByTagName("Types")[0];
 			var newTag = contentTypeDoc.createElement("Default");
-			newTag.namespaceURI = null;
+			try { newTag.namespaceURI = null; } catch (e) { /* navegador: namespaceURI es de solo lectura y ya es null */ }
 			newTag.setAttribute("ContentType", contentType);
 			newTag.setAttribute("Extension", extension);
 			types.appendChild(newTag);
@@ -350,7 +350,7 @@ module.exports = function () {
 			this.addExtensionRels("image/" + extension, extension);
 			var relationships = this.relsDoc.getElementsByTagName("Relationships")[0];
 			var newTag = this.relsDoc.createElement("Relationship");
-			newTag.namespaceURI = null;
+			try { newTag.namespaceURI = null; } catch (e) { /* navegador: namespaceURI es de solo lectura y ya es null */ }
 			var maxRid = this.loadImageRels() + 1;
 			newTag.setAttribute("Id", "rId" + maxRid);
 			newTag.setAttribute("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image");
