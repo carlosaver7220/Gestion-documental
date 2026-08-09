@@ -753,6 +753,184 @@
                 </div>
             </div>
 
+            <!-- Modal Acta de Visita Técnica (con fotos y checklists) -->
+            <div id="visitaTecnicaModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                <div class="w-full max-w-3xl bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Acta</p>
+                            <h3 class="text-lg font-black text-slate-900">Acta de Visita Técnica</h3>
+                        </div>
+                        <button onclick="document.getElementById('visitaTecnicaModal').classList.add('hidden')" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"/></svg>
+                        </button>
+                    </div>
+                    <form id="visitaTecnicaForm" class="flex-1 overflow-y-auto p-6 space-y-6">
+
+                        <!-- Quién realiza la visita -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">¿Quién realiza la visita? <span class="text-red-500">*</span></label>
+                            <input id="visitaQuien" required class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Jair Luna">
+                        </div>
+
+                        <!-- Tipo de Proyecto -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de Proyecto</label>
+                            <div id="visitaTipoProyectoChips" class="flex flex-wrap gap-1.5 mt-1">
+                                <button type="button" data-value="Residencial" onclick="seleccionarChip('visitaTipoProyecto','visitaTipoProyectoChips',this,'visitaTipoProyectoOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Residencial</button>
+                                <button type="button" data-value="Comercial" onclick="seleccionarChip('visitaTipoProyecto','visitaTipoProyectoChips',this,'visitaTipoProyectoOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Comercial</button>
+                                <button type="button" data-value="Industrial" onclick="seleccionarChip('visitaTipoProyecto','visitaTipoProyectoChips',this,'visitaTipoProyectoOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Industrial</button>
+                            </div>
+                            <input type="hidden" id="visitaTipoProyecto">
+                        </div>
+
+                        <!-- Tipo de Red Eléctrica -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de Red Eléctrica</label>
+                            <div id="visitaTipoRedChips" class="flex flex-wrap gap-1.5 mt-1">
+                                <button type="button" data-value="Monofásica" onclick="seleccionarChip('visitaTipoRed','visitaTipoRedChips',this,'visitaTipoRedOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Monofásica</button>
+                                <button type="button" data-value="Bifásica" onclick="seleccionarChip('visitaTipoRed','visitaTipoRedChips',this,'visitaTipoRedOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Bifásica</button>
+                                <button type="button" data-value="Trifásica" onclick="seleccionarChip('visitaTipoRed','visitaTipoRedChips',this,'visitaTipoRedOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Trifásica</button>
+                            </div>
+                            <input type="hidden" id="visitaTipoRed">
+                        </div>
+
+                        <!-- Tipo de Sistema -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de Sistema</label>
+                            <div id="visitaTipoSistemaChips" class="flex flex-wrap gap-1.5 mt-1">
+                                <button type="button" data-value="On Grid" onclick="seleccionarChip('visitaTipoSistema','visitaTipoSistemaChips',this,'visitaTipoSistemaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">On Grid</button>
+                                <button type="button" data-value="Off Grid" onclick="seleccionarChip('visitaTipoSistema','visitaTipoSistemaChips',this,'visitaTipoSistemaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Off Grid</button>
+                                <button type="button" data-value="Híbrido" onclick="seleccionarChip('visitaTipoSistema','visitaTipoSistemaChips',this,'visitaTipoSistemaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Híbrido</button>
+                            </div>
+                            <input type="hidden" id="visitaTipoSistema">
+                        </div>
+
+                        <!-- Tipo de Cubierta -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de Cubierta</label>
+                            <div id="visitaTipoCubiertaChips" class="flex flex-wrap gap-1.5 mt-1">
+                                <button type="button" data-value="Eternit" onclick="seleccionarChip('visitaTipoCubierta','visitaTipoCubiertaChips',this,'visitaTipoCubiertaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Eternit</button>
+                                <button type="button" data-value="Placa" onclick="seleccionarChip('visitaTipoCubierta','visitaTipoCubiertaChips',this,'visitaTipoCubiertaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Placa</button>
+                                <button type="button" data-value="Colonial" onclick="seleccionarChip('visitaTipoCubierta','visitaTipoCubiertaChips',this,'visitaTipoCubiertaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Colonial</button>
+                                <button type="button" data-value="Zinc" onclick="seleccionarChip('visitaTipoCubierta','visitaTipoCubiertaChips',this,'visitaTipoCubiertaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Zinc</button>
+                                <button type="button" data-value="Otro" onclick="seleccionarChip('visitaTipoCubierta','visitaTipoCubiertaChips',this,'visitaTipoCubiertaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Otro</button>
+                            </div>
+                            <input type="hidden" id="visitaTipoCubierta">
+                            <div id="visitaTipoCubiertaOtroWrap" class="hidden mt-2">
+                                <input id="visitaTipoCubiertaOtro" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Especifica cuál">
+                            </div>
+                        </div>
+
+                        <!-- Soporte de Cubierta -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Soporte de Cubierta</label>
+                            <div id="visitaSoporteChips" class="flex flex-wrap gap-1.5 mt-1">
+                                <button type="button" data-value="Cercha" onclick="seleccionarChip('visitaSoporte','visitaSoporteChips',this,'visitaSoporteOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Cercha</button>
+                                <button type="button" data-value="Perfil Metálico" onclick="seleccionarChip('visitaSoporte','visitaSoporteChips',this,'visitaSoporteOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Perfil Metálico</button>
+                                <button type="button" data-value="Madera" onclick="seleccionarChip('visitaSoporte','visitaSoporteChips',this,'visitaSoporteOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Madera</button>
+                                <button type="button" data-value="Otro" onclick="seleccionarChip('visitaSoporte','visitaSoporteChips',this,'visitaSoporteOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Otro</button>
+                            </div>
+                            <input type="hidden" id="visitaSoporte">
+                            <div id="visitaSoporteOtroWrap" class="hidden mt-2">
+                                <input id="visitaSoporteOtro" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Especifica cuál">
+                            </div>
+                        </div>
+
+                        <!-- Especificaciones técnicas -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Código de Transformador</label>
+                                <input id="visitaCodigoTransformador" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Área Disponible Cubierta (m²)</label>
+                                <input id="visitaAreaCubierta" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Altura de Cubierta (ml)</label>
+                                <input id="visitaAlturaCubierta" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Inclinación de Cubierta</label>
+                                <input id="visitaInclinacionCubierta" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Área Disponible Bastidor (ml)</label>
+                                <input id="visitaAreaBastidor" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <!-- Observaciones -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Observaciones</label>
+                            <textarea id="visitaObservaciones" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[90px] outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+
+                        <!-- Registro fotográfico -->
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Registro Fotográfico <span class="text-slate-300 normal-case font-semibold">(todas opcionales)</span></p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-500">Tablero de protección</label>
+                                    <input type="file" accept="image/*" id="visitaFoto_tablero" class="w-full text-[10px] mt-1">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-500">Zona de instalación de bastidor</label>
+                                    <input type="file" accept="image/*" id="visitaFoto_bastidor" class="w-full text-[10px] mt-1">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-500">Panorámica de cubierta (módulos)</label>
+                                    <input type="file" accept="image/*" id="visitaFoto_cubierta" class="w-full text-[10px] mt-1">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-500">Canalización AC</label>
+                                    <input type="file" accept="image/*" id="visitaFoto_ac" class="w-full text-[10px] mt-1">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-500">Canalización DC</label>
+                                    <input type="file" accept="image/*" id="visitaFoto_dc" class="w-full text-[10px] mt-1">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-500">Medidor</label>
+                                    <input type="file" accept="image/*" id="visitaFoto_medidor" class="w-full text-[10px] mt-1">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-500">Transformador</label>
+                                    <input type="file" accept="image/*" id="visitaFoto_transformador" class="w-full text-[10px] mt-1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Elaboró -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Elaboró <span class="text-red-500">*</span></label>
+                            <div id="visitaElaboroChips" class="flex flex-wrap gap-1.5 mt-1"></div>
+                            <input type="hidden" id="visitaElaboro">
+                            <div id="visitaElaboroOtroWrap" class="hidden mt-2 space-y-2">
+                                <input id="visitaElaboroOtroNombre" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre completo">
+                                <input id="visitaElaboroOtroCedula" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Cédula">
+                                <input id="visitaElaboroOtroEmpresa" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Empresa">
+                            </div>
+                        </div>
+
+                        <!-- Revisó -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Revisó <span class="text-red-500">*</span></label>
+                            <div id="visitaRevisoChips" class="flex flex-wrap gap-1.5 mt-1"></div>
+                            <input type="hidden" id="visitaReviso">
+                            <div id="visitaRevisoOtroWrap" class="hidden mt-2 space-y-2">
+                                <input id="visitaRevisoOtroNombre" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre completo">
+                                <input id="visitaRevisoOtroCedula" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Cédula">
+                                <input id="visitaRevisoOtroEmpresa" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Empresa">
+                            </div>
+                        </div>
+
+                        <button id="visitaTecnicaSubmitBtn" type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-md hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Generar Acta</button>
+                    </form>
+                </div>
+            </div>
+
             <!-- Vista DESARROLLO (Presupuesto) -->
             <div id="developmentView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
                 <header class="px-10 py-6 bg-white border-b flex justify-between items-center">
@@ -1402,9 +1580,247 @@
             }
         });
 
-        // Actas que piden fotos (Visita Técnica, Vecindad): todavía no implementadas.
+        // ----------------------------------------------------------
+        // ACTA DE VISITA TÉCNICA (con fotos y checklists)
+        // ----------------------------------------------------------
+
+        // Personal fijo de Smart Energy. Predefinido en el código a propósito
+        // (no se guarda en Supabase). Completa cédula y cargo reales.
+        const PERSONAL = {
+            'Jair Luna':       { cedula: 'PENDIENTE', empresa: 'Smart Energy Ing S.A.S', cargo: 'PENDIENTE' },
+            'Hassith Mueges':  { cedula: 'PENDIENTE', empresa: 'Smart Energy Ing S.A.S', cargo: 'PENDIENTE' },
+            'Rodrigo Sierra':  { cedula: 'PENDIENTE', empresa: 'Smart Energy Ing S.A.S', cargo: 'Coordinador de Proyectos' },
+            'Oscar Godoy':     { cedula: 'PENDIENTE', empresa: 'Smart Energy Ing S.A.S', cargo: 'PENDIENTE' },
+        };
+        const ELABORO_OPCIONES = ['Jair Luna', 'Hassith Mueges', 'Rodrigo Sierra', 'Oscar Godoy', 'Otro'];
+        const REVISO_OPCIONES  = ['Rodrigo Sierra', 'Oscar Godoy', 'Otro'];
+
+        // Convierte un booleano en el símbolo de checkbox marcado/vacío para el Word.
+        function chk(condicion) {
+            return condicion ? '☒' : '☐';
+        }
+
+        // Igual que seleccionarChip, pero además autocompleta cédula/empresa
+        // cuando la persona elegida está en PERSONAL, o libera los campos de
+        // texto si se elige "Otro".
+        function seleccionarPersona(hiddenId, containerId, btnEl, otroWrapId) {
+            const container = document.getElementById(containerId);
+            [...container.querySelectorAll('.chip-btn')].forEach(b => b.classList.remove('chip-active'));
+            btnEl.classList.add('chip-active');
+            const value = btnEl.dataset.value;
+            document.getElementById(hiddenId).value = value;
+            const otroWrap = document.getElementById(otroWrapId);
+            if (value === 'Otro') {
+                otroWrap.classList.remove('hidden');
+            } else {
+                otroWrap.classList.add('hidden');
+            }
+        }
+
+        function poblarChipsPersonal(containerId, opciones, hiddenId, otroWrapId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = opciones.map(nombre => `
+                <button type="button" data-value="${nombre}"
+                    onclick="seleccionarPersona('${hiddenId}','${containerId}',this,'${otroWrapId}')"
+                    class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">
+                    ${nombre}
+                </button>`).join('');
+        }
+
+        // Devuelve { nombre, cedula, empresa } ya resuelto según lo elegido
+        // en un bloque Elaboró/Revisó (predefinido o "Otro" escrito a mano).
+        function resolverPersona(hiddenId, otroPrefix) {
+            const valor = document.getElementById(hiddenId).value;
+            if (!valor) return { nombre: '', cedula: '', empresa: '' };
+            if (valor === 'Otro') {
+                return {
+                    nombre: document.getElementById(otroPrefix + 'Nombre').value.trim(),
+                    cedula: document.getElementById(otroPrefix + 'Cedula').value.trim(),
+                    empresa: document.getElementById(otroPrefix + 'Empresa').value.trim(),
+                };
+            }
+            const datos = PERSONAL[valor] || { cedula: '', empresa: '' };
+            return { nombre: valor, cedula: datos.cedula, empresa: datos.empresa, cargo: datos.cargo };
+        }
+
+        let visitaTecnicaProjectId = null;
+
+        window.abrirModalVisitaTecnica = (projectId) => {
+            visitaTecnicaProjectId = projectId;
+            document.getElementById('visitaTecnicaForm').reset();
+            ['visitaTipoProyecto','visitaTipoRed','visitaTipoSistema','visitaTipoCubierta','visitaSoporte','visitaElaboro','visitaReviso']
+                .forEach(id => document.getElementById(id).value = '');
+            [...document.querySelectorAll('#visitaTecnicaForm .chip-btn')].forEach(b => b.classList.remove('chip-active'));
+            document.getElementById('visitaTipoCubiertaOtroWrap').classList.add('hidden');
+            document.getElementById('visitaSoporteOtroWrap').classList.add('hidden');
+            document.getElementById('visitaElaboroOtroWrap').classList.add('hidden');
+            document.getElementById('visitaRevisoOtroWrap').classList.add('hidden');
+            poblarChipsPersonal('visitaElaboroChips', ELABORO_OPCIONES, 'visitaElaboro', 'visitaElaboroOtroWrap');
+            poblarChipsPersonal('visitaRevisoChips', REVISO_OPCIONES, 'visitaReviso', 'visitaRevisoOtroWrap');
+            document.getElementById('visitaTecnicaModal').classList.remove('hidden');
+        };
+
+        // Lee un archivo de imagen, lo devuelve como bytes + su tamaño ya
+        // escalado (respetando proporción) para que quepa ordenado en la celda.
+        async function leerImagenComoDatos(file, maxWidth, maxHeight) {
+            const arrayBuffer = await file.arrayBuffer();
+            const url = URL.createObjectURL(new Blob([arrayBuffer]));
+            const dims = await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+                img.onerror = reject;
+                img.src = url;
+            });
+            URL.revokeObjectURL(url);
+            const ratio = Math.min(maxWidth / dims.w, maxHeight / dims.h, 1);
+            return {
+                buffer: new Uint8Array(arrayBuffer),
+                width: Math.round(dims.w * ratio),
+                height: Math.round(dims.h * ratio),
+            };
+        }
+
+        document.getElementById('visitaTecnicaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const elaboro = resolverPersona('visitaElaboro', 'visitaElaboroOtro');
+            const reviso = resolverPersona('visitaReviso', 'visitaRevisoOtro');
+            if (!elaboro.nombre || !reviso.nombre) {
+                alert('Selecciona quién elaboró y quién revisó el acta.');
+                return;
+            }
+
+            const btn = document.getElementById('visitaTecnicaSubmitBtn');
+            btn.disabled = true;
+            btn.innerText = 'Generando...';
+            try {
+                // 1. Leer las fotos que sí se subieron (todas son opcionales)
+                const secciones = ['tablero', 'bastidor', 'cubierta', 'ac', 'dc', 'medidor', 'transformador'];
+                const imagenesData = {};
+                for (const s of secciones) {
+                    const input = document.getElementById('visitaFoto_' + s);
+                    const file = input.files[0];
+                    if (file) {
+                        imagenesData['foto_' + s] = await leerImagenComoDatos(file, 450, 350);
+                    }
+                }
+
+                // 2. Armar el módulo de imágenes: busca los bytes/tamaño ya
+                // pre-calculados en imagenesData según el nombre del tag.
+                const imageOpts = {
+                    centered: true,
+                    getImage: (tagValue, tagName) => imagenesData[tagName].buffer,
+                    getSize: (img, tagValue, tagName) => [imagenesData[tagName].width, imagenesData[tagName].height],
+                };
+                const imageModule = new window.ImageModule(imageOpts);
+
+                // 3. Cargar la plantilla y adjuntar el módulo
+                const p = projects.find(x => x.id === visitaTecnicaProjectId);
+                const info = await getProjectInfo(visitaTecnicaProjectId);
+                const plantillasFolder = await currentHandle.getDirectoryHandle('Plantillas');
+                const plantillaHandle = await plantillasFolder.getFileHandle('1. Acta de Visita Tecnica.docx');
+                const arrayBuffer = await (await plantillaHandle.getFile()).arrayBuffer();
+                const zip = new PizZip(arrayBuffer);
+                const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true, modules: [imageModule] });
+
+                const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+                const hoy = new Date();
+                const fechaLarga = `${hoy.getDate()} de ${meses[hoy.getMonth()]} del ${hoy.getFullYear()}`;
+                const nombreLimpio = limpiarNombreProyecto(p.name);
+
+                const tipoCubierta = document.getElementById('visitaTipoCubierta').value;
+                const soporte = document.getElementById('visitaSoporte').value;
+
+                // 4. Armar todos los datos: texto normal + checkboxes + fotos
+                const data = {
+                    proyecto: nombreLimpio,
+                    dueno: info.dueno || '',
+                    identificacion: info.identificacion || '',
+                    direccion: info.direccion || '',
+                    municipio: info.municipio || '',
+                    departamento: info.departamento || '',
+                    fecha: fechaLarga,
+                    visita: document.getElementById('visitaQuien').value.trim(),
+                    observaciones: document.getElementById('visitaObservaciones').value.trim(),
+
+                    codigoTransformador: document.getElementById('visitaCodigoTransformador').value.trim(),
+                    areaCubierta: document.getElementById('visitaAreaCubierta').value.trim(),
+                    alturaCubierta: document.getElementById('visitaAlturaCubierta').value.trim(),
+                    inclinacionCubierta: document.getElementById('visitaInclinacionCubierta').value.trim(),
+                    areaBastidor: document.getElementById('visitaAreaBastidor').value.trim(),
+
+                    // Checkboxes: se marcan comparando contra el valor elegido en cada chip
+                    chk_residencial: chk(document.getElementById('visitaTipoProyecto').value === 'Residencial'),
+                    chk_comercial: chk(document.getElementById('visitaTipoProyecto').value === 'Comercial'),
+                    chk_industrial: chk(document.getElementById('visitaTipoProyecto').value === 'Industrial'),
+
+                    chk_mono: chk(document.getElementById('visitaTipoRed').value === 'Monofásica'),
+                    chk_bi: chk(document.getElementById('visitaTipoRed').value === 'Bifásica'),
+                    chk_tri: chk(document.getElementById('visitaTipoRed').value === 'Trifásica'),
+
+                    chk_ongrid: chk(document.getElementById('visitaTipoSistema').value === 'On Grid'),
+                    chk_offgrid: chk(document.getElementById('visitaTipoSistema').value === 'Off Grid'),
+                    chk_hibrido: chk(document.getElementById('visitaTipoSistema').value === 'Híbrido'),
+
+                    chk_eternit: chk(tipoCubierta === 'Eternit'),
+                    chk_placa: chk(tipoCubierta === 'Placa'),
+                    chk_colonial: chk(tipoCubierta === 'Colonial'),
+                    chk_zinc: chk(tipoCubierta === 'Zinc'),
+                    chk_cubierta_otro: chk(tipoCubierta === 'Otro'),
+                    cubierta_otro_texto: tipoCubierta === 'Otro' ? document.getElementById('visitaTipoCubiertaOtro').value.trim() : '',
+
+                    chk_cercha: chk(soporte === 'Cercha'),
+                    chk_perfil: chk(soporte === 'Perfil Metálico'),
+                    chk_madera: chk(soporte === 'Madera'),
+                    chk_soporte_otro: chk(soporte === 'Otro'),
+                    soporte_otro_texto: soporte === 'Otro' ? document.getElementById('visitaSoporteOtro').value.trim() : '',
+
+                    elaboro: elaboro.nombre,
+                    cargo: elaboro.cargo || '',
+                    empresa: elaboro.empresa,
+                    cedula_elaboro: elaboro.cedula,
+
+                    reviso: reviso.nombre,
+                    cargo_reviso: reviso.cargo || '',
+                    empresa_reviso: reviso.empresa,
+                    cedula_reviso: reviso.cedula,
+                };
+                // Las fotos: solo se manda la clave (truthy) si sí se subió esa foto,
+                // así el bloque {#foto_x}...{/foto_x} de la plantilla se oculta solo
+                // cuando esa sección no tiene imagen.
+                for (const s of secciones) {
+                    const key = 'foto_' + s;
+                    data[key] = !!imagenesData[key];
+                }
+
+                doc.render(data);
+
+                const buf = doc.getZip().generate({ type: 'uint8array' });
+                const fileName = `1. Acta de Visita Tecnica - ${nombreLimpio}.docx`;
+                const actaHandle = await p.actFolder.getFileHandle(fileName, { create: true });
+                const writable = await actaHandle.createWritable();
+                await writable.write(buf);
+                await writable.close();
+
+                await scan();
+                showToast('Acta de Visita Técnica generada correctamente');
+                document.getElementById('visitaTecnicaModal').classList.add('hidden');
+            } catch (err) {
+                console.error('ERROR generando Visita Técnica:', err);
+                alert('No se pudo generar el acta: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Generar Acta';
+            }
+        });
+
+        // Actas que piden fotos: Visita Técnica ya está implementada arriba.
+        // Vecindad todavía no.
         window.crearActaConFotos = (docId, projectId) => {
-            showToast('Esta acta va a pedir fotos, todavía la estamos armando. Por ahora usa la plantilla manual.');
+            if (docId === '1.') {
+                abrirModalVisitaTecnica(projectId);
+            } else {
+                showToast('Esta acta va a pedir fotos, todavía la estamos armando. Por ahora usa la plantilla manual.');
+            }
         };
 
         // Actualizar nombres de archivos al seleccionar
