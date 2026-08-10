@@ -321,7 +321,10 @@
                             <div class="glass-card p-8">
                                 <div class="flex items-center justify-between mb-8">
                                     <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Bóveda Técnica (Ingeniería)</h3>
-                                    <span class="px-3 py-1 bg-blue-600 text-[10px] text-white font-bold rounded-full">PDF OBLIGATORIOS</span>
+                                    <div class="flex items-center gap-2">
+                                        <span id="bovedaPctBadge" class="px-2.5 py-1 bg-slate-900 text-[10px] text-white font-black rounded-full">0%</span>
+                                        <span class="px-3 py-1 bg-blue-600 text-[10px] text-white font-bold rounded-full">PDF OBLIGATORIOS</span>
+                                    </div>
                                 </div>
                                 <div id="listIng" class="ing-grid"></div>
                             </div>
@@ -332,8 +335,17 @@
                             <div class="glass-card p-8">
                                 <div class="flex items-center justify-between mb-8">
                                     <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Actas de Proyecto</h3>
+                                    <span id="actasPctBadge" class="px-2.5 py-1 bg-slate-900 text-[10px] text-white font-black rounded-full">0%</span>
                                 </div>
                                 <div id="listAct" class="space-y-2"></div>
+                            </div>
+
+                            <div class="glass-card p-8 mt-6">
+                                <div class="flex items-center justify-between mb-6">
+                                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Informe General de Proyecto</h3>
+                                    <span id="informePctBadge" class="px-2.5 py-1 bg-slate-900 text-[10px] text-white font-black rounded-full">0%</span>
+                                </div>
+                                <div id="informeRow"></div>
                             </div>
                         </div>
 
@@ -352,6 +364,18 @@
                                             <img src="img/logo2.png" alt="" class="select-none w-[70%] max-w-[420px] object-contain opacity-[0.08]">
                                         </div>
                                         <div id="infoProyectoList" class="p-5 relative z-10">
+                                            <!-- Generado dinámicamente -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-span-12">
+                                    <!-- RESUMEN EJECUTIVO DEL PROYECTO (generado a partir del avance real detectado) -->
+                                    <div class="glass-card overflow-hidden">
+                                        <div class="bg-slate-900 p-4">
+                                            <h3 class="text-[11px] font-black text-white uppercase tracking-[0.2em]">Resumen del Proyecto</h3>
+                                        </div>
+                                        <div id="resumenProyecto" class="p-5 text-sm leading-relaxed text-slate-700">
                                             <!-- Generado dinámicamente -->
                                         </div>
                                     </div>
@@ -927,6 +951,170 @@
                         </div>
 
                         <button id="visitaTecnicaSubmitBtn" type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-md hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Generar Acta</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal: Informe General de Proyecto (se guarda en 4. DOSSIER) -->
+            <div id="informeModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                <div class="w-full max-w-3xl bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Dossier</p>
+                            <h3 class="text-lg font-black text-slate-900">Informe General de Proyecto</h3>
+                        </div>
+                        <button onclick="document.getElementById('informeModal').classList.add('hidden')" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"/></svg>
+                        </button>
+                    </div>
+                    <form id="informeForm" class="flex-1 overflow-y-auto p-6 space-y-6">
+
+                        <p class="text-[10px] text-slate-400 leading-relaxed -mt-2">Los datos básicos (proyecto, cliente, dirección, potencia) se toman automáticamente de <span class="font-bold text-slate-500">Datos del Proyecto</span>. Aquí solo completas lo específico de la instalación y el registro fotográfico.</p>
+
+                        <!-- Tipo de Sistema -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de Sistema</label>
+                            <div id="informeTipoSistemaChips" class="flex flex-wrap gap-1.5 mt-1">
+                                <button type="button" data-value="On Grid" onclick="seleccionarChip('informeTipoSistema','informeTipoSistemaChips',this,'informeTipoSistemaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">On Grid</button>
+                                <button type="button" data-value="Off Grid" onclick="seleccionarChip('informeTipoSistema','informeTipoSistemaChips',this,'informeTipoSistemaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Off Grid</button>
+                                <button type="button" data-value="Híbrido" onclick="seleccionarChip('informeTipoSistema','informeTipoSistemaChips',this,'informeTipoSistemaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Híbrido</button>
+                            </div>
+                            <input type="hidden" id="informeTipoSistema">
+                            <div id="informeTipoSistemaOtroWrap" class="hidden"></div>
+                        </div>
+
+                        <!-- Smart Meter -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Smart Meter</label>
+                            <div id="informeSmartMeterChips" class="flex flex-wrap gap-1.5 mt-1">
+                                <button type="button" data-value="Si" onclick="seleccionarChip('informeSmartMeter','informeSmartMeterChips',this,'informeSmartMeterOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Sí</button>
+                                <button type="button" data-value="No" onclick="seleccionarChip('informeSmartMeter','informeSmartMeterChips',this,'informeSmartMeterOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">No</button>
+                            </div>
+                            <input type="hidden" id="informeSmartMeter">
+                            <div id="informeSmartMeterOtroWrap" class="hidden"></div>
+                        </div>
+
+                        <!-- Batería -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Batería</label>
+                            <div id="informeBateriaChips" class="flex flex-wrap gap-1.5 mt-1">
+                                <button type="button" data-value="Si" onclick="seleccionarChip('informeBateria','informeBateriaChips',this,'informeBateriaOtroWrap'); toggleInformeBateria(true)" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Sí</button>
+                                <button type="button" data-value="No" onclick="seleccionarChip('informeBateria','informeBateriaChips',this,'informeBateriaOtroWrap'); toggleInformeBateria(false)" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">No</button>
+                            </div>
+                            <input type="hidden" id="informeBateria">
+                            <div id="informeBateriaOtroWrap" class="hidden"></div>
+                            <div id="informeBateriaDatosWrap" class="hidden grid grid-cols-2 gap-3 mt-3">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase">Referencia</label>
+                                    <input id="informeBateriaReferencia" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase">Potencia</label>
+                                    <input id="informeBateriaPotencia" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Calibres -->
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Calibre Tierra</label>
+                                <input id="informeCalibreTierra" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Calibre Acometida</label>
+                                <input id="informeCalibreAcometida" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Calibre AC</label>
+                                <input id="informeCalibreAc" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <!-- Registro fotográfico -->
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Registro Fotográfico <span class="text-slate-300 normal-case font-semibold">(todas opcionales)</span></p>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">1. Instalación de Paneles en Cubierta</p>
+                                    <div class="grid grid-cols-3 gap-3">
+                                        <input type="file" accept="image/*" id="informeFoto_paneles_1" class="w-full text-[10px]">
+                                        <input type="file" accept="image/*" id="informeFoto_paneles_2" class="w-full text-[10px]">
+                                        <input type="file" accept="image/*" id="informeFoto_paneles_3" class="w-full text-[10px]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">2. Bajante de Cubierta</p>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <input type="file" accept="image/*" id="informeFoto_bajante_1" class="w-full text-[10px]">
+                                        <input type="file" accept="image/*" id="informeFoto_bajante_2" class="w-full text-[10px]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">3. Bastidor</p>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <input type="file" accept="image/*" id="informeFoto_bastidor_1" class="w-full text-[10px]">
+                                        <input type="file" accept="image/*" id="informeFoto_bastidor_2" class="w-full text-[10px]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">4. Tubería AC</p>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <input type="file" accept="image/*" id="informeFoto_ac_1" class="w-full text-[10px]">
+                                        <input type="file" accept="image/*" id="informeFoto_ac_2" class="w-full text-[10px]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">5. Punto de Conexión</p>
+                                    <input type="file" accept="image/*" id="informeFoto_conexion_1" class="w-full text-[10px]">
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">6. Tablero de Protecciones (Breakers y DPS)</p>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <input type="file" accept="image/*" id="informeFoto_tablero_1" class="w-full text-[10px]">
+                                        <input type="file" accept="image/*" id="informeFoto_tablero_2" class="w-full text-[10px]">
+                                    </div>
+                                </div>
+                                <div id="informeFotoBateriaWrap" class="hidden">
+                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">7. Batería</p>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <input type="file" accept="image/*" id="informeFoto_bateria_1" class="w-full text-[10px]">
+                                        <input type="file" accept="image/*" id="informeFoto_bateria_2" class="w-full text-[10px]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">8. Mediciones de Tensión Paneles (DC)</p>
+                                    <div class="grid grid-cols-3 gap-3">
+                                        <input type="file" accept="image/*" id="informeFoto_medicion_dc_1" class="w-full text-[10px]">
+                                        <input type="file" accept="image/*" id="informeFoto_medicion_dc_2" class="w-full text-[10px]">
+                                        <input type="file" accept="image/*" id="informeFoto_medicion_dc_3" class="w-full text-[10px]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">9. Mediciones de Tensión AC</p>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <input type="file" accept="image/*" id="informeFoto_medicion_ac_1" class="w-full text-[10px]">
+                                        <input type="file" accept="image/*" id="informeFoto_medicion_ac_2" class="w-full text-[10px]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">10. Inversor en Marcha</p>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <input type="file" accept="image/*" id="informeFoto_inversor_1" class="w-full text-[10px]">
+                                        <input type="file" accept="image/*" id="informeFoto_inversor_2" class="w-full text-[10px]">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Observaciones -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Observaciones</label>
+                            <textarea id="informeObservaciones" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[90px] outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+
+                        <button id="informeSubmitBtn" type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-md hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Generar Informe</button>
                     </form>
                 </div>
             </div>
@@ -1823,6 +2011,151 @@
             }
         };
 
+        // ==========================================================
+        // INFORME GENERAL DE PROYECTO — vive en "4. DOSSIER_<NOMBRE>",
+        // aparte de las Actas (carpeta y plantilla propias).
+        // ==========================================================
+        function toggleInformeBateria(tieneBateria) {
+            document.getElementById('informeBateriaDatosWrap').classList.toggle('hidden', !tieneBateria);
+            document.getElementById('informeFotoBateriaWrap').classList.toggle('hidden', !tieneBateria);
+        }
+
+        let informeProjectId = null;
+
+        window.abrirModalInforme = (projectId) => {
+            informeProjectId = projectId;
+            document.getElementById('informeForm').reset();
+            ['informeTipoSistema', 'informeSmartMeter', 'informeBateria'].forEach(id => document.getElementById(id).value = '');
+            [...document.querySelectorAll('#informeForm .chip-btn')].forEach(b => b.classList.remove('chip-active'));
+            toggleInformeBateria(false);
+            document.getElementById('informeModal').classList.remove('hidden');
+        };
+
+        // Todas las secciones de fotos que pide la plantilla, con su cantidad de casillas.
+        // La sección "bateria" solo se envía a la plantilla si tieneBateria = true.
+        const INFORME_FOTO_KEYS = [
+            'paneles_1', 'paneles_2', 'paneles_3',
+            'bajante_1', 'bajante_2',
+            'bastidor_1', 'bastidor_2',
+            'ac_1', 'ac_2',
+            'conexion_1',
+            'tablero_1', 'tablero_2',
+            'bateria_1', 'bateria_2',
+            'medicion_dc_1', 'medicion_dc_2', 'medicion_dc_3',
+            'medicion_ac_1', 'medicion_ac_2',
+            'inversor_1', 'inversor_2'
+        ];
+
+        document.getElementById('informeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('informeSubmitBtn');
+            btn.disabled = true;
+            btn.innerText = 'Generando...';
+            try {
+                const p = projects.find(x => x.id === informeProjectId);
+                const info = await getProjectInfo(informeProjectId);
+                const nombreLimpio = limpiarNombreProyecto(p.name);
+
+                // 1. Leer las fotos que sí se subieron (todas opcionales)
+                const imagenesData = {};
+                for (const k of INFORME_FOTO_KEYS) {
+                    const input = document.getElementById('informeFoto_' + k);
+                    const file = input?.files?.[0];
+                    if (file) {
+                        // El punto de conexión ocupa el ancho completo de la celda en la plantilla;
+                        // el resto va a dos o tres columnas, así que se escalan un poco más chico.
+                        const maxW = k === 'conexion_1' ? 700 : 450;
+                        const maxH = k === 'conexion_1' ? 400 : 350;
+                        imagenesData['foto_' + k] = await leerImagenComoDatos(file, maxW, maxH);
+                    }
+                }
+
+                const imageOpts = {
+                    centered: true,
+                    getImage: (tagValue, tagName) => imagenesData[tagName].buffer,
+                    getSize: (img, tagValue, tagName) => [imagenesData[tagName].width, imagenesData[tagName].height],
+                };
+                const imageModule = new window.ImageModule(imageOpts);
+
+                const plantillasFolder = await currentHandle.getDirectoryHandle('Plantillas');
+                const plantillaHandle = await plantillasFolder.getFileHandle(INFORME_CONFIG.plantilla);
+                const arrayBuffer = await (await plantillaHandle.getFile()).arrayBuffer();
+                const zip = new PizZip(arrayBuffer);
+                const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true, modules: [imageModule] });
+
+                const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+                const hoy = new Date();
+                const fechaLarga = `${hoy.getDate()} de ${meses[hoy.getMonth()]} del ${hoy.getFullYear()}`;
+
+                const tipoSistema = document.getElementById('informeTipoSistema').value;
+                const smartMeter = document.getElementById('informeSmartMeter').value;
+                const tieneBateria = document.getElementById('informeBateria').value === 'Si';
+
+                const data = {
+                    proyecto: nombreLimpio,
+                    direccion: info.direccion || '',
+                    dueno: info.dueno || '',
+                    identificacion: info.identificacion || '',
+                    municipio: info.municipio || '',
+                    departamento: info.departamento || '',
+                    potenciaac: info.potenciaAC ? `${info.potenciaAC}` : '',
+                    fecha: fechaLarga,
+
+                    chk_ongrid: chk(tipoSistema === 'On Grid'),
+                    chk_offgrid: chk(tipoSistema === 'Off Grid'),
+                    chk_hibrido: chk(tipoSistema === 'Híbrido'),
+
+                    chk_smartmeter_si: chk(smartMeter === 'Si'),
+                    chk_smartmeter_no: chk(smartMeter === 'No'),
+
+                    chk_bateria_si: chk(tieneBateria),
+                    chk_bateria_no: chk(!tieneBateria),
+                    tieneBateria: tieneBateria,
+                    bateria_referencia: tieneBateria ? document.getElementById('informeBateriaReferencia').value.trim() : '',
+                    bateria_potencia: tieneBateria ? document.getElementById('informeBateriaPotencia').value.trim() : '',
+
+                    calibre_tierra: document.getElementById('informeCalibreTierra').value.trim(),
+                    calibre_acometida: document.getElementById('informeCalibreAcometida').value.trim(),
+                    calibre_ac: document.getElementById('informeCalibreAc').value.trim(),
+
+                    observaciones: document.getElementById('informeObservaciones').value.trim(),
+                };
+                // Las fotos: solo se manda la clave (truthy) si sí se subió esa foto, así el
+                // bloque {#foto_x}...{/foto_x} de la plantilla se oculta solo cuando no hay imagen.
+                for (const k of INFORME_FOTO_KEYS) {
+                    data['foto_' + k] = !!imagenesData['foto_' + k];
+                }
+
+                doc.render(data);
+
+                const buf = doc.getZip().generate({ type: 'uint8array' });
+                const fileName = `1. Informe General de Proyecto - ${nombreLimpio}.docx`;
+
+                // La carpeta "4. DOSSIER_<NOMBRE>" ya se crea al crear el proyecto; si no
+                // se detectó (proyectos antiguos o carpeta renombrada), se crea aquí mismo.
+                let dossierFolder = p.dossierFolder;
+                if (!dossierFolder) {
+                    const projectFolder = await getProjectFolderById(p.id);
+                    const dossierName = `4. DOSSIER_${nombreLimpio.toUpperCase().replace(/\s+/g, '_')}`;
+                    dossierFolder = await projectFolder.getDirectoryHandle(dossierName, { create: true });
+                }
+                const informeHandle = await dossierFolder.getFileHandle(fileName, { create: true });
+                const writable = await informeHandle.createWritable();
+                await writable.write(buf);
+                await writable.close();
+
+                await scan();
+                showToast('Informe General de Proyecto generado correctamente');
+                document.getElementById('informeModal').classList.add('hidden');
+            } catch (err) {
+                console.error('ERROR generando Informe General de Proyecto:', err);
+                alert('No se pudo generar el informe: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Generar Informe';
+            }
+        });
+
         // Actualizar nombres de archivos al seleccionar
         ['kickoff', 'visita', 'material', 'recibo', 'contrato'].forEach(type => {
             document.getElementById(`${type}File`).onchange = e => {
@@ -1878,6 +2211,21 @@
                 { id: "5.", label: "Acta de Entrega de Capacitacion", tipo: 'simple' },
                 { id: "6.", label: "Acta de Instalacion de Medidor Bidireccional", tipo: 'simple' }
             ]
+        };
+
+        // El Informe General de Proyecto vive en "4. DOSSIER_<NOMBRE>", con plantilla propia
+        // (no es una acta más, tiene su modal y su detección de carpeta separada).
+        const INFORME_CONFIG = { label: 'Informe General de Proyecto', plantilla: '1. Informe General de Proyecto.docx' };
+
+        // El 100% general se reparte: la mitad es la Bóveda Técnica (ingeniería), y la
+        // otra mitad se divide en partes iguales entre Actas, Informe, OR y RETIE.
+        const PESOS_PROGRESO = { boveda: 0.5, actas: 0.125, informe: 0.125, or: 0.125, retie: 0.125 };
+
+        // Lectura de avance por estado: NO todos los estados valen igual. "CONFORME"/"APROBADO"
+        // es el 100% de esa sección; los estados intermedios dan un avance parcial.
+        const ESTADO_PCT = {
+            or: { 'NO INSCRITO': 0, 'INSCRITO': 50, 'CONFORME': 100, 'DE BAJA': 0 },
+            retie: { 'POR AGENDAR': 0, 'EN TRÁMITE': 25, 'AGENDADO': 50, 'OBSERVACIONES': 75, 'APROBADO': 100 }
         };
 
         async function init() {
@@ -1985,13 +2333,14 @@
 
         async function analyze(handle) {
             const states = await getStates(handle.name);
-            let ingFolder, actFolder, budgetFolder, preliminarFolder, estadosFolder, retieFolder, orFolder;
+            let ingFolder, actFolder, budgetFolder, preliminarFolder, estadosFolder, retieFolder, orFolder, dossierFolder;
             try {
                 for await (const e of handle.values()) {
                     if (e.name.startsWith('1.') && e.name.includes('Preeliminar')) preliminarFolder = e;
                     if (e.name.startsWith('1.') && !e.name.includes('Preeliminar')) ingFolder = e;
                     if (e.name.startsWith('2.') && e.name.includes('ESTADOS')) estadosFolder = e;
                     if (e.name.startsWith('3.')) budgetFolder = e;
+                    if (e.name.startsWith('4.')) dossierFolder = e;
                     if (e.name.startsWith('5.')) {
                         for await (const s of e.values()) if (s.name.startsWith('1.')) actFolder = s;
                     }
@@ -2016,6 +2365,10 @@
             const filesAct = await getFiles(actFolder);
             const filesRetieConf = await getFiles(retieFolder);
             const filesOrConf = await getFiles(orFolder);
+            const filesDossier = await getFiles(dossierFolder);
+            // El informe puede quedar como .docx (borrador generado) o .pdf (firmado/exportado);
+            // cualquiera de los dos cuenta como "cuenta con informe".
+            const informeFile = filesDossier.find(x => /informe/i.test(x.n) && /\.(docx|pdf)$/i.test(x.n.trim()));
 
             const mapItems = (cfg, files) => cfg.map(c => {
             const f = files.find(x => x.n.trim().startsWith(c.id));
@@ -2060,19 +2413,48 @@
             const orRadicadoEnInfo = !!(orInfoSupabase && orInfoSupabase.project_info && String(orInfoSupabase.project_info.radicado || '').trim());
             const orConformeDetectado = orFilesSinRadicado.length >= 1;
             const orInscritoDetectado = !orConformeDetectado && (orTieneSoloRadicado || (filesOrConf.length === 0 && orRadicadoEnInfo));
+            const retieConformeDetectado = filesRetieConf.length >= 2;
+
+            // Estado "visible" (igual a la lectura que ya se mostraba en las tarjetas OR/RETIE):
+            // si el trámite real todavía está en su valor base pero hay evidencia detectada
+            // por archivos, se muestra ya avanzado.
+            let orStatusDisplay = states.or.status;
+            if (orStatusDisplay === 'NO INSCRITO' && orConformeDetectado) orStatusDisplay = 'CONFORME';
+            else if (orStatusDisplay === 'NO INSCRITO' && orInscritoDetectado) orStatusDisplay = 'INSCRITO';
+            const retieStatusDisplay = (states.retie.status === 'POR AGENDAR' && retieConformeDetectado) ? 'APROBADO' : states.retie.status;
+
+            // Porcentaje de cada sección por separado
+            const bovedaPct = Math.round((ingItems.filter(i => i.found).length / ingItems.length) * 100);
+            const actasPct = Math.round((actItems.filter(i => i.found).length / actItems.length) * 100);
+            const informePct = informeFile ? 100 : 0;
+            const orPct = ESTADO_PCT.or[orStatusDisplay] ?? 0;
+            const retiePct = ESTADO_PCT.retie[retieStatusDisplay] ?? 0;
+
+            // El general de "Información" es el promedio ponderado de las 5 secciones
+            // (Bóveda pesa 50%; Actas, Informe, OR y RETIE se reparten el otro 50%).
+            const prog = Math.round(
+                bovedaPct * PESOS_PROGRESO.boveda +
+                actasPct * PESOS_PROGRESO.actas +
+                informePct * PESOS_PROGRESO.informe +
+                orPct * PESOS_PROGRESO.or +
+                retiePct * PESOS_PROGRESO.retie
+            );
 
             return {
                 id: handle.name,
                 name: handle.name.replace(/^\d+\.\s*/, ''),
                 ingItems, actItems, ingFolder, actFolder, budgetFolder, preliminarFolder,
-                orFolder, retieFolder,
+                orFolder, retieFolder, dossierFolder,
+                informeFile, informeFound: !!informeFile,
                 info,
                 // Conformidad detectada automáticamente por archivos presentes en las subcarpetas
-                retieConforme: filesRetieConf.length >= 2,
+                retieConforme: retieConformeDetectado,
                 orConforme: orConformeDetectado,
                 orInscrito: orInscritoDetectado,
+                orStatusDisplay, retieStatusDisplay,
+                bovedaPct, actasPct, informePct, orPct, retiePct,
                 filesRetieConf, filesOrConf,
-                prog: Math.round((ingItems.filter(i=>i.found).length / ingItems.length) * 100),
+                prog,
                 states
             };
         }
@@ -2217,18 +2599,25 @@
                 </div>
             `).join('');
 
-            // Trámites Estados
-            // Si hay archivos de conformidad detectados y el estado sigue en su valor base
-            // (nunca se ha tocado manualmente), lo mostramos ya avanzado automáticamente.
-            // OR tiene 3 lecturas visuales: CONFORME (verde, hay archivos además del
-            // radicado), INSCRITO (naranja, solo está el radicado, sea archivo o dato),
-            // o el estado real tal cual está guardado.
-            const orStatusReal = p.states.or.status;
-            let orStatus = orStatusReal;
-            if (orStatusReal === 'NO INSCRITO' && p.orConforme) orStatus = 'CONFORME';
-            else if (orStatusReal === 'NO INSCRITO' && p.orInscrito) orStatus = 'INSCRITO';
-            const retieStatusReal = p.states.retie.status;
-            const retieStatus = (retieStatusReal === 'POR AGENDAR' && p.retieConforme) ? 'APROBADO' : retieStatusReal;
+            document.getElementById('informeRow').innerHTML = `
+                <div class="flex items-center justify-between p-3 border border-slate-100 rounded-md hover:bg-slate-50 transition-colors">
+                    <span class="text-[10px] font-bold text-slate-500">${INFORME_CONFIG.label}</span>
+                    ${p.informeFound
+                        ? `<button onclick="openFile('${p.id}','informe','informe')" class="btn-action btn-view">Abrir</button>`
+                        : `<button onclick="abrirModalInforme('${p.id}')" class="btn-action btn-upload">Crear</button>`}
+                </div>
+            `;
+
+            // Badges de porcentaje por sección (Bóveda 50% del total; Actas, Informe, OR y
+            // RETIE se reparten el otro 50% en partes iguales — ver PESOS_PROGRESO).
+            document.getElementById('bovedaPctBadge').innerText = `${p.bovedaPct}%`;
+            document.getElementById('actasPctBadge').innerText = `${p.actasPct}%`;
+            document.getElementById('informePctBadge').innerText = `${p.informePct}%`;
+
+            // Trámites Estados (ya calculados en analyze(): p.orStatusDisplay / p.retieStatusDisplay
+            // ya consideran la detección automática por archivos, igual que antes).
+            const orStatus = p.orStatusDisplay;
+            const retieStatus = p.retieStatusDisplay;
 
             const cardOr = document.getElementById('card-or');
             cardOr.classList.toggle('bg-emerald-50', orStatus === 'CONFORME');
@@ -2240,7 +2629,7 @@
             cardOr.classList.toggle('bg-slate-100', orStatus !== 'CONFORME' && orStatus !== 'INSCRITO');
             cardOr.classList.toggle('text-slate-700', orStatus !== 'CONFORME' && orStatus !== 'INSCRITO');
             cardOr.classList.toggle('border-slate-200', orStatus !== 'CONFORME' && orStatus !== 'INSCRITO');
-            cardOr.title = `Operador Red (OR): ${orStatus}`;
+            cardOr.title = `Operador Red (OR): ${orStatus} (${p.orPct}%)`;
 
             const cardRetie = document.getElementById('card-retie');
             cardRetie.classList.toggle('bg-emerald-50', retieStatus === 'APROBADO');
@@ -2249,7 +2638,7 @@
             cardRetie.classList.toggle('bg-slate-100', retieStatus !== 'APROBADO');
             cardRetie.classList.toggle('text-slate-700', retieStatus !== 'APROBADO');
             cardRetie.classList.toggle('border-slate-200', retieStatus !== 'APROBADO');
-            cardRetie.title = `Inspección RETIE: ${retieStatus}`;
+            cardRetie.title = `Inspección RETIE: ${retieStatus} (${p.retiePct}%)`;
 
             await renderInfoProyecto(p.id);
         }
@@ -2281,6 +2670,59 @@
             }
             const idx = projects.findIndex(x => x.id === id);
             if (idx >= 0) projects[idx] = { ...projects[idx], info: data };
+        }
+
+        // --- Resumen ejecutivo del proyecto (texto generado a partir de Datos del
+        // Proyecto + el avance real detectado por analyze(): bóveda, actas, informe,
+        // OR y RETIE). Es solo lectura, no se guarda; se recalcula en cada render. ---
+        function textoEstadoOr(status) {
+            const map = {
+                'NO INSCRITO': 'aún no se encuentra inscrito ante el Operador de Red (OR)',
+                'INSCRITO': 'se encuentra inscrito ante el Operador de Red (OR), pendiente de conformidad',
+                'CONFORME': 'se encuentra conforme ante el Operador de Red (OR)',
+                'DE BAJA': 'figura dado de baja ante el Operador de Red (OR)'
+            };
+            return map[status] || `se encuentra en estado "${status}" ante el Operador de Red (OR)`;
+        }
+
+        function textoEstadoRetie(status) {
+            const map = {
+                'POR AGENDAR': 'la inspección RETIE está por agendar',
+                'EN TRÁMITE': 'la inspección RETIE se encuentra en trámite',
+                'AGENDADO': 'la inspección RETIE ya está agendada',
+                'OBSERVACIONES': 'la inspección RETIE tiene observaciones pendientes por levantar',
+                'APROBADO': 'el proyecto cuenta con la inspección RETIE aprobada'
+            };
+            return map[status] || `la inspección RETIE se encuentra en estado "${status}"`;
+        }
+
+        function generarResumenProyecto(project, info) {
+            if (!project) return '<p class="text-slate-400">Selecciona un proyecto para ver su resumen.</p>';
+            const partes = [];
+
+            const clasificacion = (info.clasificacionServicio === 'Otro' ? info.clasificacionServicioOtro : info.clasificacionServicio) || '';
+            const tipoSistema = info.tipoProyecto === 'Otro' ? info.tipoProyectoOtro : info.tipoProyecto;
+
+            let p1 = `Proyecto solar fotovoltaico${clasificacion ? ' de tipo ' + clasificacion.toLowerCase() : ''}`;
+            if (info.potenciaAC) p1 += ` de ${info.potenciaAC} kW de potencia`;
+            if (info.potenciaDC) p1 += `${info.potenciaAC ? ' y' : ' con'} una potencia DC instalada de ${info.potenciaDC} kWp`;
+            if (info.numPaneles) p1 += `, producida por ${info.numPaneles} módulos${info.marcaPaneles ? ' marca ' + info.marcaPaneles : ''}`;
+            if (info.numInversores) p1 += ` mediante ${info.numInversores} inversor${Number(info.numInversores) === 1 ? '' : 'es'}${info.marcaFabricante ? ' marca ' + info.marcaFabricante : ''}`;
+            if (tipoSistema) p1 += `, bajo esquema ${tipoSistema}`;
+            p1 += '.';
+            partes.push(p1);
+
+            let p2 = '';
+            const ubicacion = [info.direccion, info.municipio, info.departamento].filter(Boolean).join(', ');
+            if (ubicacion) p2 += `El proyecto está ubicado en ${ubicacion}`;
+            if (info.dueno) p2 += `${p2 ? ', y figura' : 'Figura'} como propietario ${info.dueno}${info.identificacion ? ` (identificación ${info.identificacion})` : ''}`;
+            if (p2) partes.push(p2 + '.');
+
+            partes.push(`Actualmente ${textoEstadoOr(project.orStatusDisplay)}, y ${textoEstadoRetie(project.retieStatusDisplay)}.`);
+
+            partes.push(`En documentación, el proyecto cuenta con el ${project.bovedaPct}% de los soportes técnicos exigidos en la bóveda técnica y el ${project.actasPct}% de sus actas de proyecto firmadas. ${project.informeFound ? 'Ya cuenta con el Informe General de Proyecto elaborado.' : 'Todavía no cuenta con el Informe General de Proyecto.'}`);
+
+            return partes.map(t => `<p class="mb-3 last:mb-0">${t}</p>`).join('');
         }
 
         async function renderInfoProyecto(projectId) {
@@ -2347,6 +2789,9 @@
                     ${campo('Dirección', info.direccion)}
                 </div>
             `;
+
+            const resumenEl = document.getElementById('resumenProyecto');
+            if (resumenEl) resumenEl.innerHTML = generarResumenProyecto(project, info);
         }
 
         // ==========================================================
@@ -3035,6 +3480,10 @@
 
         window.openFile = async (pId, dId, type) => {
             const p = projects.find(x => x.id === pId);
+            if (type === 'informe') {
+                if (p.informeFile?.h) window.open(URL.createObjectURL(await p.informeFile.h.getFile()), '_blank');
+                return;
+            }
             const item = (type === 'ing' ? p.ingItems : p.actItems).find(i => i.id === dId);
             if (item.handle) window.open(URL.createObjectURL(await item.handle.getFile()), '_blank');
         };
