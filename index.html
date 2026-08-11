@@ -368,7 +368,7 @@
                     <div class="flex items-center gap-4">
                         <div class="flex flex-col gap-1.5">
                             <div class="flex gap-2">
-                                <button title="Exportar a Excel (próximamente)" class="px-3 py-1.5 bg-slate-100 text-slate-400 text-[10px] font-black uppercase rounded border border-slate-200 cursor-not-allowed">Excel</button>
+                                <button onclick="switchDocTab('info')" class="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded border border-blue-600 hover:bg-blue-700 transition-colors">Info</button>
                                 <button id="card-or" onclick="clickTramite('or')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">OR</button>
                                 <button id="card-retie" onclick="clickTramite('retie')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">RETIE</button>
                             </div>
@@ -461,7 +461,7 @@
                             </div>
                         </div>
 
-                        <!-- PESTAÑA: PRELIMINAR (Kick-Off, Visitas, Contratos, Mapa) -->
+                        <!-- PESTAÑA: PRELIMINAR (Kick-Off, Recibo, Contrato, Mapa) -->
                         <div id="docTab-preliminar" class="doc-tab-panel hidden">
                             <div class="grid grid-cols-12 gap-6">
                                 <!-- Documentos Preeliminares -->
@@ -474,38 +474,13 @@
                                                 <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Kick-Off</h5>
                                                 <div class="relative group">
                                                     <input type="file" id="kickoffFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                                                    <div id="kickoffFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR KICK-OFF (PDF)</div>
+                                                    <div id="kickoffFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-blue-500">SUBIR KICK-OFF (PDF)</div>
                                                 </div>
                                                 <div class="mt-3 flex gap-2">
                                                     <button onclick="uploadPreliminarFile('kickoff')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded">Subir</button>
-                                                    <button onclick="viewPreliminarFile('kickoff')" id="kickoffViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded" disabled>Ver PDF</button>
+                                                    <button onclick="abrirModalCrearKickoff()" class="flex-1 py-2 bg-slate-100 text-slate-700 border border-slate-200 font-black text-[9px] uppercase rounded hover:bg-slate-200">Crear</button>
                                                 </div>
-                                            </div>
-
-                                            <!-- Acta Visita Técnica -->
-                                            <div class="p-4 border border-slate-200 rounded-md">
-                                                <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Acta Visita Técnica</h5>
-                                                <div class="relative group">
-                                                    <input type="file" id="visitaFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                                                    <div id="visitaFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR ACTA VISITA (PDF)</div>
-                                                </div>
-                                                <div class="mt-3 flex gap-2">
-                                                    <button onclick="uploadPreliminarFile('visita')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded">Subir</button>
-                                                    <button onclick="viewPreliminarFile('visita')" id="visitaViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded" disabled>Ver PDF</button>
-                                                </div>
-                                            </div>
-
-                                            <!-- Lista de Material -->
-                                            <div class="p-4 border border-slate-200 rounded-md">
-                                                <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Lista de Material</h5>
-                                                <div class="relative group">
-                                                    <input type="file" id="materialFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                                                    <div id="materialFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR LISTA MATERIAL (PDF)</div>
-                                                </div>
-                                                <div class="mt-3 flex gap-2">
-                                                    <button onclick="uploadPreliminarFile('material')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded">Subir</button>
-                                                    <button onclick="viewPreliminarFile('material')" id="materialViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded" disabled>Ver PDF</button>
-                                                </div>
+                                                <button onclick="viewPreliminarFile('kickoff')" id="kickoffViewBtn" class="w-full mt-2 py-2 bg-blue-600 text-white font-black text-[9px] uppercase rounded disabled:opacity-50" disabled>Ver PDF</button>
                                             </div>
 
                                             <!-- Recibo -->
@@ -513,11 +488,11 @@
                                                 <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Recibo</h5>
                                                 <div class="relative group">
                                                     <input type="file" id="reciboFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                                                    <div id="reciboFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR RECIBO (PDF)</div>
+                                                    <div id="reciboFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-blue-500">SUBIR RECIBO (PDF)</div>
                                                 </div>
                                                 <div class="mt-3 flex gap-2">
                                                     <button onclick="uploadPreliminarFile('recibo')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded">Subir</button>
-                                                    <button onclick="viewPreliminarFile('recibo')" id="reciboViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded" disabled>Ver PDF</button>
+                                                    <button onclick="viewPreliminarFile('recibo')" id="reciboViewBtn" class="flex-1 py-2 bg-blue-600 text-white font-black text-[9px] uppercase rounded disabled:opacity-50" disabled>Ver PDF</button>
                                                 </div>
                                             </div>
 
@@ -526,11 +501,11 @@
                                                 <h5 class="text-sm font-black text-slate-800 uppercase mb-3">Contrato</h5>
                                                 <div class="relative group">
                                                     <input type="file" id="contratoFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                                                    <div id="contratoFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-amber-500">SUBIR CONTRATO (PDF)</div>
+                                                    <div id="contratoFileName" class="p-3 border-2 border-dashed border-slate-200 rounded text-center text-[10px] font-bold text-slate-400 group-hover:border-blue-500">SUBIR CONTRATO (PDF)</div>
                                                 </div>
                                                 <div class="mt-3 flex gap-2">
                                                     <button onclick="uploadPreliminarFile('contrato')" class="flex-1 py-2 bg-slate-900 text-white font-black text-[9px] uppercase rounded">Subir</button>
-                                                    <button onclick="viewPreliminarFile('contrato')" id="contratoViewBtn" class="flex-1 py-2 bg-amber-600 text-white font-black text-[9px] uppercase rounded" disabled>Ver PDF</button>
+                                                    <button onclick="viewPreliminarFile('contrato')" id="contratoViewBtn" class="flex-1 py-2 bg-blue-600 text-white font-black text-[9px] uppercase rounded disabled:opacity-50" disabled>Ver PDF</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -541,7 +516,7 @@
                                 <div class="col-span-12 lg:col-span-4 space-y-6">
                                     <div class="glass-card p-6">
                                         <h4 class="text-[11px] font-black text-slate-900 uppercase mb-4 tracking-widest flex items-center">
-                                            <i class="fa-solid fa-map-location-dot text-amber-500 mr-2"></i>
+                                            <i class="fa-solid fa-map-location-dot text-blue-600 mr-2"></i>
                                             Ubicación del Proyecto
                                         </h4>
 
@@ -551,17 +526,17 @@
                                                 <div>
                                                     <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Latitud</label>
                                                     <input type="text" id="mapLat" placeholder="Ej: 4.6097"
-                                                        class="w-full p-2 bg-slate-50 border rounded text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500 text-center font-mono">
+                                                        class="w-full p-2 bg-slate-50 border rounded text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 text-center font-mono">
                                                 </div>
                                                 <div>
                                                     <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">Longitud</label>
                                                     <input type="text" id="mapLng" placeholder="Ej: -74.0817"
-                                                        class="w-full p-2 bg-slate-50 border rounded text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500 text-center font-mono">
+                                                        class="w-full p-2 bg-slate-50 border rounded text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 text-center font-mono">
                                                 </div>
                                             </div>
 
                                             <div class="flex gap-2">
-                                                <button onclick="saveCoordinates()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white font-black text-[9px] uppercase rounded transition-colors shadow-lg active:scale-95">Guardar</button>
+                                                <button onclick="saveCoordinates()" class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-[9px] uppercase rounded transition-colors shadow-lg active:scale-95">Guardar</button>
                                                 <button onclick="searchCoordinates()" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-black text-[9px] uppercase rounded transition-colors active:scale-95">
                                                     <i class="fa-solid fa-search"></i>
                                                 </button>
@@ -604,6 +579,40 @@
                         </div>
 
                     </div>
+                </div>
+            </div>
+
+            <!-- Modal: Crear Acta de Kick-Off (genera un .docx sencillo, sin plantilla) -->
+            <div id="kickoffCrearModal" class="hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                <div class="w-full max-w-lg bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Preliminar</p>
+                            <h3 class="text-lg font-black text-slate-900">Crear Acta de Kick-Off</h3>
+                        </div>
+                        <button onclick="document.getElementById('kickoffCrearModal').classList.add('hidden')" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2"/></svg>
+                        </button>
+                    </div>
+                    <form id="kickoffCrearForm" class="flex-1 overflow-y-auto p-6 space-y-5">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Fecha</label>
+                            <input id="kickoffCrearFecha" type="date" required class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Asistentes</label>
+                            <textarea id="kickoffCrearAsistentes" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[70px] outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombres de quienes participaron"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Temas Tratados</label>
+                            <textarea id="kickoffCrearTemas" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[90px] outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Compromisos / Observaciones</label>
+                            <textarea id="kickoffCrearCompromisos" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[90px] outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+                        <button id="kickoffCrearSubmitBtn" type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-md hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Generar Acta de Kick-Off</button>
+                    </form>
                 </div>
             </div>
 
@@ -1462,7 +1471,7 @@
 
             // Cargar estado de archivos
             const preliminarData = await getPreliminarData(selectedProjectId);
-            const fileTypes = ['kickoff', 'visita', 'material', 'recibo', 'contrato'];
+            const fileTypes = ['kickoff', 'recibo', 'contrato'];
 
             fileTypes.forEach(type => {
                 const fileData = preliminarData.find(f => f.type === type);
@@ -1476,7 +1485,7 @@
                 } else {
                     viewBtn.disabled = true;
                     viewBtn.classList.add('opacity-50');
-                    fileNameDiv.innerText = `SUBIR ${type.toUpperCase().replace('VISITA', 'ACTA VISITA').replace('MATERIAL', 'LISTA MATERIAL')} (PDF)`;
+                    fileNameDiv.innerText = `SUBIR ${type.toUpperCase()} (PDF)`;
                 }
             });
         }
@@ -1700,6 +1709,113 @@
                 alert("Error al abrir el archivo");
             }
         };
+
+        // --- Crear Acta de Kick-Off (genera un .docx simple desde cero, sin necesitar
+        // una plantilla previa en la carpeta Plantillas) ---
+        window.abrirModalCrearKickoff = () => {
+            document.getElementById('kickoffCrearForm').reset();
+            const hoy = new Date();
+            document.getElementById('kickoffCrearFecha').value = hoy.toISOString().slice(0, 10);
+            document.getElementById('kickoffCrearModal').classList.remove('hidden');
+        };
+
+        function escapeXmlDocx(str) {
+            return String(str || '').replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' }[c]));
+        }
+
+        // Convierte un bloque de texto (con saltos de línea) en uno o varios
+        // párrafos de Word. title=true lo pone en negrita y con mayor tamaño.
+        function bloqueDocx(texto, { titulo = false, negrita = false } = {}) {
+            const size = titulo ? '<w:sz w:val="28"/><w:szCs w:val="28"/>' : '';
+            const bold = (titulo || negrita) ? '<w:b/><w:bCs/>' : '';
+            const lineas = String(texto || '').split('\n');
+            if (lineas.length === 0 || (lineas.length === 1 && !lineas[0])) {
+                return `<w:p><w:pPr><w:spacing w:after="120"/></w:pPr></w:p>`;
+            }
+            return lineas.map(linea => `
+                <w:p>
+                    <w:pPr><w:spacing w:after="120"/></w:pPr>
+                    <w:r><w:rPr>${bold}${size}</w:rPr><w:t xml:space="preserve">${escapeXmlDocx(linea)}</w:t></w:r>
+                </w:p>`).join('');
+        }
+
+        document.getElementById('kickoffCrearForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const p = projects.find(x => x.id === selectedProjectId);
+            if (!p || !p.preliminarFolder) {
+                alert('Carpeta 1. Preeliminar no encontrada.');
+                return;
+            }
+
+            const btn = document.getElementById('kickoffCrearSubmitBtn');
+            btn.disabled = true;
+            btn.innerText = 'Generando...';
+            try {
+                const fecha = document.getElementById('kickoffCrearFecha').value;
+                const asistentes = document.getElementById('kickoffCrearAsistentes').value.trim();
+                const temas = document.getElementById('kickoffCrearTemas').value.trim();
+                const compromisos = document.getElementById('kickoffCrearCompromisos').value.trim();
+                const nombreLimpio = limpiarNombreProyecto(p.name);
+
+                const body = `
+                    ${bloqueDocx('ACTA DE KICK-OFF', { titulo: true })}
+                    ${bloqueDocx('Proyecto: ' + nombreLimpio, { negrita: true })}
+                    ${bloqueDocx('Fecha: ' + fecha)}
+                    ${bloqueDocx('')}
+                    ${bloqueDocx('Asistentes:', { negrita: true })}
+                    ${bloqueDocx(asistentes || '—')}
+                    ${bloqueDocx('')}
+                    ${bloqueDocx('Temas Tratados:', { negrita: true })}
+                    ${bloqueDocx(temas || '—')}
+                    ${bloqueDocx('')}
+                    ${bloqueDocx('Compromisos / Observaciones:', { negrita: true })}
+                    ${bloqueDocx(compromisos || '—')}
+                `;
+
+                const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`;
+
+                const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+
+                const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1417" w:right="1417" w:bottom="1417" w:left="1417"/></w:sectPr></w:body></w:document>`;
+
+                const zip = new PizZip();
+                zip.file('[Content_Types].xml', contentTypesXml);
+                zip.file('_rels/.rels', relsXml);
+                zip.file('word/document.xml', documentXml);
+                const buf = zip.generate({ type: 'uint8array' });
+
+                const fileName = `kickoff_${Date.now()}.docx`;
+                const handle = await p.preliminarFolder.getFileHandle(fileName, { create: true });
+                const writable = await handle.createWritable();
+                await writable.write(buf);
+                await writable.close();
+
+                const preliminarData = await getPreliminarData(selectedProjectId);
+                const existingIndex = preliminarData.findIndex(f => f.type === 'kickoff');
+                const fileData = {
+                    type: 'kickoff',
+                    fileName,
+                    originalName: `Acta de Kick-Off - ${nombreLimpio}.docx`,
+                    uploadedAt: new Date().toISOString()
+                };
+                if (existingIndex >= 0) preliminarData[existingIndex] = fileData;
+                else preliminarData.push(fileData);
+                await savePreliminarData(selectedProjectId, preliminarData);
+
+                renderPreliminar();
+                document.getElementById('kickoffCrearModal').classList.add('hidden');
+                showToast('Acta de Kick-Off generada correctamente');
+            } catch (err) {
+                console.error('ERROR generando Kick-Off:', err);
+                alert('No se pudo generar el acta: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Generar Acta de Kick-Off';
+            }
+        });
 
         function limpiarNombreProyecto(nombre) {
         return nombre
@@ -2349,7 +2465,7 @@
         });
 
         // Actualizar nombres de archivos al seleccionar
-        ['kickoff', 'visita', 'material', 'recibo', 'contrato'].forEach(type => {
+        ['kickoff', 'recibo', 'contrato'].forEach(type => {
             document.getElementById(`${type}File`).onchange = e => {
                 const file = e.target.files[0];
                 if (file) {
