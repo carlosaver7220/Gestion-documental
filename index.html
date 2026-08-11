@@ -156,6 +156,83 @@
 
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        /* Zona de arrastrar-y-soltar para múltiples imágenes (Registro Fotográfico) */
+        .dropzone-multi {
+            border: 2px dashed #cbd5e1;
+            border-radius: 0.5rem;
+            background: #f8fafc;
+            padding: 0.75rem;
+            transition: all 0.15s ease;
+        }
+        .dropzone-multi.dropzone-dragover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .dropzone-slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .dropzone-slots:empty {
+            display: none;
+            margin-bottom: 0;
+        }
+        .dropzone-thumb {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        .dropzone-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .dropzone-thumb-remove {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 9999px;
+            background: rgba(15, 23, 42, 0.7);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .dropzone-thumb-remove:hover { background: #dc2626; }
+        .dropzone-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem;
+            border-radius: 0.375rem;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .dropzone-btn:hover { background: #eff6ff; color: #2563eb; border-color: #93c5fd; }
+        .dropzone-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -907,13 +984,27 @@
                                     <label class="text-[10px] font-bold text-slate-500">Panorámica de cubierta (módulos)</label>
                                     <input type="file" accept="image/*" id="visitaFoto_cubierta" class="w-full text-[10px] mt-1">
                                 </div>
-                                <div>
-                                    <label class="text-[10px] font-bold text-slate-500">Canalización AC</label>
-                                    <input type="file" accept="image/*" id="visitaFoto_ac" class="w-full text-[10px] mt-1">
+                                <div class="col-span-2">
+                                    <label class="text-[10px] font-bold text-slate-500">Canalización AC <span class="text-slate-300 font-semibold normal-case">(hasta 3 imágenes)</span></label>
+                                    <div id="visitaDropzone_ac" class="dropzone-multi mt-1" data-section="ac">
+                                        <div id="visitaSlots_ac" class="dropzone-slots"></div>
+                                        <button type="button" id="visitaDropzoneBtn_ac" class="dropzone-btn" onclick="document.getElementById('visitaFoto_ac').click()">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                                            <span>Arrastra imágenes aquí o haz clic para agregar</span>
+                                        </button>
+                                        <input type="file" accept="image/*" id="visitaFoto_ac" multiple class="hidden">
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="text-[10px] font-bold text-slate-500">Canalización DC</label>
-                                    <input type="file" accept="image/*" id="visitaFoto_dc" class="w-full text-[10px] mt-1">
+                                <div class="col-span-2">
+                                    <label class="text-[10px] font-bold text-slate-500">Canalización DC <span class="text-slate-300 font-semibold normal-case">(hasta 3 imágenes)</span></label>
+                                    <div id="visitaDropzone_dc" class="dropzone-multi mt-1" data-section="dc">
+                                        <div id="visitaSlots_dc" class="dropzone-slots"></div>
+                                        <button type="button" id="visitaDropzoneBtn_dc" class="dropzone-btn" onclick="document.getElementById('visitaFoto_dc').click()">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                                            <span>Arrastra imágenes aquí o haz clic para agregar</span>
+                                        </button>
+                                        <input type="file" accept="image/*" id="visitaFoto_dc" multiple class="hidden">
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-bold text-slate-500">Medidor</label>
@@ -1833,6 +1924,89 @@
 
         let visitaTecnicaProjectId = null;
 
+        // --- Registro fotográfico múltiple (arrastrar y soltar) para Canalización AC/DC ---
+        // Cada sección admite hasta 3 imágenes. Se guardan como objetos File en memoria
+        // hasta que se envía el formulario.
+        const MAX_MULTI_IMG = 3;
+        const multiImageFiles = { ac: [], dc: [] };
+
+        function renderDropzoneSlots(section) {
+            const cont = document.getElementById(`visitaSlots_${section}`);
+            const files = multiImageFiles[section];
+            cont.innerHTML = files.map((file, idx) => `
+                <div class="dropzone-thumb">
+                    <img src="${URL.createObjectURL(file)}" alt="Imagen ${idx + 1}">
+                    <div class="dropzone-thumb-remove" onclick="quitarImagenMulti('${section}', ${idx})" title="Quitar">
+                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </div>
+                </div>
+            `).join('');
+            const btn = document.getElementById(`visitaDropzoneBtn_${section}`);
+            const restantes = MAX_MULTI_IMG - files.length;
+            if (restantes <= 0) {
+                btn.disabled = true;
+                btn.querySelector('span').innerText = 'Máximo de 3 imágenes alcanzado';
+            } else {
+                btn.disabled = false;
+                btn.querySelector('span').innerText = 'Arrastra imágenes aquí o haz clic para agregar';
+            }
+        }
+
+        function agregarImagenesMulti(section, fileList) {
+            const nuevas = [...fileList].filter(f => f.type.startsWith('image/'));
+            const disponibles = MAX_MULTI_IMG - multiImageFiles[section].length;
+            if (disponibles <= 0) return;
+            multiImageFiles[section] = multiImageFiles[section].concat(nuevas.slice(0, disponibles));
+            renderDropzoneSlots(section);
+        }
+
+        window.quitarImagenMulti = (section, idx) => {
+            multiImageFiles[section].splice(idx, 1);
+            renderDropzoneSlots(section);
+        };
+
+        function resetDropzonesMulti() {
+            multiImageFiles.ac = [];
+            multiImageFiles.dc = [];
+            renderDropzoneSlots('ac');
+            renderDropzoneSlots('dc');
+        }
+
+        // Cablea el input de archivo (clic) y los eventos de arrastrar-y-soltar
+        // sobre toda la zona (incluye el botón "agregar imagen").
+        ['ac', 'dc'].forEach(section => {
+            const dropzone = document.getElementById(`visitaDropzone_${section}`);
+            const input = document.getElementById(`visitaFoto_${section}`);
+
+            input.addEventListener('change', () => {
+                agregarImagenesMulti(section, input.files);
+                input.value = '';
+            });
+
+            ['dragenter', 'dragover'].forEach(evt => {
+                dropzone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.add('dropzone-dragover');
+                });
+            });
+            ['dragleave', 'dragend'].forEach(evt => {
+                dropzone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.remove('dropzone-dragover');
+                });
+            });
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.remove('dropzone-dragover');
+                if (e.dataTransfer && e.dataTransfer.files) {
+                    agregarImagenesMulti(section, e.dataTransfer.files);
+                }
+            });
+        });
+
         window.abrirModalVisitaTecnica = (projectId) => {
             visitaTecnicaProjectId = projectId;
             document.getElementById('visitaTecnicaForm').reset();
@@ -1845,6 +2019,7 @@
             document.getElementById('visitaRevisoOtroWrap').classList.add('hidden');
             poblarChipsPersonal('visitaElaboroChips', ELABORO_OPCIONES, 'visitaElaboro', 'visitaElaboroOtroWrap');
             poblarChipsPersonal('visitaRevisoChips', REVISO_OPCIONES, 'visitaReviso', 'visitaRevisoOtroWrap');
+            resetDropzonesMulti();
             document.getElementById('visitaTecnicaModal').classList.remove('hidden');
         };
 
@@ -1881,14 +2056,23 @@
             btn.disabled = true;
             btn.innerText = 'Generando...';
             try {
-                // 1. Leer las fotos que sí se subieron (todas son opcionales)
-                const secciones = ['tablero', 'bastidor', 'cubierta', 'ac', 'dc', 'medidor', 'transformador'];
+                // 1. Leer las fotos que sí se subieron (todas son opcionales).
+                // "ac" y "dc" admiten hasta 3 imágenes cada una (multiImageFiles),
+                // el resto sigue siendo una sola imagen por sección.
+                const seccionesSimples = ['tablero', 'bastidor', 'cubierta', 'medidor', 'transformador'];
+                const seccionesMultiples = ['ac', 'dc'];
                 const imagenesData = {};
-                for (const s of secciones) {
+                for (const s of seccionesSimples) {
                     const input = document.getElementById('visitaFoto_' + s);
                     const file = input.files[0];
                     if (file) {
                         imagenesData['foto_' + s] = await leerImagenComoDatos(file, 450, 350);
+                    }
+                }
+                for (const s of seccionesMultiples) {
+                    const files = multiImageFiles[s];
+                    for (let i = 0; i < files.length; i++) {
+                        imagenesData[`foto_${s}_${i + 1}`] = await leerImagenComoDatos(files[i], 450, 350);
                     }
                 }
 
@@ -1975,9 +2159,17 @@
                 // Las fotos: solo se manda la clave (truthy) si sí se subió esa foto,
                 // así el bloque {#foto_x}...{/foto_x} de la plantilla se oculta solo
                 // cuando esa sección no tiene imagen.
-                for (const s of secciones) {
+                for (const s of seccionesSimples) {
                     const key = 'foto_' + s;
                     data[key] = !!imagenesData[key];
+                }
+                // Para AC y DC, cada una de las 3 imágenes tiene su propia clave
+                // (foto_ac_1, foto_ac_2, foto_ac_3, y lo mismo para dc).
+                for (const s of seccionesMultiples) {
+                    for (let i = 1; i <= MAX_MULTI_IMG; i++) {
+                        const key = `foto_${s}_${i}`;
+                        data[key] = !!imagenesData[key];
+                    }
                 }
 
                 doc.render(data);
@@ -2219,6 +2411,19 @@
 
         // El 100% general se reparte: la mitad es la Bóveda Técnica (ingeniería), y la
         // otra mitad se divide en partes iguales entre Actas, Informe, OR y RETIE.
+        // Colores estándar para cualquier badge/indicador de porcentaje de la app:
+        // rojo (<60%), naranja (60% a 90%) y verde (90% o más).
+        function pctBadgeClasses(pct) {
+            if (pct < 60) return 'bg-red-600';
+            if (pct < 90) return 'bg-orange-500';
+            return 'bg-emerald-600';
+        }
+        function pctTextClasses(pct) {
+            if (pct < 60) return 'text-red-600';
+            if (pct < 90) return 'text-orange-500';
+            return 'text-emerald-600';
+        }
+
         const PESOS_PROGRESO = { boveda: 0.5, actas: 0.125, informe: 0.125, or: 0.125, retie: 0.125 };
 
         // Lectura de avance por estado: NO todos los estados valen igual. "CONFORME"/"APROBADO"
@@ -2538,7 +2743,7 @@
                     ${groupedByYear[year].map(p => `
                         <div onclick="selectProject('${p.id}')" title="${p.prog}% de documentos" class="project-card px-3 py-1.5 cursor-pointer flex items-center justify-between gap-2 ${selectedProjectId === p.id ? 'active' : ''}">
                             <h3 class="text-[11px] font-bold uppercase truncate tracking-wide ${selectedProjectId === p.id ? 'text-white' : 'text-slate-700'}">${p.name}</h3>
-                            <div class="w-1.5 h-1.5 rounded-full shrink-0 ${p.prog === 100 ? 'bg-emerald-400' : 'bg-blue-500'}"></div>
+                            <div class="w-1.5 h-1.5 rounded-full shrink-0 ${pctBadgeClasses(p.prog)}"></div>
                         </div>
                     `).join('')}
                 </div>
@@ -2610,9 +2815,17 @@
 
             // Badges de porcentaje por sección (Bóveda 50% del total; Actas, Informe, OR y
             // RETIE se reparten el otro 50% en partes iguales — ver PESOS_PROGRESO).
-            document.getElementById('bovedaPctBadge').innerText = `${p.bovedaPct}%`;
-            document.getElementById('actasPctBadge').innerText = `${p.actasPct}%`;
-            document.getElementById('informePctBadge').innerText = `${p.informePct}%`;
+            const bovedaPctBadge = document.getElementById('bovedaPctBadge');
+            bovedaPctBadge.innerText = `${p.bovedaPct}%`;
+            bovedaPctBadge.className = `px-2.5 py-1 text-[10px] text-white font-black rounded-full ${pctBadgeClasses(p.bovedaPct)}`;
+
+            const actasPctBadge = document.getElementById('actasPctBadge');
+            actasPctBadge.innerText = `${p.actasPct}%`;
+            actasPctBadge.className = `px-2.5 py-1 text-[10px] text-white font-black rounded-full ${pctBadgeClasses(p.actasPct)}`;
+
+            const informePctBadge = document.getElementById('informePctBadge');
+            informePctBadge.innerText = `${p.informePct}%`;
+            informePctBadge.className = `px-2.5 py-1 text-[10px] text-white font-black rounded-full ${pctBadgeClasses(p.informePct)}`;
 
             // Trámites Estados (ya calculados en analyze(): p.orStatusDisplay / p.retieStatusDisplay
             // ya consideran la detección automática por archivos, igual que antes).
@@ -2733,8 +2946,12 @@
 
             document.getElementById('infoHeaderNombre').innerText = project ? project.name : '---';
             const pct = project ? project.prog : 0;
-            document.getElementById('infoCargaPct').innerText = `${pct}%`;
-            document.getElementById('infoCargaCircle').setAttribute('stroke-dasharray', `${pct}, 100`);
+            const infoCargaPctEl = document.getElementById('infoCargaPct');
+            infoCargaPctEl.innerText = `${pct}%`;
+            infoCargaPctEl.className = `text-xs font-black ${pctTextClasses(pct)}`;
+            const infoCargaCircleEl = document.getElementById('infoCargaCircle');
+            infoCargaCircleEl.setAttribute('stroke-dasharray', `${pct}, 100`);
+            infoCargaCircleEl.setAttribute('class', pctTextClasses(pct));
 
             const campo = (label, valor) => `
                 <div class="min-w-0">
