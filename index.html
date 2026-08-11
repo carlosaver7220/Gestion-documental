@@ -2486,6 +2486,11 @@
         const STORES = { SETTINGS: 'settings' };
         let db, currentHandle, selectedProjectId, projects = [], activeTramiteType = null, currentPendingFile = null;
         let currentTramiteExistingFiles = [];
+        // Estado que tenía el trámite (el que se ve en el desplegable) al abrir el modal.
+        // Se usa para saber si el usuario realmente está CAMBIANDO el estado (y por
+        // tanto debe aportar evidencia) o si solo quiere agregar un comentario sin
+        // tocar el estado (lo cual siempre debe poder hacer, sin pedir archivos).
+        let estadoAlAbrirTramite = null;
         let lastProjectView = 'documentation'; // ya no hay hub de selección de módulos; Documentación es la única vista
 
         // Estados posibles por tipo de trámite. OR: ciclo real de inscripción ante el Operador de Red.
@@ -3564,8 +3569,11 @@
             const select = document.getElementById('modalStateSelect');
             const saveBtn = document.getElementById('saveTramiteUpdateBtn');
             const type = activeTramiteType;
-            const p = projects.find(x => x.id === selectedProjectId);
-            const prevStatus = p?.states?.[type]?.status;
+            // Comparamos contra el estado con el que se abrió el modal (no el crudo
+            // guardado en BD), así solo se pide evidencia cuando el usuario realmente
+            // está cambiando el estado en el desplegable. Si lo deja igual, puede
+            // guardar solo un comentario sin restricciones.
+            const prevStatus = estadoAlAbrirTramite;
             const status = select?.value;
             let valid = true;
             let reason = '';
@@ -3612,7 +3620,10 @@
             const select = document.getElementById('modalStateSelect');
             const type = activeTramiteType;
             const p = projects.find(x => x.id === selectedProjectId);
-            const prevStatus = p?.states?.[type]?.status;
+            // Igual que en updateTramiteSaveButtonState: solo pedimos el campo extra
+            // (radicado, archivos, fecha, observaciones) cuando el usuario cambia el
+            // estado respecto al que tenía el trámite al abrir el modal.
+            const prevStatus = estadoAlAbrirTramite;
             const status = select?.value;
             let html = '';
 
@@ -3724,6 +3735,10 @@
             else if (type === 'or' && state.status === 'NO INSCRITO' && p.orInscrito) estadoMostrado = 'INSCRITO';
             if (type === 'retie' && state.status === 'POR AGENDAR' && p.retieConforme) estadoMostrado = 'APROBADO';
             select.value = estadoMostrado;
+            // Guardamos el estado con el que se abrió el modal: mientras el
+            // desplegable se quede en este mismo valor, no se pide evidencia y
+            // se puede guardar el comentario libremente.
+            estadoAlAbrirTramite = estadoMostrado;
 
             document.getElementById('modalCommentInput').value = '';
             document.getElementById('tramiteModal').classList.remove('hidden');
