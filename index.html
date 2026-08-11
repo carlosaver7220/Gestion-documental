@@ -2928,7 +2928,7 @@
             let p2 = '';
             const ubicacion = [info.direccion, info.municipio, info.departamento].filter(Boolean).join(', ');
             if (ubicacion) p2 += `El proyecto está ubicado en ${ubicacion}`;
-            if (info.dueno) p2 += `${p2 ? ', y figura' : 'Figura'} como propietario ${info.dueno}${info.identificacion ? ` (identificación ${info.identificacion})` : ''}`;
+            if (info.dueno) p2 += `${p2 ? ', y figura' : 'Figura'} como propietario ${info.dueno}${info.identificacion ? ` con la C.C. ${info.identificacion}` : ''}`;
             if (p2) partes.push(p2 + '.');
 
             partes.push(`Actualmente ${textoEstadoOr(project.orStatusDisplay)}, y ${textoEstadoRetie(project.retieStatusDisplay)}.`);
@@ -3502,10 +3502,14 @@
 
             if (type === 'or') {
                 if (status === 'INSCRITO' && prevStatus !== 'INSCRITO') {
+                    // Si el proyecto ya tiene un número de radicado guardado (en Información
+                    // del Proyecto o en el propio trámite), se precarga aquí para no
+                    // tener que volver a escribirlo.
+                    const radicadoExistente = p?.states?.or?.radicado || p?.info?.radicado || '';
                     html = `
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase">Número de radicado</label>
-                            <input id="modalRadicadoInput" type="text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ingrese el radicado" oninput="updateTramiteSaveButtonState()">
+                            <input id="modalRadicadoInput" type="text" value="${radicadoExistente.replace(/"/g, '&quot;')}" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ingrese el radicado" oninput="updateTramiteSaveButtonState()">
                         </div>`;
                 } else if (status === 'CONFORME' && prevStatus !== 'CONFORME') {
                     html = `
@@ -3622,7 +3626,19 @@
             const datos = await getProjectData(selectedProjectId);
             const history = (datos.history && datos.history[activeTramiteType]) || [];
 
-            document.getElementById('modalHistoryList').innerHTML = history.slice().reverse().map(h => `
+            document.getElementById('modalHistoryList').innerHTML = history.slice().reverse().map(h => {
+                const archivos = (h.metadata && h.metadata.uploadedFiles) || [];
+                const archivosHtml = archivos.length ? `
+                    <div class="flex flex-wrap gap-1 mt-2">
+                        ${archivos.map(f => `
+                            <button type="button" onclick="openTramiteHistoryFile('${selectedProjectId}','${activeTramiteType}', decodeURIComponent('${encodeURIComponent(f)}'))" class="flex items-center gap-1 max-w-[130px] px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[8px] font-bold text-slate-500 hover:border-blue-400 hover:text-blue-600 transition-colors" title="${f.replace(/"/g, '&quot;')}">
+                                <i class="fa-solid fa-paperclip text-[7px] shrink-0"></i>
+                                <span class="truncate">${f}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                ` : '';
+                return `
                 <div class="relative pl-8">
                     <div class="absolute left-0 top-1.5 w-6 h-6 bg-slate-100 border-4 border-white rounded-full z-10"></div>
                     <div class="bg-slate-50 p-4 rounded-md border border-slate-100">
@@ -3631,10 +3647,25 @@
                             <span class="text-[8px] text-slate-400 font-bold">${h.date}</span>
                         </div>
                         <p class="text-xs text-slate-600 leading-relaxed">${h.comment}</p>
+                        ${archivosHtml}
                     </div>
-                </div>
-            `).join('') || '<p class="text-center text-slate-400 text-xs py-10">Sin historial registrado aún.</p>';
+                </div>`;
+            }).join('') || '<p class="text-center text-slate-400 text-xs py-10">Sin historial registrado aún.</p>';
         }
+
+        // Abre, desde la trazabilidad del trámite, un archivo que se adjuntó en esa
+        // actualización (viven en la misma carpeta "2. OR" / "1. RETIE" del proyecto).
+        window.openTramiteHistoryFile = async (pId, type, fileName) => {
+            const p = projects.find(x => x.id === pId);
+            const folder = type === 'or' ? p?.orFolder : p?.retieFolder;
+            if (!folder) return alert('No se encontró la carpeta del trámite.');
+            try {
+                const handle = await folder.getFileHandle(fileName);
+                window.open(URL.createObjectURL(await handle.getFile()), '_blank');
+            } catch (e) {
+                alert('No se pudo abrir el archivo: ' + fileName);
+            }
+        };
 
         window.saveTramiteUpdate = async () => {
             const validation = updateTramiteSaveButtonState();
