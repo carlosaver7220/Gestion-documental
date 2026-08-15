@@ -14,16 +14,6 @@
         }
     </script>
 
-    
-    <!--
-        INSTRUCCIONES PARA GOOGLE MAPS:
-        1. Ve a https://console.cloud.google.com/
-        2. Crea un nuevo proyecto o selecciona uno existente
-        3. Habilita la "Maps JavaScript API"
-        4. Crea una API key en "Credentials"
-        5. Reemplaza "YOUR_GOOGLE_MAPS_API_KEY" con tu API key real
-        6. Opcionalmente, restringe la API key a tu dominio para mayor seguridad
-    -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="libs/pizzip.min.js"></script>
@@ -71,21 +61,6 @@
             border-radius: 0.5rem;
             border: 1px solid #e2e8f0;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-        }
-
-        .doc-tab-btn {
-            color: #94a3b8;
-            background: transparent;
-            border-bottom: 3px solid transparent;
-        }
-        .doc-tab-btn:hover {
-            color: #1e293b;
-            background: #ffffff;
-        }
-        .doc-tab-btn.active {
-            color: #2563eb;
-            background: #ffffff;
-            border-bottom: 3px solid #2563eb;
         }
 
         .chip-btn {
@@ -144,14 +119,6 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-
-        .history-badge {
-            font-size: 9px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: #f1f5f9;
-            color: #64748b;
         }
 
         ::-webkit-scrollbar { width: 6px; }
@@ -335,6 +302,17 @@
                             <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Documentación</h3>
                             <p class="text-slate-500 text-sm mt-3 leading-relaxed">Bóveda Técnica, RETIE, OR, Actas y Archivos.</p>
                             <div class="mt-8 px-6 py-2 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:bg-blue-600 group-hover:text-white transition-colors">Ingresar Módulo</div>
+                        </div>
+
+                        <div onclick="switchView('cronograma')" class="nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
+                            <div class="w-20 h-20 bg-amber-500 rounded-xl flex items-center justify-center shadow-2xl shadow-amber-500/40 mb-8 group-hover:scale-110 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Cronograma</h3>
+                            <p class="text-slate-500 text-sm mt-3 leading-relaxed">Fechas contractuales vs. reales, por proyecto y por año.</p>
+                            <div class="mt-8 px-6 py-2 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:bg-amber-500 group-hover:text-white transition-colors">Ingresar Módulo</div>
                         </div>
 
                         <div onclick="switchView('development')" class="hidden nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
@@ -785,6 +763,17 @@
                             </div>
                         </div>
 
+                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest pt-2 border-t border-slate-100">Fechas Contractuales</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Fecha Inicio Contractual</label>
+                                <input id="infoFechaInicioContractual" type="date" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Fecha Fin Contractual</label>
+                                <input id="infoFechaFinContractual" type="date" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
                         <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest pt-2 border-t border-slate-100">Datos del Cliente</p>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -1283,6 +1272,91 @@
 
             </div>
 
+            <!-- Vista CRONOGRAMA -->
+            <div id="cronogramaView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
+                <header class="px-10 py-6 bg-white border-b flex justify-between items-center flex-wrap gap-4">
+                    <div class="flex items-center gap-4">
+                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-md">
+                            <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2"/></svg>
+                        </button>
+                        <div>
+                            <h2 class="text-xl font-black text-slate-900 uppercase">Cronograma</h2>
+                            <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Contractual vs. Real</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="cronoTabProyecto" onclick="switchCronoTab('proyecto')" class="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded border border-blue-600 hover:bg-blue-700 transition-colors">Cronograma de Proyecto</button>
+                        <button id="cronoTabGeneral" onclick="switchCronoTab('general')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200 transition-colors">Cronograma General</button>
+                    </div>
+                </header>
+
+                <!-- Sección: Cronograma de Proyecto -->
+                <div id="cronoSeccionProyecto" class="flex-1 overflow-y-auto p-8">
+                    <div class="max-w-3xl mx-auto space-y-8">
+                        <div class="glass-card p-6">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyecto</p>
+                            <h3 id="cronoProyectoNombre" class="text-xl font-black text-slate-900 mb-6">---</h3>
+
+                            <div class="grid grid-cols-2 gap-6 mb-8">
+                                <div>
+                                    <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Inicio Contractual</p>
+                                    <p id="cronoInicioContractualTxt" class="text-sm font-bold text-slate-800">---</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Fin Contractual</p>
+                                    <p id="cronoFinContractualTxt" class="text-sm font-bold text-slate-800">---</p>
+                                </div>
+                            </div>
+
+                            <div id="cronoTimelineWrap"></div>
+
+                            <p id="cronoDeltaInicio" class="text-xs font-bold text-slate-400 mt-6"></p>
+                        </div>
+
+                        <div class="glass-card p-6">
+                            <h4 class="text-[11px] font-black text-amber-600 uppercase mb-1 tracking-widest">Fechas Reales</h4>
+                            <p class="text-[10px] text-slate-400 mb-4">Registra cuándo arrancó y terminó realmente el proyecto en obra. No borra ni reemplaza la fecha contractual.</p>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="text-[9px] font-black text-slate-400 uppercase">Inicio Real</label>
+                                    <input id="cronoFechaInicioReal" type="date" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-500">
+                                </div>
+                                <div>
+                                    <label class="text-[9px] font-black text-slate-400 uppercase">Fin Real</label>
+                                    <input id="cronoFechaFinReal" type="date" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-500">
+                                </div>
+                            </div>
+                            <button onclick="guardarFechasReales()" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase rounded-md transition-colors shadow-lg shadow-amber-200">Guardar Fechas Reales</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Cronograma General -->
+                <div id="cronoSeccionGeneral" class="hidden flex-1 overflow-y-auto p-8">
+                    <div class="max-w-5xl mx-auto">
+                        <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+                            <div class="flex items-center gap-3">
+                                <button id="cronoYearPrevBtn2" onclick="cambiarAnioCronoGeneral(-1)" class="p-1.5 rounded-md hover:bg-slate-900/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors">
+                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                                </button>
+                                <span id="cronoYearGeneralLabel" class="text-lg font-black text-slate-800 tracking-widest">----</span>
+                                <button id="cronoYearNextBtn2" onclick="cambiarAnioCronoGeneral(1)" class="p-1.5 rounded-md hover:bg-slate-900/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors">
+                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                                </button>
+                            </div>
+                            <div class="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
+                                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Contractual</span>
+                                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Real</span>
+                            </div>
+                        </div>
+                        <div class="glass-card p-6">
+                            <div id="cronoGeneralMeses" class="flex text-[9px] font-black text-slate-400 uppercase mb-3 pb-2 border-b border-slate-100"></div>
+                            <div id="cronoGeneralFilas"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Modal para asignar valor -->
             <div id="assignValueModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
                 <div class="bg-white rounded-xl p-8 w-full max-w-sm shadow-2xl">
@@ -1427,16 +1501,6 @@
         }
 
         // --- PREELIMINAR / COORDINATES ---
-        let googleMapsLoaded = false;
-
-        window.initGoogleMaps = function() {
-            googleMapsLoaded = true;
-            // Si la pestaña Preliminar está visible, inicializar el mapa
-            if (document.getElementById('docTab-preliminar').classList.contains('hidden') === false) {
-                const p = projects.find(x => x.id === selectedProjectId);
-                if (p) renderPreliminar();
-            }
-        };
 
         // Manejar selección de imagen
         document.getElementById('imageInput').addEventListener('change', function(e) {
@@ -1561,13 +1625,6 @@
             // Actualizar inputs del mapa
             document.getElementById('mapLat').value = lat.toFixed(6);
             document.getElementById('mapLng').value = lng.toFixed(6);
-
-            if (googleMapsLoaded && map && marker) {
-                const pos = { lat, lng };
-                map.panTo(pos);
-                marker.setPosition(pos);
-                getReverseGeocoding(pos);
-            }
 
             showToast('Coordenadas guardadas correctamente');
         }
@@ -1825,7 +1882,6 @@
         }
 
         async function renderActaTemplate(docId, projectId, extraData = {}) {
-            console.log('=== INICIO renderActaTemplate ===', { docId, projectId, extraData });
             const p = projects.find(x => x.id === projectId);
 
             if (!p || !p.actFolder) {
@@ -2586,18 +2642,34 @@
 
         // Navegación
         window.switchView = (view) => {
-            ['loadingState', 'emptyState', 'projectHub', 'documentationView', 'developmentView'].forEach(id => {
+            ['loadingState', 'emptyState', 'projectHub', 'documentationView', 'developmentView', 'cronogramaView'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
-            const viewsMap = { hub: 'projectHub', documentation: 'documentationView', development: 'developmentView', empty: 'emptyState' };
+            const viewsMap = { hub: 'projectHub', documentation: 'documentationView', development: 'developmentView', cronograma: 'cronogramaView', empty: 'emptyState' };
             document.getElementById(viewsMap[view]).classList.remove('hidden');
             const p = projects.find(x => x.id === selectedProjectId);
             if (view === 'development' && p) renderDevelopment();
             if (view === 'documentation' && p) { renderDocModule(p); switchDocTab('info'); }
+            if (view === 'cronograma') { switchCronoTab('proyecto'); }
 
-            if (['hub', 'documentation', 'development'].includes(view)) {
+            if (['hub', 'documentation', 'development', 'cronograma'].includes(view)) {
                 lastProjectView = view;
             }
+        };
+
+        // Pestañas dentro del Módulo de Cronograma (Proyecto / General)
+        window.switchCronoTab = (tab) => {
+            const activeCls = ['bg-blue-600', 'text-white', 'border-blue-600'];
+            const inactiveCls = ['bg-slate-100', 'text-slate-700', 'border-slate-200'];
+            [['proyecto', 'cronoTabProyecto', 'cronoSeccionProyecto'], ['general', 'cronoTabGeneral', 'cronoSeccionGeneral']].forEach(([t, btnId, secId]) => {
+                const activo = t === tab;
+                document.getElementById(secId).classList.toggle('hidden', !activo);
+                const btn = document.getElementById(btnId);
+                btn.classList.remove(...activeCls, ...inactiveCls);
+                btn.classList.add(...(activo ? activeCls : inactiveCls));
+            });
+            if (tab === 'proyecto') renderCronogramaProyecto();
+            if (tab === 'general') renderCronogramaGeneral();
         };
 
         // Pestañas dentro del Módulo de Documentación (Info / Bóveda Técnica / Actas / Preliminar)
@@ -2807,6 +2879,203 @@
             sidebarYear = next;
             renderSidebar();
         };
+
+        // ==========================================================
+        // CRONOGRAMA (Contractual vs. Real)
+        // ----------------------------------------------------------
+        // Las fechas contractuales (fechaInicioContractual/fechaFinContractual)
+        // se piden en el formulario de Nuevo Proyecto y viven dentro de
+        // project_info, igual que el resto de los datos del proyecto.
+        // Las fechas reales (fechaInicioReal/fechaFinReal) se editan solo
+        // desde este módulo y también viven en project_info: así el
+        // Cronograma General puede leerlas directo de projects[].info sin
+        // pegarle a Supabase proyecto por proyecto.
+        // ==========================================================
+
+        // Interpreta un string "YYYY-MM-DD" como fecha LOCAL (no UTC), para
+        // evitar el típico corrimiento de un día que da `new Date('YYYY-MM-DD')`
+        // en zonas horarias negativas como Colombia.
+        function parseFechaLocal(str) {
+            if (!str) return null;
+            const [y, m, d] = str.split('-').map(Number);
+            if (!y || !m || !d) return null;
+            return new Date(y, m - 1, d);
+        }
+
+        function formatearFecha(str) {
+            const d = parseFechaLocal(str);
+            if (!d) return '';
+            return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        // Diferencia en días entre dos fechas "YYYY-MM-DD" (b - a). Positivo = atraso, negativo = adelanto.
+        function diferenciaDias(a, b) {
+            const da = parseFechaLocal(a), db = parseFechaLocal(b);
+            if (!da || !db) return null;
+            return Math.round((db - da) / 86400000);
+        }
+
+        window.guardarFechasReales = async () => {
+            if (!selectedProjectId) return;
+            const p = projects.find(x => x.id === selectedProjectId);
+            if (!p) return;
+            const fechaInicioReal = document.getElementById('cronoFechaInicioReal').value;
+            const fechaFinReal = document.getElementById('cronoFechaFinReal').value;
+            const infoActual = (await getProjectInfo(selectedProjectId)) || {};
+            const nuevaInfo = { ...infoActual, fechaInicioReal, fechaFinReal };
+            await saveProjectInfo(selectedProjectId, nuevaInfo);
+            p.info = nuevaInfo; // refleja el cambio en memoria sin esperar a un scan() completo
+            showToast('Fechas reales guardadas');
+            renderCronogramaProyecto();
+        };
+
+        // Construye una línea de tiempo (contractual arriba, real abajo) escalada
+        // al rango de fechas que realmente tenga el proyecto.
+        function renderCronoTimelineHtml(cs, ce, rs, re) {
+            const fechas = [cs, ce, rs, re].filter(Boolean).map(f => parseFechaLocal(f).getTime());
+            if (!fechas.length) {
+                return `<p class="text-center text-slate-400 text-xs py-10">Registra la fecha de inicio y fin contractual del proyecto desde "Editar Info" para ver el cronograma.</p>`;
+            }
+            let min = Math.min(...fechas), max = Math.max(...fechas);
+            const margen = Math.max((max - min) * 0.08, 86400000 * 2);
+            min -= margen; max += margen;
+
+            const pct = (str) => {
+                const t = parseFechaLocal(str)?.getTime();
+                if (t == null || max === min) return null;
+                return ((t - min) / (max - min)) * 100;
+            };
+
+            const track = (start, end, barClass, trackClass, vacio) => {
+                const left = pct(start);
+                if (left === null) return `<div class="h-2.5 ${trackClass} rounded-full flex items-center justify-center"><span class="text-[8px] text-slate-400 font-bold uppercase">${vacio}</span></div>`;
+                if (!end) {
+                    return `<div class="relative h-2.5 ${trackClass} rounded-full">
+                        <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full ${barClass} border-2 border-white shadow" style="left:${left}%"></div>
+                    </div>`;
+                }
+                const right = pct(end);
+                const width = Math.max(right - left, 1);
+                return `<div class="relative h-2.5 ${trackClass} rounded-full">
+                    <div class="absolute top-1/2 -translate-y-1/2 h-2.5 rounded-full ${barClass}" style="left:${left}%; width:${width}%"></div>
+                </div>`;
+            };
+
+            return `
+                <div class="flex justify-between text-[9px] font-bold text-slate-400 uppercase mb-2">
+                    <span>${formatearFecha(new Date(min).toISOString().slice(0, 10))}</span>
+                    <span>${formatearFecha(new Date(max).toISOString().slice(0, 10))}</span>
+                </div>
+                <p class="text-[9px] font-black text-blue-600 uppercase mb-1">Contractual</p>
+                ${track(cs, ce, 'bg-blue-600', 'bg-blue-50', 'Sin fecha')}
+                <p class="text-[9px] font-black text-amber-600 uppercase mt-4 mb-1">Real</p>
+                ${track(rs, re, 'bg-amber-500', 'bg-amber-50', 'Sin registrar')}
+            `;
+        }
+
+        function renderCronogramaProyecto() {
+            const p = projects.find(x => x.id === selectedProjectId);
+            if (!p) return;
+            const info = p.info || {};
+            document.getElementById('cronoProyectoNombre').innerText = p.name;
+            document.getElementById('cronoFechaInicioReal').value = info.fechaInicioReal || '';
+            document.getElementById('cronoFechaFinReal').value = info.fechaFinReal || '';
+            document.getElementById('cronoInicioContractualTxt').innerText = formatearFecha(info.fechaInicioContractual) || 'Sin definir';
+            document.getElementById('cronoFinContractualTxt').innerText = formatearFecha(info.fechaFinContractual) || 'Sin definir';
+            document.getElementById('cronoTimelineWrap').innerHTML = renderCronoTimelineHtml(info.fechaInicioContractual, info.fechaFinContractual, info.fechaInicioReal, info.fechaFinReal);
+
+            const delta = diferenciaDias(info.fechaInicioContractual, info.fechaInicioReal);
+            const deltaEl = document.getElementById('cronoDeltaInicio');
+            if (delta === null) {
+                deltaEl.innerText = 'Aún no hay fecha de inicio real registrada.';
+                deltaEl.className = 'text-xs font-bold text-slate-400 mt-6';
+            } else if (delta === 0) {
+                deltaEl.innerText = 'El inicio real coincide con el contractual.';
+                deltaEl.className = 'text-xs font-bold text-emerald-600 mt-6';
+            } else if (delta > 0) {
+                deltaEl.innerText = `Inicio real con ${delta} día(s) de atraso respecto al contractual.`;
+                deltaEl.className = 'text-xs font-bold text-red-600 mt-6';
+            } else {
+                deltaEl.innerText = `Inicio real ${Math.abs(delta)} día(s) antes de lo contractual.`;
+                deltaEl.className = 'text-xs font-bold text-emerald-600 mt-6';
+            }
+        }
+
+        // Fila de mini-Gantt (contractual arriba, real abajo) escalada a un año calendario completo,
+        // usada en el Cronograma General. Las fechas fuera del año se recortan a sus bordes.
+        function filaGantt(cs, ce, rs, re, year) {
+            const yStart = new Date(year, 0, 1).getTime();
+            const yEnd = new Date(year, 11, 31).getTime();
+            const span = yEnd - yStart;
+
+            const pct = (str) => {
+                const d = parseFechaLocal(str);
+                if (!d) return null;
+                const t = Math.min(Math.max(d.getTime(), yStart), yEnd);
+                return ((t - yStart) / span) * 100;
+            };
+
+            const barra = (start, end, colorClass) => {
+                const left = pct(start);
+                if (left === null) return '';
+                if (!end) {
+                    return `<div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full ${colorClass} border-2 border-white shadow" style="left:${left}%"></div>`;
+                }
+                const right = pct(end);
+                const width = Math.max(right - left, 0.6);
+                return `<div class="absolute top-1/2 -translate-y-1/2 h-2 rounded-full ${colorClass}" style="left:${left}%; width:${width}%"></div>`;
+            };
+
+            return `
+                <div class="relative h-2 bg-slate-100 rounded-full mb-1.5">${(cs || ce) ? barra(cs, ce, 'bg-blue-600') : ''}</div>
+                <div class="relative h-2 bg-slate-50 rounded-full">${(rs || re) ? barra(rs, re, 'bg-amber-500') : ''}</div>
+            `;
+        }
+
+        let cronoYearGeneral = null;
+
+        window.cambiarAnioCronoGeneral = (delta) => {
+            const anios = [...new Set(projects.map(anioNumerico).filter(n => n !== null))];
+            if (!anios.length) return;
+            const min = Math.min(...anios), max = Math.max(...anios);
+            let next = (cronoYearGeneral ?? max) + delta;
+            if (next < min) next = min;
+            if (next > max) next = max;
+            cronoYearGeneral = next;
+            renderCronogramaGeneral();
+        };
+
+        function renderCronogramaGeneral() {
+            const anios = [...new Set(projects.map(anioNumerico).filter(n => n !== null))];
+            if (!anios.length) {
+                document.getElementById('cronoGeneralFilas').innerHTML = '<p class="text-center text-slate-400 text-sm py-16">No hay proyectos cargados todavía.</p>';
+                document.getElementById('cronoGeneralMeses').innerHTML = '';
+                return;
+            }
+            const minAnio = Math.min(...anios), maxAnio = Math.max(...anios);
+            if (cronoYearGeneral === null) cronoYearGeneral = maxAnio;
+            if (cronoYearGeneral < minAnio) cronoYearGeneral = minAnio;
+            if (cronoYearGeneral > maxAnio) cronoYearGeneral = maxAnio;
+            const year = cronoYearGeneral;
+
+            document.getElementById('cronoYearGeneralLabel').innerText = year;
+            document.getElementById('cronoYearPrevBtn2').disabled = year <= minAnio;
+            document.getElementById('cronoYearNextBtn2').disabled = year >= maxAnio;
+
+            const meses = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+            document.getElementById('cronoGeneralMeses').innerHTML = meses.map(m => `<span class="flex-1 text-center">${m}</span>`).join('');
+
+            const proyectosAnio = projects.filter(p => anioNumerico(p) === year).sort((a, b) => a.name.localeCompare(b.name));
+            document.getElementById('cronoGeneralFilas').innerHTML = proyectosAnio.map(p => {
+                const info = p.info || {};
+                return `
+                    <div class="py-3 border-b border-slate-100 last:border-0">
+                        <p class="text-xs font-bold text-slate-700 mb-2 truncate">${p.name}</p>
+                        ${filaGantt(info.fechaInicioContractual, info.fechaFinContractual, info.fechaInicioReal, info.fechaFinReal, year)}
+                    </div>
+                `;
+            }).join('') || '<p class="text-center text-slate-400 text-xs py-16">No hay proyectos en este año.</p>';
+        }
 
         function renderSidebar() {
             const searchTerm = document.getElementById('projectSearch').value.toLowerCase();
@@ -3238,6 +3507,8 @@
             document.getElementById('infoNicTrf').value = info.nicTrf || '';
             document.getElementById('infoReferenciaMedidor').value = info.referenciaMedidor || '';
             document.getElementById('infoRadicado').value = info.radicado || '';
+            document.getElementById('infoFechaInicioContractual').value = info.fechaInicioContractual || '';
+            document.getElementById('infoFechaFinContractual').value = info.fechaFinContractual || '';
             document.getElementById('infoDueno').value = info.dueno || '';
             document.getElementById('infoIdentificacion').value = info.identificacion || '';
             poblarDepartamentos();
@@ -3266,6 +3537,8 @@
                 nicTrf: document.getElementById('infoNicTrf').value.trim(),
                 referenciaMedidor: document.getElementById('infoReferenciaMedidor').value.trim(),
                 radicado: document.getElementById('infoRadicado').value.trim(),
+                fechaInicioContractual: document.getElementById('infoFechaInicioContractual').value,
+                fechaFinContractual: document.getElementById('infoFechaFinContractual').value,
                 tipoProyecto: document.getElementById('infoTipoProyecto').value.trim(),
                 tipoProyectoOtro: document.getElementById('infoTipoProyectoOtro').value.trim(),
                 clasificacionServicio: document.getElementById('infoClasificacionServicio').value.trim(),
@@ -3296,7 +3569,8 @@
                     btn.disabled = false;
                 }
             } else {
-                await saveProjectInfo(selectedProjectId, data);
+                const infoActual = (await getProjectInfo(selectedProjectId)) || {};
+                await saveProjectInfo(selectedProjectId, { ...infoActual, ...data });
                 await renderInfoProyecto(selectedProjectId);
                 document.getElementById('proyectoInfoModal').classList.add('hidden');
                 showToast('Datos guardados');
