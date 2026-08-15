@@ -200,6 +200,58 @@
             opacity: 0.4;
             cursor: not-allowed;
         }
+
+        .smart-cronograma-shell {
+            border: 1px solid #e2e8f0;
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+            box-shadow: 0 12px 30px rgba(37, 99, 235, 0.06);
+        }
+
+        .smart-cronograma-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.65rem;
+            border-radius: 9999px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: #1d4ed8;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .smart-crono-stages {
+            display: grid;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .smart-crono-stage {
+            display: grid;
+            grid-template-columns: 1.5fr 0.9fr 0.9fr;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.6rem 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            background: rgba(255,255,255,0.8);
+        }
+
+        .smart-crono-stage .stage-name {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #334155;
+        }
+
+        .smart-crono-stage .stage-meta {
+            font-size: 9px;
+            font-weight: 700;
+            color: #64748b;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -2908,6 +2960,110 @@
             return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
         }
 
+        function fechaLocalISO(date) {
+            const d = new Date(date);
+            const offset = d.getTimezoneOffset();
+            const local = new Date(d.getTime() - offset * 60000);
+            return local.toISOString().slice(0, 10);
+        }
+
+        function addBusinessDays(date, days) {
+            const result = new Date(date);
+            let remaining = days;
+            while (remaining > 0) {
+                result.setDate(result.getDate() + 1);
+                if (result.getDay() !== 0 && result.getDay() !== 6) {
+                    remaining--;
+                }
+            }
+            return result;
+        }
+
+        function countBusinessDays(start, end) {
+            if (!start || !end) return 0;
+            const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+            const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+            let count = 0;
+            let cursor = new Date(startDate);
+            while (cursor <= endDate) {
+                if (cursor.getDay() !== 0 && cursor.getDay() !== 6) count++;
+                cursor.setDate(cursor.getDate() + 1);
+            }
+            return count;
+        }
+
+        function getProjectPowerKw(info = {}) {
+            const dc = Number.parseFloat(info.potenciaDC || 0);
+            const ac = Number.parseFloat(info.potenciaAC || 0);
+            if (Number.isFinite(dc) && dc > 0) return dc;
+            if (Number.isFinite(ac) && ac > 0) return ac;
+            return 0;
+        }
+
+        function shouldUseAutoCronograma(info = {}) {
+            if (!info) return false;
+            const kw = getProjectPowerKw(info);
+            if (!kw || kw > 10) return false;
+            const hasManualDates = !!(info.fechaInicioContractual || info.fechaFinContractual);
+            return !hasManualDates;
+        }
+
+        function crearCronogramaAutomatico(info = {}, startDate = null) {
+            const base = startDate ? parseFechaLocal(startDate) : new Date();
+            const inicioBase = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+            let cursor = new Date(inicioBase);
+
+            const etapas = [
+                { nombre: 'Kick Off', duracion: 1 },
+                { nombre: 'Visita técnica', duracion: 2 },
+                { nombre: 'Ingeniería a detalle', duracion: 5 },
+                { nombre: 'Revisión y aprobación', duracion: 1 },
+                { nombre: 'Inscripción OR', duracion: 1 },
+                { nombre: 'Compra de materiales', duracion: 2 },
+                { nombre: 'Alistamiento', duracion: 2 },
+                { nombre: 'Instalación AC', duracion: 3 },
+                { nombre: 'Instalación DC', duracion: 4 },
+                { nombre: 'Pruebas y puesta en marcha', duracion: 1 },
+                { nombre: 'Legalización RETIE / OR', duracion: 12 }
+            ];
+
+            const plan = etapas.map((etapa) => {
+                const inicio = new Date(cursor);
+                const fin = etapa.duracion > 1 ? addBusinessDays(inicio, etapa.duracion - 1) : new Date(inicio);
+                cursor = addBusinessDays(fin, 1);
+                return {
+                    nombre: etapa.nombre,
+                    inicio: fechaLocalISO(inicio),
+                    fin: fechaLocalISO(fin)
+                };
+            });
+
+            const fechaInicio = plan[0].inicio;
+            const fechaFin = plan[plan.length - 1].fin;
+            const diasHabiles = countBusinessDays(parseFechaLocal(fechaInicio), parseFechaLocal(fechaFin));
+
+            return {
+                fechaInicioContractual: fechaInicio,
+                fechaFinContractual: fechaFin,
+                cronogramaAuto: true,
+                cronogramaPlan: plan,
+                duracionContractualDias: diasHabiles
+            };
+        }
+
+        function aplicarCronogramaAutomaticoSiAplica(data = {}) {
+            const info = { ...data };
+            if (!shouldUseAutoCronograma(info)) {
+                if (info.fechaInicioContractual || info.fechaFinContractual) {
+                    info.cronogramaAuto = false;
+                    info.cronogramaPlan = [];
+                }
+                return info;
+            }
+            const auto = crearCronogramaAutomatico(info);
+            return { ...info, ...auto };
+        }
+
         // Diferencia en días entre dos fechas "YYYY-MM-DD" (b - a). Positivo = atraso, negativo = adelanto.
         function diferenciaDias(a, b) {
             const da = parseFechaLocal(a), db = parseFechaLocal(b);
@@ -2977,14 +3133,66 @@
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p) return;
             const info = p.info || {};
+            const plan = Array.isArray(info.cronogramaPlan) ? info.cronogramaPlan : [];
+            const startContractual = info.fechaInicioContractual || (plan[0]?.inicio || '');
+            const endContractual = info.fechaFinContractual || (plan[plan.length - 1]?.fin || '');
+            const isAuto = !!info.cronogramaAuto && (!info.fechaInicioContractual && !info.fechaFinContractual);
+
             document.getElementById('cronoProyectoNombre').innerText = p.name;
             document.getElementById('cronoFechaInicioReal').value = info.fechaInicioReal || '';
             document.getElementById('cronoFechaFinReal').value = info.fechaFinReal || '';
-            document.getElementById('cronoInicioContractualTxt').innerText = formatearFecha(info.fechaInicioContractual) || 'Sin definir';
-            document.getElementById('cronoFinContractualTxt').innerText = formatearFecha(info.fechaFinContractual) || 'Sin definir';
-            document.getElementById('cronoTimelineWrap').innerHTML = renderCronoTimelineHtml(info.fechaInicioContractual, info.fechaFinContractual, info.fechaInicioReal, info.fechaFinReal);
+            document.getElementById('cronoInicioContractualTxt').innerText = formatearFecha(startContractual) || 'Sin definir';
+            document.getElementById('cronoFinContractualTxt').innerText = formatearFecha(endContractual) || 'Sin definir';
 
-            const delta = diferenciaDias(info.fechaInicioContractual, info.fechaInicioReal);
+            const summaryHtml = isAuto && plan.length
+                ? `
+                    <div class="smart-cronograma-shell rounded-2xl p-4 mb-5">
+                        <div class="flex items-center justify-between gap-3 flex-wrap">
+                            <span class="smart-cronograma-badge">Programación inteligente</span>
+                            <span class="text-[9px] font-black uppercase tracking-widest text-slate-500">Proyecto ≤ 10 kWp</span>
+                        </div>
+                        <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="bg-white border border-slate-200 rounded-xl p-2.5">
+                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Inicio</p>
+                                <p class="mt-1 text-xs font-black text-slate-800">${formatearFecha(startContractual) || '—'}</p>
+                            </div>
+                            <div class="bg-white border border-slate-200 rounded-xl p-2.5">
+                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Fin</p>
+                                <p class="mt-1 text-xs font-black text-slate-800">${formatearFecha(endContractual) || '—'}</p>
+                            </div>
+                            <div class="bg-white border border-slate-200 rounded-xl p-2.5">
+                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Días hábiles</p>
+                                <p class="mt-1 text-xs font-black text-slate-800">${info.duracionContractualDias || plan.length || 0}</p>
+                            </div>
+                            <div class="bg-white border border-slate-200 rounded-xl p-2.5">
+                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Etapas</p>
+                                <p class="mt-1 text-xs font-black text-slate-800">${plan.length}</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+                : '';
+
+            let stagesHtml = '';
+            if (plan.length) {
+                stagesHtml = `
+                    <div class="smart-crono-stages">
+                        ${plan.map((stage) => `
+                            <div class="smart-crono-stage">
+                                <div>
+                                    <p class="stage-name">${stage.nombre}</p>
+                                </div>
+                                <div class="stage-meta">${formatearFecha(stage.inicio)}</div>
+                                <div class="stage-meta">${formatearFecha(stage.fin)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            document.getElementById('cronoTimelineWrap').innerHTML = `${summaryHtml}${renderCronoTimelineHtml(startContractual, endContractual, info.fechaInicioReal, info.fechaFinReal)}${stagesHtml}`;
+
+            const delta = diferenciaDias(startContractual, info.fechaInicioReal);
             const deltaEl = document.getElementById('cronoDeltaInicio');
             if (delta === null) {
                 deltaEl.innerText = 'Aún no hay fecha de inicio real registrada.';
@@ -3560,7 +3768,8 @@
                 btn.disabled = true;
                 btn.innerText = 'Creando carpetas...';
                 try {
-                    await crearNuevoProyecto(nombreProyecto, data);
+                    const dataConCronograma = aplicarCronogramaAutomaticoSiAplica(data);
+                    await crearNuevoProyecto(nombreProyecto, dataConCronograma);
                     document.getElementById('proyectoInfoModal').classList.add('hidden');
                     showToast('Proyecto creado');
                 } catch (err) {
@@ -3570,7 +3779,12 @@
                 }
             } else {
                 const infoActual = (await getProjectInfo(selectedProjectId)) || {};
-                await saveProjectInfo(selectedProjectId, { ...infoActual, ...data });
+                const finalData = { ...infoActual, ...data };
+                if (finalData.fechaInicioContractual || finalData.fechaFinContractual) {
+                    finalData.cronogramaAuto = false;
+                    finalData.cronogramaPlan = [];
+                }
+                await saveProjectInfo(selectedProjectId, finalData);
                 await renderInfoProyecto(selectedProjectId);
                 document.getElementById('proyectoInfoModal').classList.add('hidden');
                 showToast('Datos guardados');
@@ -3630,7 +3844,8 @@
             await seguimientoFolder.getDirectoryHandle('1. ACTAS', { create: true });
             await projectFolder.getDirectoryHandle('6. ESTADOS DE PAGO', { create: true });
 
-            await saveProjectInfo(projectFolder.name, data);
+            const dataFinal = aplicarCronogramaAutomaticoSiAplica(data);
+            await saveProjectInfo(projectFolder.name, dataFinal);
             await scan();
             selectProject(projectFolder.name);
         }
