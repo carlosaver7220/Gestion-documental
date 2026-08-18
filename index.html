@@ -304,17 +304,6 @@
                             <div class="mt-8 px-6 py-2 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:bg-blue-600 group-hover:text-white transition-colors">Ingresar Módulo</div>
                         </div>
 
-                        <div onclick="switchView('cronograma')" class="nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
-                            <div class="w-20 h-20 bg-amber-500 rounded-xl flex items-center justify-center shadow-2xl shadow-amber-500/40 mb-8 group-hover:scale-110 transition-transform">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            <h3 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Cronograma</h3>
-                            <p class="text-slate-500 text-sm mt-3 leading-relaxed">Fechas contractuales vs. reales, por proyecto y por año.</p>
-                            <div class="mt-8 px-6 py-2 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:bg-amber-500 group-hover:text-white transition-colors">Ingresar Módulo</div>
-                        </div>
-
                         <div onclick="switchView('development')" class="hidden nav-hub-card glass-card p-10 flex flex-col items-center text-center group">
                             <div class="w-20 h-20 bg-slate-900 rounded-xl flex items-center justify-center shadow-2xl shadow-slate-900/40 mb-8 group-hover:scale-110 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -354,6 +343,7 @@
                                 <button onclick="switchDocTab('actas')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">Actas</button>
                                 <button onclick="switchDocTab('boveda')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">Bóveda Técnica</button>
                                 <button onclick="switchDocTab('preliminar')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">Preliminar</button>
+                                <button onclick="switchDocTab('cronograma')" class="px-3 py-1.5 bg-amber-500 text-white text-[10px] font-black uppercase rounded border border-amber-500 hover:bg-amber-600">Cronograma</button>
                             </div>
                         </div>
                         <div class="relative w-14 h-14 shrink-0">
@@ -551,6 +541,108 @@
                                                 <input type="file" id="imageInput" accept="image/*" class="mt-2 text-xs">
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PESTAÑA: CRONOGRAMA -->
+                        <div id="docTab-cronograma" class="doc-tab-panel hidden">
+                            <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+                                <div>
+                                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Cronograma</h3>
+                                    <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Contractual vs. Real</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button id="cronoTabProyecto" onclick="switchCronoTab('proyecto')" class="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded border border-blue-600 hover:bg-blue-700 transition-colors">Cronograma de Proyecto</button>
+                                    <button id="cronoTabGeneral" onclick="switchCronoTab('general')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200 transition-colors">Cronograma General</button>
+                                </div>
+                            </div>
+
+                            <!-- Sección: Cronograma de Proyecto -->
+                            <div id="cronoSeccionProyecto">
+                                <div class="max-w-3xl mx-auto space-y-8">
+                                    <div class="glass-card p-6 relative overflow-hidden">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyecto</p>
+                                            <span id="cronoEstadoBadge" class="hidden px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest"></span>
+                                        </div>
+                                        <h3 id="cronoProyectoNombre" class="text-xl font-black text-slate-900 mb-6">---</h3>
+
+                                        <div class="grid grid-cols-2 gap-4 mb-8">
+                                            <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                                                <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Inicio Contractual</p>
+                                                <p id="cronoInicioContractualTxt" class="text-sm font-black text-blue-900">---</p>
+                                            </div>
+                                            <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                                                <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Fin Contractual</p>
+                                                <p id="cronoFinContractualTxt" class="text-sm font-black text-blue-900">---</p>
+                                            </div>
+                                        </div>
+
+                                        <div id="cronoTimelineWrap"></div>
+
+                                        <p id="cronoDeltaInicio" class="text-xs font-bold text-slate-400 mt-6"></p>
+                                    </div>
+
+                                    <div class="glass-card p-6">
+                                        <h4 class="text-[11px] font-black text-amber-600 uppercase mb-1 tracking-widest">Fechas Reales</h4>
+                                        <p class="text-[10px] text-slate-400 mb-4">Registra cuándo arrancó y terminó realmente el proyecto en obra. No borra ni reemplaza la fecha contractual.</p>
+                                        <div class="grid grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <label class="text-[9px] font-black text-slate-400 uppercase">Inicio Real</label>
+                                                <input id="cronoFechaInicioReal" type="date" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-500">
+                                            </div>
+                                            <div>
+                                                <label class="text-[9px] font-black text-slate-400 uppercase">Fin Real</label>
+                                                <input id="cronoFechaFinReal" type="date" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-500">
+                                            </div>
+                                        </div>
+                                        <button onclick="guardarFechasReales()" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase rounded-md transition-colors shadow-lg shadow-amber-200">Guardar Fechas Reales</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sección: Cronograma General -->
+                            <div id="cronoSeccionGeneral" class="hidden">
+                                <div class="max-w-5xl mx-auto">
+                                    <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+                                        <div class="flex items-center gap-3">
+                                            <button id="cronoYearPrevBtn2" onclick="cambiarAnioCronoGeneral(-1)" class="p-1.5 rounded-md hover:bg-slate-900/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors">
+                                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                                            </button>
+                                            <span id="cronoYearGeneralLabel" class="text-lg font-black text-slate-800 tracking-widest">----</span>
+                                            <button id="cronoYearNextBtn2" onclick="cambiarAnioCronoGeneral(1)" class="p-1.5 rounded-md hover:bg-slate-900/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors">
+                                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                                            </button>
+                                        </div>
+                                        <div class="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
+                                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Contractual</span>
+                                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Real</span>
+                                        </div>
+                                    </div>
+
+                                    <div id="cronoStatsRow" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                        <div class="glass-card p-5 border-l-4 border-slate-300">
+                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Proyectos del Año</p>
+                                            <p id="cronoStatTotal" class="text-2xl font-black text-slate-900 mt-1">0</p>
+                                        </div>
+                                        <div class="glass-card p-5 border-l-4 border-emerald-500">
+                                            <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">A Tiempo / Adelantados</p>
+                                            <p id="cronoStatATiempo" class="text-2xl font-black text-emerald-600 mt-1">0</p>
+                                        </div>
+                                        <div class="glass-card p-5 border-l-4 border-red-500">
+                                            <p class="text-[9px] font-black text-red-600 uppercase tracking-widest">Atrasados</p>
+                                            <p id="cronoStatAtrasados" class="text-2xl font-black text-red-600 mt-1">0</p>
+                                        </div>
+                                        <div class="glass-card p-5 border-l-4 border-amber-400">
+                                            <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest">Atraso Promedio</p>
+                                            <p id="cronoStatPromedio" class="text-2xl font-black text-amber-600 mt-1">--</p>
+                                        </div>
+                                    </div>
+                                    <div class="glass-card p-6">
+                                        <div id="cronoGeneralMeses" class="flex text-[9px] font-black text-slate-400 uppercase mb-3 pb-2 border-b border-slate-100"></div>
+                                        <div id="cronoGeneralFilas"></div>
                                     </div>
                                 </div>
                             </div>
@@ -1270,113 +1362,6 @@
                     </div>
                 </div>
 
-            </div>
-
-            <!-- Vista CRONOGRAMA -->
-            <div id="cronogramaView" class="hidden flex-1 flex flex-col overflow-hidden view-transition">
-                <header class="px-10 py-6 bg-white border-b flex justify-between items-center flex-wrap gap-4">
-                    <div class="flex items-center gap-4">
-                        <button onclick="switchView('hub')" class="p-2 hover:bg-slate-100 rounded-md">
-                            <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-width="2"/></svg>
-                        </button>
-                        <div>
-                            <h2 class="text-xl font-black text-slate-900 uppercase">Cronograma</h2>
-                            <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Contractual vs. Real</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button id="cronoTabProyecto" onclick="switchCronoTab('proyecto')" class="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded border border-blue-600 hover:bg-blue-700 transition-colors">Cronograma de Proyecto</button>
-                        <button id="cronoTabGeneral" onclick="switchCronoTab('general')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200 transition-colors">Cronograma General</button>
-                    </div>
-                </header>
-
-                <!-- Sección: Cronograma de Proyecto -->
-                <div id="cronoSeccionProyecto" class="flex-1 overflow-y-auto p-8">
-                    <div class="max-w-3xl mx-auto space-y-8">
-                        <div class="glass-card p-6 relative overflow-hidden">
-                            <div class="flex items-center justify-between mb-1">
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyecto</p>
-                                <span id="cronoEstadoBadge" class="hidden px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest"></span>
-                            </div>
-                            <h3 id="cronoProyectoNombre" class="text-xl font-black text-slate-900 mb-6">---</h3>
-
-                            <div class="grid grid-cols-2 gap-4 mb-8">
-                                <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                                    <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Inicio Contractual</p>
-                                    <p id="cronoInicioContractualTxt" class="text-sm font-black text-blue-900">---</p>
-                                </div>
-                                <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                                    <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Fin Contractual</p>
-                                    <p id="cronoFinContractualTxt" class="text-sm font-black text-blue-900">---</p>
-                                </div>
-                            </div>
-
-                            <div id="cronoTimelineWrap"></div>
-
-                            <p id="cronoDeltaInicio" class="text-xs font-bold text-slate-400 mt-6"></p>
-                        </div>
-
-                        <div class="glass-card p-6">
-                            <h4 class="text-[11px] font-black text-amber-600 uppercase mb-1 tracking-widest">Fechas Reales</h4>
-                            <p class="text-[10px] text-slate-400 mb-4">Registra cuándo arrancó y terminó realmente el proyecto en obra. No borra ni reemplaza la fecha contractual.</p>
-                            <div class="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="text-[9px] font-black text-slate-400 uppercase">Inicio Real</label>
-                                    <input id="cronoFechaInicioReal" type="date" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-500">
-                                </div>
-                                <div>
-                                    <label class="text-[9px] font-black text-slate-400 uppercase">Fin Real</label>
-                                    <input id="cronoFechaFinReal" type="date" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-500">
-                                </div>
-                            </div>
-                            <button onclick="guardarFechasReales()" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase rounded-md transition-colors shadow-lg shadow-amber-200">Guardar Fechas Reales</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sección: Cronograma General -->
-                <div id="cronoSeccionGeneral" class="hidden flex-1 overflow-y-auto p-8">
-                    <div class="max-w-5xl mx-auto">
-                        <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-                            <div class="flex items-center gap-3">
-                                <button id="cronoYearPrevBtn2" onclick="cambiarAnioCronoGeneral(-1)" class="p-1.5 rounded-md hover:bg-slate-900/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors">
-                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-                                </button>
-                                <span id="cronoYearGeneralLabel" class="text-lg font-black text-slate-800 tracking-widest">----</span>
-                                <button id="cronoYearNextBtn2" onclick="cambiarAnioCronoGeneral(1)" class="p-1.5 rounded-md hover:bg-slate-900/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors">
-                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                                </button>
-                            </div>
-                            <div class="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
-                                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Contractual</span>
-                                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Real</span>
-                            </div>
-                        </div>
-
-                        <div id="cronoStatsRow" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                            <div class="glass-card p-5 border-l-4 border-slate-300">
-                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Proyectos del Año</p>
-                                <p id="cronoStatTotal" class="text-2xl font-black text-slate-900 mt-1">0</p>
-                            </div>
-                            <div class="glass-card p-5 border-l-4 border-emerald-500">
-                                <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">A Tiempo / Adelantados</p>
-                                <p id="cronoStatATiempo" class="text-2xl font-black text-emerald-600 mt-1">0</p>
-                            </div>
-                            <div class="glass-card p-5 border-l-4 border-red-500">
-                                <p class="text-[9px] font-black text-red-600 uppercase tracking-widest">Atrasados</p>
-                                <p id="cronoStatAtrasados" class="text-2xl font-black text-red-600 mt-1">0</p>
-                            </div>
-                            <div class="glass-card p-5 border-l-4 border-amber-400">
-                                <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest">Atraso Promedio</p>
-                                <p id="cronoStatPromedio" class="text-2xl font-black text-amber-600 mt-1">--</p>
-                            </div>
-                        </div>
-                        <div class="glass-card p-6">
-                            <div id="cronoGeneralMeses" class="flex text-[9px] font-black text-slate-400 uppercase mb-3 pb-2 border-b border-slate-100"></div>
-                            <div id="cronoGeneralFilas"></div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Modal para asignar valor -->
@@ -2664,17 +2649,16 @@
 
         // Navegación
         window.switchView = (view) => {
-            ['loadingState', 'emptyState', 'projectHub', 'documentationView', 'developmentView', 'cronogramaView'].forEach(id => {
+            ['loadingState', 'emptyState', 'projectHub', 'documentationView', 'developmentView'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
-            const viewsMap = { hub: 'projectHub', documentation: 'documentationView', development: 'developmentView', cronograma: 'cronogramaView', empty: 'emptyState' };
+            const viewsMap = { hub: 'projectHub', documentation: 'documentationView', development: 'developmentView', empty: 'emptyState' };
             document.getElementById(viewsMap[view]).classList.remove('hidden');
             const p = projects.find(x => x.id === selectedProjectId);
             if (view === 'development' && p) renderDevelopment();
             if (view === 'documentation' && p) { renderDocModule(p); switchDocTab('info'); }
-            if (view === 'cronograma') { switchCronoTab('proyecto'); }
 
-            if (['hub', 'documentation', 'development', 'cronograma'].includes(view)) {
+            if (['hub', 'documentation', 'development'].includes(view)) {
                 lastProjectView = view;
             }
         };
@@ -2694,15 +2678,16 @@
             if (tab === 'general') renderCronogramaGeneral();
         };
 
-        // Pestañas dentro del Módulo de Documentación (Info / Bóveda Técnica / Actas / Preliminar)
+        // Pestañas dentro del Módulo de Documentación (Info / Bóveda Técnica / Actas / Preliminar / Cronograma)
         window.switchDocTab = (tab) => {
-            ['boveda', 'actas', 'info', 'preliminar'].forEach(t => {
+            ['boveda', 'actas', 'info', 'preliminar', 'cronograma'].forEach(t => {
                 document.getElementById(`docTab-${t}`).classList.toggle('hidden', t !== tab);
             });
             if (tab === 'preliminar') {
                 const p = projects.find(x => x.id === selectedProjectId);
                 if (p) renderPreliminar();
             }
+            if (tab === 'cronograma') { switchCronoTab('proyecto'); }
         };
 
         // Escaneo y Lógica de Datos
