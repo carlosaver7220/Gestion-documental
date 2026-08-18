@@ -561,7 +561,7 @@
 
                             <!-- Sección: Cronograma de Proyecto -->
                             <div id="cronoSeccionProyecto">
-                                <div class="max-w-3xl mx-auto space-y-8">
+                                <div class="max-w-6xl mx-auto space-y-6">
                                     <div class="glass-card p-6 relative overflow-hidden">
                                         <div class="flex items-center justify-between mb-1">
                                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyecto</p>
@@ -569,7 +569,7 @@
                                         </div>
                                         <h3 id="cronoProyectoNombre" class="text-xl font-black text-slate-900 mb-6">---</h3>
 
-                                        <div class="grid grid-cols-2 gap-4 mb-8">
+                                        <div class="grid grid-cols-2 gap-4 mb-2">
                                             <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
                                                 <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Inicio Contractual</p>
                                                 <p id="cronoInicioContractualTxt" class="text-sm font-black text-blue-900">---</p>
@@ -580,9 +580,28 @@
                                             </div>
                                         </div>
 
-                                        <div id="cronoTimelineWrap"></div>
+                                        <p id="cronoDeltaInicio" class="text-xs font-bold text-slate-400"></p>
+                                    </div>
 
-                                        <p id="cronoDeltaInicio" class="text-xs font-bold text-slate-400 mt-6"></p>
+                                    <!-- Calendario del proyecto: mismo formato que el Cronograma General, solo que
+                                         filtrado a este proyecto (una única barra, siempre en azul). -->
+                                    <div>
+                                        <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+                                            <div class="flex items-center gap-3">
+                                                <button id="cronoHoyBtnProyecto" onclick="irHoyCronoProyecto()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase rounded-md border border-slate-200 transition-colors">Hoy</button>
+                                                <button onclick="cambiarMesCronoProyecto(-1)" class="p-1.5 rounded-md hover:bg-slate-900/5 transition-colors">
+                                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                                                </button>
+                                                <span id="cronoMesProyectoLabel" class="text-lg font-black text-slate-800 tracking-wide capitalize">----</span>
+                                                <button onclick="cambiarMesCronoProyecto(1)" class="p-1.5 rounded-md hover:bg-slate-900/5 transition-colors">
+                                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                                                </button>
+                                            </div>
+                                            <div id="cronoLeyendaProyecto" class="flex flex-wrap gap-3 text-[10px] font-bold uppercase text-slate-500"></div>
+                                        </div>
+                                        <div class="glass-card p-4 md:p-6 overflow-x-auto">
+                                            <div id="cronoCalendarGridProyecto" class="min-w-[720px]"></div>
+                                        </div>
                                     </div>
 
                                     <div class="glass-card p-6">
@@ -2942,50 +2961,6 @@
             renderCronogramaProyecto();
         };
 
-        // Construye una línea de tiempo (contractual arriba, real abajo) escalada
-        // al rango de fechas que realmente tenga el proyecto.
-        function renderCronoTimelineHtml(cs, ce, rs, re) {
-            const fechas = [cs, ce, rs, re].filter(Boolean).map(f => parseFechaLocal(f).getTime());
-            if (!fechas.length) {
-                return `<p class="text-center text-slate-400 text-xs py-10">Registra la fecha de inicio y fin contractual del proyecto desde "Editar Info" para ver el cronograma.</p>`;
-            }
-            let min = Math.min(...fechas), max = Math.max(...fechas);
-            const margen = Math.max((max - min) * 0.08, 86400000 * 2);
-            min -= margen; max += margen;
-
-            const pct = (str) => {
-                const t = parseFechaLocal(str)?.getTime();
-                if (t == null || max === min) return null;
-                return ((t - min) / (max - min)) * 100;
-            };
-
-            const track = (start, end, barClass, trackClass, vacio) => {
-                const left = pct(start);
-                if (left === null) return `<div class="h-3 ${trackClass} rounded-full flex items-center justify-center"><span class="text-[8px] text-slate-400 font-bold uppercase">${vacio}</span></div>`;
-                if (!end) {
-                    return `<div class="relative h-3 ${trackClass} rounded-full">
-                        <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full ${barClass} border-2 border-white shadow-lg" style="left:${left}%"></div>
-                    </div>`;
-                }
-                const right = pct(end);
-                const width = Math.max(right - left, 1);
-                return `<div class="relative h-3 ${trackClass} rounded-full shadow-inner">
-                    <div class="absolute top-0 h-3 rounded-full ${barClass} shadow-md" style="left:${left}%; width:${width}%"></div>
-                </div>`;
-            };
-
-            return `
-                <div class="flex justify-between text-[9px] font-bold text-slate-400 uppercase mb-2">
-                    <span>${formatearFecha(new Date(min).toISOString().slice(0, 10))}</span>
-                    <span>${formatearFecha(new Date(max).toISOString().slice(0, 10))}</span>
-                </div>
-                <p class="text-[9px] font-black text-blue-600 uppercase mb-1">Contractual</p>
-                ${track(cs, ce, 'bg-gradient-to-r from-blue-500 to-blue-700', 'bg-blue-50', 'Sin fecha')}
-                <p class="text-[9px] font-black text-amber-600 uppercase mt-4 mb-1">Real</p>
-                ${track(rs, re, 'bg-gradient-to-r from-amber-400 to-orange-600', 'bg-amber-50', 'Sin registrar')}
-            `;
-        }
-
         function renderCronogramaProyecto() {
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p) return;
@@ -2995,10 +2970,10 @@
             document.getElementById('cronoFechaFinReal').value = info.fechaFinReal || '';
             document.getElementById('cronoInicioContractualTxt').innerText = formatearFecha(info.fechaInicioContractual) || 'Sin definir';
             document.getElementById('cronoFinContractualTxt').innerText = formatearFecha(info.fechaFinContractual) || 'Sin definir';
-            document.getElementById('cronoTimelineWrap').innerHTML = renderCronoTimelineHtml(info.fechaInicioContractual, info.fechaFinContractual, info.fechaInicioReal, info.fechaFinReal);
 
             const estado = estadoProyecto(info);
             const badge = document.getElementById('cronoEstadoBadge');
+            badge.classList.remove('hidden');
             badge.innerText = estado.label;
             badge.className = `px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${estado.bg}`;
 
@@ -3006,18 +2981,69 @@
             const deltaEl = document.getElementById('cronoDeltaInicio');
             if (delta === null) {
                 deltaEl.innerText = 'Aún no hay fecha de inicio real registrada.';
-                deltaEl.className = 'text-xs font-bold text-slate-400 mt-6';
+                deltaEl.className = 'text-xs font-bold text-slate-400';
             } else if (delta === 0) {
                 deltaEl.innerText = 'El inicio real coincide con el contractual.';
-                deltaEl.className = 'text-xs font-bold text-emerald-600 mt-6';
+                deltaEl.className = 'text-xs font-bold text-emerald-600';
             } else if (delta > 0) {
                 deltaEl.innerText = `Inicio real con ${delta} día(s) de atraso respecto al contractual.`;
-                deltaEl.className = 'text-xs font-bold text-red-600 mt-6';
+                deltaEl.className = 'text-xs font-bold text-red-600';
             } else {
                 deltaEl.innerText = `Inicio real ${Math.abs(delta)} día(s) antes de lo contractual.`;
-                deltaEl.className = 'text-xs font-bold text-emerald-600 mt-6';
+                deltaEl.className = 'text-xs font-bold text-emerald-600';
+            }
+
+            // --- Calendario del proyecto: mismo componente que el Cronograma General
+            // (construirGrillaCronograma), pero filtrado a un único proyecto y siempre
+            // en el color reservado CRONO_COLOR_PROYECTO_INDIVIDUAL (azul). ---
+            inicializarCronoProyectoSiHaceFalta();
+            const year = cronoAnioProyecto;
+            const month = cronoMesProyecto;
+            document.getElementById('cronoMesProyectoLabel').innerText = `${MESES_LARGO[month]} de ${year}`;
+
+            const segmentos = segmentosEjecucion(info);
+            const enElMes = segmentos && segmentos.length ? [{ p, segmentos }] : [];
+
+            const leyenda = [`<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${CRONO_COLOR_PROYECTO_INDIVIDUAL.dot}"></span> ${p.name}</span>`];
+            if (segmentos && segmentos.some(s => s.cambio)) {
+                leyenda.push(`<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${CRONO_COLOR_CAMBIO.dot}"></span> Fecha actualizada</span>`);
+            }
+            document.getElementById('cronoLeyendaProyecto').innerHTML = leyenda.join('');
+
+            document.getElementById('cronoCalendarGridProyecto').innerHTML = construirGrillaCronograma(year, month, enElMes, () => CRONO_COLOR_PROYECTO_INDIVIDUAL);
+            if (!enElMes.length) {
+                document.getElementById('cronoCalendarGridProyecto').insertAdjacentHTML('beforeend', '<p class="text-center text-slate-400 text-sm py-8">Este proyecto aún no tiene fechas de ejecución registradas.</p>');
             }
         }
+
+        let cronoAnioProyecto = null;
+        let cronoMesProyecto = null; // 0-11
+
+        function inicializarCronoProyectoSiHaceFalta() {
+            if (cronoAnioProyecto === null || cronoMesProyecto === null) {
+                const hoy = new Date();
+                cronoAnioProyecto = hoy.getFullYear();
+                cronoMesProyecto = hoy.getMonth();
+            }
+        }
+
+        window.irHoyCronoProyecto = () => {
+            const hoy = new Date();
+            cronoAnioProyecto = hoy.getFullYear();
+            cronoMesProyecto = hoy.getMonth();
+            renderCronogramaProyecto();
+        };
+
+        window.cambiarMesCronoProyecto = (delta) => {
+            inicializarCronoProyectoSiHaceFalta();
+            let m = cronoMesProyecto + delta;
+            let y = cronoAnioProyecto;
+            if (m < 0) { m = 11; y--; }
+            if (m > 11) { m = 0; y++; }
+            cronoMesProyecto = m;
+            cronoAnioProyecto = y;
+            renderCronogramaProyecto();
+        };
 
         // ==========================================================
         // CRONOGRAMA GENERAL — vista de calendario mensual
@@ -3036,18 +3062,26 @@
         // del proyecto.
         // ==========================================================
 
+        // Azul y rojo quedan RESERVADOS y nunca entran en esta paleta:
+        // - Azul (CRONO_COLOR_PROYECTO_INDIVIDUAL) es el color fijo que usa
+        //   cualquier proyecto dentro de SU PROPIO Cronograma de Proyecto (no
+        //   importa que se repita entre proyectos: ahí solo se ve uno a la vez).
+        // - Rojo (CRONO_COLOR_CAMBIO) es el indicador de "fecha actualizada".
         const CRONO_COLORES_PROYECTO = [
-            { bg: 'bg-blue-600',   dot: 'bg-blue-600' },
-            { bg: 'bg-indigo-500', dot: 'bg-indigo-500' },
-            { bg: 'bg-sky-500',    dot: 'bg-sky-500' },
-            { bg: 'bg-cyan-600',   dot: 'bg-cyan-600' },
-            { bg: 'bg-purple-500', dot: 'bg-purple-500' },
-            { bg: 'bg-teal-600',   dot: 'bg-teal-600' },
-            { bg: 'bg-blue-800',   dot: 'bg-blue-800' },
-            { bg: 'bg-violet-500', dot: 'bg-violet-500' },
+            { bg: 'bg-indigo-500',  dot: 'bg-indigo-500' },
+            { bg: 'bg-purple-500',  dot: 'bg-purple-500' },
+            { bg: 'bg-teal-600',    dot: 'bg-teal-600' },
+            { bg: 'bg-amber-600',   dot: 'bg-amber-600' },
+            { bg: 'bg-fuchsia-500', dot: 'bg-fuchsia-500' },
+            { bg: 'bg-violet-500',  dot: 'bg-violet-500' },
+            { bg: 'bg-lime-600',    dot: 'bg-lime-600' },
+            { bg: 'bg-orange-500',  dot: 'bg-orange-500' },
+            { bg: 'bg-pink-500',    dot: 'bg-pink-500' },
         ];
         const CRONO_COLOR_CAMBIO = { bg: 'bg-red-500', dot: 'bg-red-500' };
+        const CRONO_COLOR_PROYECTO_INDIVIDUAL = { bg: 'bg-blue-600', dot: 'bg-blue-600' };
 
+        // Se repite (cicla) con módulo una vez se agotan los colores disponibles.
         function colorProyecto(index) {
             return CRONO_COLORES_PROYECTO[index % CRONO_COLORES_PROYECTO.length];
         }
@@ -3143,6 +3177,57 @@
         const DIAS_SEMANA = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'];
         const ALTO_BARRA = 22; // px por fila de barra apilada dentro de una semana
 
+        // Construye el HTML de la grilla de calendario mensual (días + barras de
+        // ejecución) para una lista de proyectos ya filtrada (cada item con forma
+        // { p, segmentos }). La reutilizan tanto el Cronograma General (todos los
+        // proyectos) como el Cronograma de Proyecto (un único proyecto), así ambas
+        // vistas se ven exactamente igual. colorFn(p) => { bg, dot }.
+        function construirGrillaCronograma(year, month, enElMes, colorFn) {
+            const semanas = semanasDelMes(year, month);
+            const hoyStr = new Date().toDateString();
+            let html = `<div class="grid grid-cols-7 text-[9px] font-black text-slate-400 uppercase mb-2">
+                ${DIAS_SEMANA.map(d => `<div class="text-center py-1">${d}</div>`).join('')}
+            </div>`;
+
+            semanas.forEach(dias => {
+                const semStart = dias[0].getTime();
+                const semEnd = dias[6].getTime() + 86400000 - 1;
+
+                const enSemana = enElMes.filter(({ segmentos }) => segmentos.some(s => s.end >= semStart && s.start <= semEnd));
+                const alturaBarras = enSemana.length ? enSemana.length * ALTO_BARRA + 4 : 0;
+
+                html += `<div class="grid grid-cols-7 border-t border-slate-100 relative" style="min-height:${44 + alturaBarras}px">`;
+                dias.forEach(d => {
+                    const esMesActual = d.getMonth() === month;
+                    const esHoy = d.toDateString() === hoyStr;
+                    html += `<div class="border-l border-slate-50 first:border-l-0 p-1.5">
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${esHoy ? 'bg-blue-600 text-white' : esMesActual ? 'text-slate-600' : 'text-slate-300'}">${d.getDate()}</span>
+                    </div>`;
+                });
+
+                html += `<div class="absolute left-0 right-0 top-7">`;
+                enSemana.forEach(({ p, segmentos }, fila) => {
+                    const color = colorFn(p);
+                    segmentos.forEach((seg, segIdx) => {
+                        const segS = Math.max(seg.start, semStart);
+                        const segE = Math.min(seg.end, semEnd);
+                        if (segE < segS) return;
+                        const diaInicio = Math.floor((segS - semStart) / 86400000);
+                        const diaFin = Math.floor((segE - semStart) / 86400000);
+                        const left = (diaInicio / 7) * 100;
+                        const width = ((diaFin - diaInicio + 1) / 7) * 100;
+                        const claseColor = seg.cambio ? CRONO_COLOR_CAMBIO.bg : color.bg;
+                        const mostrarNombre = segIdx === 0 && segS === seg.start;
+                        html += `<div class="absolute h-[19px] ${claseColor} rounded text-white text-[9px] font-bold flex items-center px-1.5 truncate shadow-sm" style="left:${left}%; width:calc(${width}% - 2px); top:${fila * ALTO_BARRA}px;" title="${p.name}">
+                            ${mostrarNombre ? p.name : ''}
+                        </div>`;
+                    });
+                });
+                html += `</div></div>`;
+            });
+            return html;
+        }
+
         function renderCronogramaGeneral() {
             inicializarCronoGeneralSiHaceFalta();
             const year = cronoAnioGeneral;
@@ -3192,49 +3277,7 @@
             document.getElementById('cronoLeyenda').innerHTML = leyenda.join('');
 
             // --- Grilla ---
-            const hoyStr = new Date().toDateString();
-            let html = `<div class="grid grid-cols-7 text-[9px] font-black text-slate-400 uppercase mb-2">
-                ${DIAS_SEMANA.map(d => `<div class="text-center py-1">${d}</div>`).join('')}
-            </div>`;
-
-            semanas.forEach(dias => {
-                const semStart = dias[0].getTime();
-                const semEnd = dias[6].getTime() + 86400000 - 1;
-
-                const enSemana = enElMes.filter(({ segmentos }) => segmentos.some(s => s.end >= semStart && s.start <= semEnd));
-                const alturaBarras = enSemana.length ? enSemana.length * ALTO_BARRA + 4 : 0;
-
-                html += `<div class="grid grid-cols-7 border-t border-slate-100 relative" style="min-height:${44 + alturaBarras}px">`;
-                dias.forEach(d => {
-                    const esMesActual = d.getMonth() === month;
-                    const esHoy = d.toDateString() === hoyStr;
-                    html += `<div class="border-l border-slate-50 first:border-l-0 p-1.5">
-                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${esHoy ? 'bg-blue-600 text-white' : esMesActual ? 'text-slate-600' : 'text-slate-300'}">${d.getDate()}</span>
-                    </div>`;
-                });
-
-                html += `<div class="absolute left-0 right-0 top-7">`;
-                enSemana.forEach(({ p, segmentos }, fila) => {
-                    const color = colorPorProyecto.get(p.id);
-                    segmentos.forEach((seg, segIdx) => {
-                        const segS = Math.max(seg.start, semStart);
-                        const segE = Math.min(seg.end, semEnd);
-                        if (segE < segS) return;
-                        const diaInicio = Math.floor((segS - semStart) / 86400000);
-                        const diaFin = Math.floor((segE - semStart) / 86400000);
-                        const left = (diaInicio / 7) * 100;
-                        const width = ((diaFin - diaInicio + 1) / 7) * 100;
-                        const claseColor = seg.cambio ? CRONO_COLOR_CAMBIO.bg : color.bg;
-                        const mostrarNombre = segIdx === 0 && segS === seg.start;
-                        html += `<div class="absolute h-[19px] ${claseColor} rounded text-white text-[9px] font-bold flex items-center px-1.5 truncate shadow-sm" style="left:${left}%; width:calc(${width}% - 2px); top:${fila * ALTO_BARRA}px;" title="${p.name}">
-                            ${mostrarNombre ? p.name : ''}
-                        </div>`;
-                    });
-                });
-                html += `</div></div>`;
-            });
-
-            document.getElementById('cronoCalendarGrid').innerHTML = html;
+            document.getElementById('cronoCalendarGrid').innerHTML = construirGrillaCronograma(year, month, enElMes, (p) => colorPorProyecto.get(p.id));
             if (!enElMes.length) {
                 document.getElementById('cronoCalendarGrid').insertAdjacentHTML('beforeend', '<p class="text-center text-slate-400 text-sm py-8">Ningún proyecto tiene fechas de ejecución en este mes.</p>');
             }
