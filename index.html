@@ -548,77 +548,34 @@
 
                         <!-- PESTAÑA: CRONOGRAMA -->
                         <div id="docTab-cronograma" class="doc-tab-panel hidden">
-                            <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-                                <div>
-                                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Cronograma</h3>
-                                    <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Contractual vs. Real</p>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button id="cronoTabProyecto" onclick="switchCronoTab('proyecto')" class="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded border border-blue-600 hover:bg-blue-700 transition-colors">Cronograma de Proyecto</button>
-                                    <button id="cronoTabGeneral" onclick="switchCronoTab('general')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200 transition-colors">Cronograma General</button>
-                                </div>
+                            <div class="flex items-center gap-2 mb-6">
+                                <button id="cronoTabProyecto" onclick="switchCronoTab('proyecto')" class="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded border border-blue-600 hover:bg-blue-700 transition-colors">Proyecto</button>
+                                <button id="cronoTabGeneral" onclick="switchCronoTab('general')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200 transition-colors">Cronograma General</button>
                             </div>
 
-                            <!-- Sección: Cronograma de Proyecto -->
+                            <!-- Sección: Cronograma de Proyecto. El calendario es lo principal: tocando
+                                 el número de un día se define directamente la fecha real de inicio/fin
+                                 (ver clickDiaCronoProyecto), sin campos ni botones aparte. -->
                             <div id="cronoSeccionProyecto">
-                                <div class="max-w-6xl mx-auto space-y-6">
-                                    <div class="glass-card p-6 relative overflow-hidden">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyecto</p>
-                                            <span id="cronoEstadoBadge" class="hidden px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest"></span>
+                                <div class="max-w-6xl mx-auto">
+                                    <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+                                        <div class="flex items-center gap-3">
+                                            <button id="cronoHoyBtnProyecto" onclick="irHoyCronoProyecto()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase rounded-md border border-slate-200 transition-colors">Hoy</button>
+                                            <button onclick="cambiarMesCronoProyecto(-1)" class="p-1.5 rounded-md hover:bg-slate-900/5 transition-colors">
+                                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                                            </button>
+                                            <span id="cronoMesProyectoLabel" class="text-lg font-black text-slate-800 tracking-wide capitalize">----</span>
+                                            <button onclick="cambiarMesCronoProyecto(1)" class="p-1.5 rounded-md hover:bg-slate-900/5 transition-colors">
+                                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                                            </button>
                                         </div>
-                                        <h3 id="cronoProyectoNombre" class="text-xl font-black text-slate-900 mb-6">---</h3>
-
-                                        <div class="grid grid-cols-2 gap-4 mb-2">
-                                            <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                                                <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Inicio Contractual</p>
-                                                <p id="cronoInicioContractualTxt" class="text-sm font-black text-blue-900">---</p>
-                                            </div>
-                                            <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                                                <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Fin Contractual</p>
-                                                <p id="cronoFinContractualTxt" class="text-sm font-black text-blue-900">---</p>
-                                            </div>
-                                        </div>
-
-                                        <p id="cronoDeltaInicio" class="text-xs font-bold text-slate-400"></p>
+                                        <div id="cronoLeyendaProyecto" class="flex flex-wrap gap-3 text-[10px] font-bold uppercase text-slate-500"></div>
                                     </div>
-
-                                    <!-- Calendario del proyecto: mismo formato que el Cronograma General, solo que
-                                         filtrado a este proyecto (una única barra, siempre en azul). -->
-                                    <div>
-                                        <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-                                            <div class="flex items-center gap-3">
-                                                <button id="cronoHoyBtnProyecto" onclick="irHoyCronoProyecto()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase rounded-md border border-slate-200 transition-colors">Hoy</button>
-                                                <button onclick="cambiarMesCronoProyecto(-1)" class="p-1.5 rounded-md hover:bg-slate-900/5 transition-colors">
-                                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-                                                </button>
-                                                <span id="cronoMesProyectoLabel" class="text-lg font-black text-slate-800 tracking-wide capitalize">----</span>
-                                                <button onclick="cambiarMesCronoProyecto(1)" class="p-1.5 rounded-md hover:bg-slate-900/5 transition-colors">
-                                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                                                </button>
-                                            </div>
-                                            <div id="cronoLeyendaProyecto" class="flex flex-wrap gap-3 text-[10px] font-bold uppercase text-slate-500"></div>
-                                        </div>
-                                        <div class="glass-card p-4 md:p-6 overflow-x-auto">
-                                            <div id="cronoCalendarGridProyecto" class="min-w-[720px]"></div>
-                                        </div>
+                                    <div class="glass-card p-4 md:p-6 overflow-x-auto">
+                                        <div id="cronoCalendarGridProyecto" class="min-w-[720px]"></div>
                                     </div>
-
-                                    <div class="glass-card p-6">
-                                        <h4 class="text-[11px] font-black text-amber-600 uppercase mb-1 tracking-widest">Fechas Reales</h4>
-                                        <p class="text-[10px] text-slate-400 mb-4">Registra cuándo arrancó y terminó realmente el proyecto en obra. No borra ni reemplaza la fecha contractual.</p>
-                                        <div class="grid grid-cols-2 gap-4 mb-4">
-                                            <div>
-                                                <label class="text-[9px] font-black text-slate-400 uppercase">Inicio Real</label>
-                                                <input id="cronoFechaInicioReal" type="date" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-500">
-                                            </div>
-                                            <div>
-                                                <label class="text-[9px] font-black text-slate-400 uppercase">Fin Real</label>
-                                                <input id="cronoFechaFinReal" type="date" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-500">
-                                            </div>
-                                        </div>
-                                        <button onclick="guardarFechasReales()" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase rounded-md transition-colors shadow-lg shadow-amber-200">Guardar Fechas Reales</button>
-                                    </div>
+                                    <input type="date" id="cronoInputFechaOculto" class="absolute opacity-0 pointer-events-none" style="width:1px;height:1px;top:-9999px;left:-9999px;">
+                                    <p class="text-[10px] text-slate-400 mt-3">Toca el número de un día para definirlo como fecha real de inicio (y, si quieres, de fin) de ejecución.</p>
                                 </div>
                             </div>
 
@@ -2947,55 +2904,73 @@
             return { label: 'Atrasado', delta, dot: 'bg-red-500', text: 'text-red-600', bg: 'bg-red-100 text-red-700' };
         }
 
-        window.guardarFechasReales = async () => {
+        // Abre el selector nativo de fecha de un <input type="date"> oculto y resuelve
+        // con el valor elegido ("YYYY-MM-DD"), o null si el usuario lo cierra sin elegir.
+        // Debe llamarse de forma síncrona dentro del gesto de clic (sin await antes),
+        // porque showPicker() requiere activación reciente del usuario.
+        function pedirFechaConPicker(valorInicial) {
+            return new Promise((resolve) => {
+                const input = document.getElementById('cronoInputFechaOculto');
+                input.value = valorInicial || '';
+                const onChange = () => {
+                    input.removeEventListener('change', onChange);
+                    resolve(input.value || null);
+                };
+                input.addEventListener('change', onChange, { once: true });
+                if (input.showPicker) {
+                    try { input.showPicker(); } catch (e) { input.focus(); input.click(); }
+                } else {
+                    input.focus();
+                    input.click();
+                }
+            });
+        }
+
+        // Tocar el número de un día en el calendario de "Cronograma de Proyecto" es
+        // la única forma de definir las fechas reales de ejecución: primero pregunta
+        // si ese día es el INICIO real, y si se confirma, ofrece definir también el
+        // FIN (con el selector nativo de fecha) en el mismo flujo.
+        window.clickDiaCronoProyecto = (fechaIso) => {
             if (!selectedProjectId) return;
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p) return;
-            const fechaInicioReal = document.getElementById('cronoFechaInicioReal').value;
-            const fechaFinReal = document.getElementById('cronoFechaFinReal').value;
-            const infoActual = (await getProjectInfo(selectedProjectId)) || {};
-            const nuevaInfo = { ...infoActual, fechaInicioReal, fechaFinReal };
-            await saveProjectInfo(selectedProjectId, nuevaInfo);
-            p.info = nuevaInfo; // refleja el cambio en memoria sin esperar a un scan() completo
-            showToast('Fechas reales guardadas');
-            renderCronogramaProyecto();
+
+            const fechaBonita = formatearFecha(fechaIso);
+            const quiereInicio = confirm(`¿Definir el ${fechaBonita} como fecha de INICIO real de ejecución del proyecto?`);
+            if (!quiereInicio) return;
+
+            const quiereFin = confirm('¿Deseas definir también la fecha de FIN de ejecución?');
+
+            const guardar = async (fechaFinReal) => {
+                const infoActual = (await getProjectInfo(selectedProjectId)) || {};
+                const nuevaInfo = { ...infoActual, fechaInicioReal: fechaIso };
+                if (fechaFinReal) nuevaInfo.fechaFinReal = fechaFinReal;
+                await saveProjectInfo(selectedProjectId, nuevaInfo);
+                p.info = nuevaInfo; // refleja el cambio en memoria sin esperar a un scan() completo
+                showToast('Fecha(s) actualizada(s)');
+                renderCronogramaProyecto();
+            };
+
+            if (quiereFin) {
+                pedirFechaConPicker(p.info?.fechaFinReal || fechaIso).then(guardar);
+            } else {
+                guardar(null);
+            }
         };
 
         function renderCronogramaProyecto() {
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p) return;
             const info = p.info || {};
-            document.getElementById('cronoProyectoNombre').innerText = p.name;
-            document.getElementById('cronoFechaInicioReal').value = info.fechaInicioReal || '';
-            document.getElementById('cronoFechaFinReal').value = info.fechaFinReal || '';
-            document.getElementById('cronoInicioContractualTxt').innerText = formatearFecha(info.fechaInicioContractual) || 'Sin definir';
-            document.getElementById('cronoFinContractualTxt').innerText = formatearFecha(info.fechaFinContractual) || 'Sin definir';
 
-            const estado = estadoProyecto(info);
-            const badge = document.getElementById('cronoEstadoBadge');
-            badge.classList.remove('hidden');
-            badge.innerText = estado.label;
-            badge.className = `px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${estado.bg}`;
-
-            const delta = diferenciaDias(info.fechaInicioContractual, info.fechaInicioReal);
-            const deltaEl = document.getElementById('cronoDeltaInicio');
-            if (delta === null) {
-                deltaEl.innerText = 'Aún no hay fecha de inicio real registrada.';
-                deltaEl.className = 'text-xs font-bold text-slate-400';
-            } else if (delta === 0) {
-                deltaEl.innerText = 'El inicio real coincide con el contractual.';
-                deltaEl.className = 'text-xs font-bold text-emerald-600';
-            } else if (delta > 0) {
-                deltaEl.innerText = `Inicio real con ${delta} día(s) de atraso respecto al contractual.`;
-                deltaEl.className = 'text-xs font-bold text-red-600';
-            } else {
-                deltaEl.innerText = `Inicio real ${Math.abs(delta)} día(s) antes de lo contractual.`;
-                deltaEl.className = 'text-xs font-bold text-emerald-600';
-            }
+            // El botón de esta pestaña muestra el nombre real del proyecto.
+            const tabBtn = document.getElementById('cronoTabProyecto');
+            if (tabBtn) tabBtn.innerText = p.name;
 
             // --- Calendario del proyecto: mismo componente que el Cronograma General
             // (construirGrillaCronograma), pero filtrado a un único proyecto y siempre
-            // en el color reservado CRONO_COLOR_PROYECTO_INDIVIDUAL (azul). ---
+            // en el color reservado CRONO_COLOR_PROYECTO_INDIVIDUAL (azul). Los días
+            // son clicables (clickDiaCronoProyecto) para definir fechas reales. ---
             inicializarCronoProyectoSiHaceFalta();
             const year = cronoAnioProyecto;
             const month = cronoMesProyecto;
@@ -3010,9 +2985,9 @@
             }
             document.getElementById('cronoLeyendaProyecto').innerHTML = leyenda.join('');
 
-            document.getElementById('cronoCalendarGridProyecto').innerHTML = construirGrillaCronograma(year, month, enElMes, () => CRONO_COLOR_PROYECTO_INDIVIDUAL);
+            document.getElementById('cronoCalendarGridProyecto').innerHTML = construirGrillaCronograma(year, month, enElMes, () => CRONO_COLOR_PROYECTO_INDIVIDUAL, 'clickDiaCronoProyecto');
             if (!enElMes.length) {
-                document.getElementById('cronoCalendarGridProyecto').insertAdjacentHTML('beforeend', '<p class="text-center text-slate-400 text-sm py-8">Este proyecto aún no tiene fechas de ejecución registradas.</p>');
+                document.getElementById('cronoCalendarGridProyecto').insertAdjacentHTML('beforeend', '<p class="text-center text-slate-400 text-sm py-8">Este proyecto aún no tiene fechas de ejecución registradas. Toca el número de un día para definir el inicio real.</p>');
             }
         }
 
@@ -3182,7 +3157,7 @@
         // { p, segmentos }). La reutilizan tanto el Cronograma General (todos los
         // proyectos) como el Cronograma de Proyecto (un único proyecto), así ambas
         // vistas se ven exactamente igual. colorFn(p) => { bg, dot }.
-        function construirGrillaCronograma(year, month, enElMes, colorFn) {
+        function construirGrillaCronograma(year, month, enElMes, colorFn, diaClickFn = null) {
             const semanas = semanasDelMes(year, month);
             const hoyStr = new Date().toDateString();
             let html = `<div class="grid grid-cols-7 text-[9px] font-black text-slate-400 uppercase mb-2">
@@ -3200,8 +3175,11 @@
                 dias.forEach(d => {
                     const esMesActual = d.getMonth() === month;
                     const esHoy = d.toDateString() === hoyStr;
+                    const fechaIso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    const esClickeable = diaClickFn ? `onclick="${diaClickFn}('${fechaIso}')" style="cursor:pointer"` : '';
+                    const hoverClass = diaClickFn ? 'hover:ring-2 hover:ring-blue-400' : '';
                     html += `<div class="border-l border-slate-50 first:border-l-0 p-1.5">
-                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${esHoy ? 'bg-blue-600 text-white' : esMesActual ? 'text-slate-600' : 'text-slate-300'}">${d.getDate()}</span>
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold transition-all ${esHoy ? 'bg-blue-600 text-white' : esMesActual ? 'text-slate-600' : 'text-slate-300'} ${hoverClass}" ${esClickeable}>${d.getDate()}</span>
                     </div>`;
                 });
 
