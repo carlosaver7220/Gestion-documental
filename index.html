@@ -200,58 +200,6 @@
             opacity: 0.4;
             cursor: not-allowed;
         }
-
-        .smart-cronograma-shell {
-            border: 1px solid #e2e8f0;
-            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-            box-shadow: 0 12px 30px rgba(37, 99, 235, 0.06);
-        }
-
-        .smart-cronograma-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.35rem 0.65rem;
-            border-radius: 9999px;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            color: #1d4ed8;
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-        }
-
-        .smart-crono-stages {
-            display: grid;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .smart-crono-stage {
-            display: grid;
-            grid-template-columns: 1.5fr 0.9fr 0.9fr;
-            gap: 0.5rem;
-            align-items: center;
-            padding: 0.6rem 0.75rem;
-            border-radius: 0.75rem;
-            border: 1px solid #e2e8f0;
-            background: rgba(255,255,255,0.8);
-        }
-
-        .smart-crono-stage .stage-name {
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: #334155;
-        }
-
-        .smart-crono-stage .stage-meta {
-            font-size: 9px;
-            font-weight: 700;
-            color: #64748b;
-        }
     </style>
 </head>
 <body class="antialiased">
@@ -397,10 +345,6 @@
                     </div>
                     <div class="flex items-center gap-4">
                         <div class="flex flex-col gap-1.5">
-                            <div class="flex gap-2">
-                                <button onclick="switchView('hub')" class="px-3 py-1.5 bg-slate-900 text-white text-[10px] font-black uppercase rounded border border-slate-900 hover:bg-slate-700 transition-colors">Hub</button>
-                                <button onclick="switchView('cronograma')" class="px-3 py-1.5 bg-amber-500 text-white text-[10px] font-black uppercase rounded border border-amber-500 hover:bg-amber-600 transition-colors">Cronograma</button>
-                            </div>
                             <div class="flex gap-2">
                                 <button onclick="switchDocTab('info')" class="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded border border-blue-600 hover:bg-blue-700 transition-colors">Info</button>
                                 <button id="card-or" onclick="clickTramite('or')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200">OR</button>
@@ -1349,18 +1293,21 @@
                 <!-- Sección: Cronograma de Proyecto -->
                 <div id="cronoSeccionProyecto" class="flex-1 overflow-y-auto p-8">
                     <div class="max-w-3xl mx-auto space-y-8">
-                        <div class="glass-card p-6">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyecto</p>
+                        <div class="glass-card p-6 relative overflow-hidden">
+                            <div class="flex items-center justify-between mb-1">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Proyecto</p>
+                                <span id="cronoEstadoBadge" class="hidden px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest"></span>
+                            </div>
                             <h3 id="cronoProyectoNombre" class="text-xl font-black text-slate-900 mb-6">---</h3>
 
-                            <div class="grid grid-cols-2 gap-6 mb-8">
-                                <div>
+                            <div class="grid grid-cols-2 gap-4 mb-8">
+                                <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
                                     <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Inicio Contractual</p>
-                                    <p id="cronoInicioContractualTxt" class="text-sm font-bold text-slate-800">---</p>
+                                    <p id="cronoInicioContractualTxt" class="text-sm font-black text-blue-900">---</p>
                                 </div>
-                                <div>
+                                <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
                                     <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">Fin Contractual</p>
-                                    <p id="cronoFinContractualTxt" class="text-sm font-bold text-slate-800">---</p>
+                                    <p id="cronoFinContractualTxt" class="text-sm font-black text-blue-900">---</p>
                                 </div>
                             </div>
 
@@ -1403,6 +1350,25 @@
                             <div class="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
                                 <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Contractual</span>
                                 <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Real</span>
+                            </div>
+                        </div>
+
+                        <div id="cronoStatsRow" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="glass-card p-5 border-l-4 border-slate-300">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Proyectos del Año</p>
+                                <p id="cronoStatTotal" class="text-2xl font-black text-slate-900 mt-1">0</p>
+                            </div>
+                            <div class="glass-card p-5 border-l-4 border-emerald-500">
+                                <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">A Tiempo / Adelantados</p>
+                                <p id="cronoStatATiempo" class="text-2xl font-black text-emerald-600 mt-1">0</p>
+                            </div>
+                            <div class="glass-card p-5 border-l-4 border-red-500">
+                                <p class="text-[9px] font-black text-red-600 uppercase tracking-widest">Atrasados</p>
+                                <p id="cronoStatAtrasados" class="text-2xl font-black text-red-600 mt-1">0</p>
+                            </div>
+                            <div class="glass-card p-5 border-l-4 border-amber-400">
+                                <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest">Atraso Promedio</p>
+                                <p id="cronoStatPromedio" class="text-2xl font-black text-amber-600 mt-1">--</p>
                             </div>
                         </div>
                         <div class="glass-card p-6">
@@ -2964,115 +2930,20 @@
             return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
         }
 
-        function fechaLocalISO(date) {
-            const d = new Date(date);
-            const offset = d.getTimezoneOffset();
-            const local = new Date(d.getTime() - offset * 60000);
-            return local.toISOString().slice(0, 10);
-        }
-
-        function addBusinessDays(date, days) {
-            const result = new Date(date);
-            let remaining = days;
-            while (remaining > 0) {
-                result.setDate(result.getDate() + 1);
-                if (result.getDay() !== 0 && result.getDay() !== 6) {
-                    remaining--;
-                }
-            }
-            return result;
-        }
-
-        function countBusinessDays(start, end) {
-            if (!start || !end) return 0;
-            const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-            const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-            let count = 0;
-            let cursor = new Date(startDate);
-            while (cursor <= endDate) {
-                if (cursor.getDay() !== 0 && cursor.getDay() !== 6) count++;
-                cursor.setDate(cursor.getDate() + 1);
-            }
-            return count;
-        }
-
-        function getProjectPowerKw(info = {}) {
-            const dc = Number.parseFloat(info.potenciaDC || 0);
-            const ac = Number.parseFloat(info.potenciaAC || 0);
-            if (Number.isFinite(dc) && dc > 0) return dc;
-            if (Number.isFinite(ac) && ac > 0) return ac;
-            return 0;
-        }
-
-        function shouldUseAutoCronograma(info = {}) {
-            if (!info) return false;
-            const kw = getProjectPowerKw(info);
-            if (!kw || kw > 10) return false;
-            const hasManualDates = !!(info.fechaInicioContractual || info.fechaFinContractual);
-            return !hasManualDates;
-        }
-
-        function crearCronogramaAutomatico(info = {}, startDate = null) {
-            const base = startDate ? parseFechaLocal(startDate) : new Date();
-            const inicioBase = new Date(base.getFullYear(), base.getMonth(), base.getDate());
-            let cursor = new Date(inicioBase);
-
-            const etapas = [
-                { nombre: 'Kick Off', duracion: 1 },
-                { nombre: 'Visita técnica', duracion: 2 },
-                { nombre: 'Ingeniería a detalle', duracion: 5 },
-                { nombre: 'Revisión y aprobación', duracion: 1 },
-                { nombre: 'Inscripción OR', duracion: 1 },
-                { nombre: 'Compra de materiales', duracion: 2 },
-                { nombre: 'Alistamiento', duracion: 2 },
-                { nombre: 'Instalación AC', duracion: 3 },
-                { nombre: 'Instalación DC', duracion: 4 },
-                { nombre: 'Pruebas y puesta en marcha', duracion: 1 },
-                { nombre: 'Legalización RETIE / OR', duracion: 12 }
-            ];
-
-            const plan = etapas.map((etapa) => {
-                const inicio = new Date(cursor);
-                const fin = etapa.duracion > 1 ? addBusinessDays(inicio, etapa.duracion - 1) : new Date(inicio);
-                cursor = addBusinessDays(fin, 1);
-                return {
-                    nombre: etapa.nombre,
-                    inicio: fechaLocalISO(inicio),
-                    fin: fechaLocalISO(fin)
-                };
-            });
-
-            const fechaInicio = plan[0].inicio;
-            const fechaFin = plan[plan.length - 1].fin;
-            const diasHabiles = countBusinessDays(parseFechaLocal(fechaInicio), parseFechaLocal(fechaFin));
-
-            return {
-                fechaInicioContractual: fechaInicio,
-                fechaFinContractual: fechaFin,
-                cronogramaAuto: true,
-                cronogramaPlan: plan,
-                duracionContractualDias: diasHabiles
-            };
-        }
-
-        function aplicarCronogramaAutomaticoSiAplica(data = {}) {
-            const info = { ...data };
-            if (!shouldUseAutoCronograma(info)) {
-                if (info.fechaInicioContractual || info.fechaFinContractual) {
-                    info.cronogramaAuto = false;
-                    info.cronogramaPlan = [];
-                }
-                return info;
-            }
-            const auto = crearCronogramaAutomatico(info);
-            return { ...info, ...auto };
-        }
-
         // Diferencia en días entre dos fechas "YYYY-MM-DD" (b - a). Positivo = atraso, negativo = adelanto.
         function diferenciaDias(a, b) {
             const da = parseFechaLocal(a), db = parseFechaLocal(b);
             if (!da || !db) return null;
             return Math.round((db - da) / 86400000);
+        }
+
+        // Estado a color de un proyecto según el atraso/adelanto del inicio real vs. el contractual
+        function estadoProyecto(info) {
+            const delta = diferenciaDias(info.fechaInicioContractual, info.fechaInicioReal);
+            if (delta === null) return { label: 'Sin iniciar', delta, dot: 'bg-slate-300', text: 'text-slate-400', bg: 'bg-slate-100 text-slate-500' };
+            if (delta === 0) return { label: 'A Tiempo', delta, dot: 'bg-emerald-500', text: 'text-emerald-600', bg: 'bg-emerald-100 text-emerald-700' };
+            if (delta < 0) return { label: 'Adelantado', delta, dot: 'bg-emerald-500', text: 'text-emerald-600', bg: 'bg-emerald-100 text-emerald-700' };
+            return { label: 'Atrasado', delta, dot: 'bg-red-500', text: 'text-red-600', bg: 'bg-red-100 text-red-700' };
         }
 
         window.guardarFechasReales = async () => {
@@ -3108,16 +2979,16 @@
 
             const track = (start, end, barClass, trackClass, vacio) => {
                 const left = pct(start);
-                if (left === null) return `<div class="h-2.5 ${trackClass} rounded-full flex items-center justify-center"><span class="text-[8px] text-slate-400 font-bold uppercase">${vacio}</span></div>`;
+                if (left === null) return `<div class="h-3 ${trackClass} rounded-full flex items-center justify-center"><span class="text-[8px] text-slate-400 font-bold uppercase">${vacio}</span></div>`;
                 if (!end) {
-                    return `<div class="relative h-2.5 ${trackClass} rounded-full">
-                        <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full ${barClass} border-2 border-white shadow" style="left:${left}%"></div>
+                    return `<div class="relative h-3 ${trackClass} rounded-full">
+                        <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full ${barClass} border-2 border-white shadow-lg" style="left:${left}%"></div>
                     </div>`;
                 }
                 const right = pct(end);
                 const width = Math.max(right - left, 1);
-                return `<div class="relative h-2.5 ${trackClass} rounded-full">
-                    <div class="absolute top-1/2 -translate-y-1/2 h-2.5 rounded-full ${barClass}" style="left:${left}%; width:${width}%"></div>
+                return `<div class="relative h-3 ${trackClass} rounded-full shadow-inner">
+                    <div class="absolute top-0 h-3 rounded-full ${barClass} shadow-md" style="left:${left}%; width:${width}%"></div>
                 </div>`;
             };
 
@@ -3127,9 +2998,9 @@
                     <span>${formatearFecha(new Date(max).toISOString().slice(0, 10))}</span>
                 </div>
                 <p class="text-[9px] font-black text-blue-600 uppercase mb-1">Contractual</p>
-                ${track(cs, ce, 'bg-blue-600', 'bg-blue-50', 'Sin fecha')}
+                ${track(cs, ce, 'bg-gradient-to-r from-blue-500 to-blue-700', 'bg-blue-50', 'Sin fecha')}
                 <p class="text-[9px] font-black text-amber-600 uppercase mt-4 mb-1">Real</p>
-                ${track(rs, re, 'bg-amber-500', 'bg-amber-50', 'Sin registrar')}
+                ${track(rs, re, 'bg-gradient-to-r from-amber-400 to-orange-600', 'bg-amber-50', 'Sin registrar')}
             `;
         }
 
@@ -3137,66 +3008,19 @@
             const p = projects.find(x => x.id === selectedProjectId);
             if (!p) return;
             const info = p.info || {};
-            const plan = Array.isArray(info.cronogramaPlan) ? info.cronogramaPlan : [];
-            const startContractual = info.fechaInicioContractual || (plan[0]?.inicio || '');
-            const endContractual = info.fechaFinContractual || (plan[plan.length - 1]?.fin || '');
-            const isAuto = !!info.cronogramaAuto && (!info.fechaInicioContractual && !info.fechaFinContractual);
-
             document.getElementById('cronoProyectoNombre').innerText = p.name;
             document.getElementById('cronoFechaInicioReal').value = info.fechaInicioReal || '';
             document.getElementById('cronoFechaFinReal').value = info.fechaFinReal || '';
-            document.getElementById('cronoInicioContractualTxt').innerText = formatearFecha(startContractual) || 'Sin definir';
-            document.getElementById('cronoFinContractualTxt').innerText = formatearFecha(endContractual) || 'Sin definir';
+            document.getElementById('cronoInicioContractualTxt').innerText = formatearFecha(info.fechaInicioContractual) || 'Sin definir';
+            document.getElementById('cronoFinContractualTxt').innerText = formatearFecha(info.fechaFinContractual) || 'Sin definir';
+            document.getElementById('cronoTimelineWrap').innerHTML = renderCronoTimelineHtml(info.fechaInicioContractual, info.fechaFinContractual, info.fechaInicioReal, info.fechaFinReal);
 
-            const summaryHtml = isAuto && plan.length
-                ? `
-                    <div class="smart-cronograma-shell rounded-2xl p-4 mb-5">
-                        <div class="flex items-center justify-between gap-3 flex-wrap">
-                            <span class="smart-cronograma-badge">Programación inteligente</span>
-                            <span class="text-[9px] font-black uppercase tracking-widest text-slate-500">Proyecto ≤ 10 kWp</span>
-                        </div>
-                        <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div class="bg-white border border-slate-200 rounded-xl p-2.5">
-                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Inicio</p>
-                                <p class="mt-1 text-xs font-black text-slate-800">${formatearFecha(startContractual) || '—'}</p>
-                            </div>
-                            <div class="bg-white border border-slate-200 rounded-xl p-2.5">
-                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Fin</p>
-                                <p class="mt-1 text-xs font-black text-slate-800">${formatearFecha(endContractual) || '—'}</p>
-                            </div>
-                            <div class="bg-white border border-slate-200 rounded-xl p-2.5">
-                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Días hábiles</p>
-                                <p class="mt-1 text-xs font-black text-slate-800">${info.duracionContractualDias || plan.length || 0}</p>
-                            </div>
-                            <div class="bg-white border border-slate-200 rounded-xl p-2.5">
-                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Etapas</p>
-                                <p class="mt-1 text-xs font-black text-slate-800">${plan.length}</p>
-                            </div>
-                        </div>
-                    </div>
-                `
-                : '';
+            const estado = estadoProyecto(info);
+            const badge = document.getElementById('cronoEstadoBadge');
+            badge.innerText = estado.label;
+            badge.className = `px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${estado.bg}`;
 
-            let stagesHtml = '';
-            if (plan.length) {
-                stagesHtml = `
-                    <div class="smart-crono-stages">
-                        ${plan.map((stage) => `
-                            <div class="smart-crono-stage">
-                                <div>
-                                    <p class="stage-name">${stage.nombre}</p>
-                                </div>
-                                <div class="stage-meta">${formatearFecha(stage.inicio)}</div>
-                                <div class="stage-meta">${formatearFecha(stage.fin)}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
-
-            document.getElementById('cronoTimelineWrap').innerHTML = `${summaryHtml}${renderCronoTimelineHtml(startContractual, endContractual, info.fechaInicioReal, info.fechaFinReal)}${stagesHtml}`;
-
-            const delta = diferenciaDias(startContractual, info.fechaInicioReal);
+            const delta = diferenciaDias(info.fechaInicioContractual, info.fechaInicioReal);
             const deltaEl = document.getElementById('cronoDeltaInicio');
             if (delta === null) {
                 deltaEl.innerText = 'Aún no hay fecha de inicio real registrada.';
@@ -3239,8 +3063,8 @@
             };
 
             return `
-                <div class="relative h-2 bg-slate-100 rounded-full mb-1.5">${(cs || ce) ? barra(cs, ce, 'bg-blue-600') : ''}</div>
-                <div class="relative h-2 bg-slate-50 rounded-full">${(rs || re) ? barra(rs, re, 'bg-amber-500') : ''}</div>
+                <div class="relative h-2.5 bg-slate-100 rounded-full mb-1.5">${(cs || ce) ? barra(cs, ce, 'bg-gradient-to-r from-blue-500 to-blue-700 shadow') : ''}</div>
+                <div class="relative h-2.5 bg-slate-50 rounded-full">${(rs || re) ? barra(rs, re, 'bg-gradient-to-r from-amber-400 to-orange-600 shadow') : ''}</div>
             `;
         }
 
@@ -3278,11 +3102,28 @@
             document.getElementById('cronoGeneralMeses').innerHTML = meses.map(m => `<span class="flex-1 text-center">${m}</span>`).join('');
 
             const proyectosAnio = projects.filter(p => anioNumerico(p) === year).sort((a, b) => a.name.localeCompare(b.name));
+
+            let aTiempo = 0, atrasados = 0, sumaAtrasos = 0, conteoAtrasos = 0;
+            proyectosAnio.forEach(p => {
+                const estado = estadoProyecto(p.info || {});
+                if (estado.label === 'A Tiempo' || estado.label === 'Adelantado') aTiempo++;
+                if (estado.label === 'Atrasado') { atrasados++; sumaAtrasos += estado.delta; conteoAtrasos++; }
+            });
+            document.getElementById('cronoStatTotal').innerText = proyectosAnio.length;
+            document.getElementById('cronoStatATiempo').innerText = aTiempo;
+            document.getElementById('cronoStatAtrasados').innerText = atrasados;
+            document.getElementById('cronoStatPromedio').innerText = conteoAtrasos ? `${Math.round(sumaAtrasos / conteoAtrasos)} días` : '--';
+
             document.getElementById('cronoGeneralFilas').innerHTML = proyectosAnio.map(p => {
                 const info = p.info || {};
+                const estado = estadoProyecto(info);
                 return `
                     <div class="py-3 border-b border-slate-100 last:border-0">
-                        <p class="text-xs font-bold text-slate-700 mb-2 truncate">${p.name}</p>
+                        <p class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full ${estado.dot} shrink-0"></span>
+                            <span class="truncate min-w-0">${p.name}</span>
+                            <span class="${estado.text} text-[9px] font-black uppercase ml-auto shrink-0">${estado.label}</span>
+                        </p>
                         ${filaGantt(info.fechaInicioContractual, info.fechaFinContractual, info.fechaInicioReal, info.fechaFinReal, year)}
                     </div>
                 `;
@@ -3772,8 +3613,7 @@
                 btn.disabled = true;
                 btn.innerText = 'Creando carpetas...';
                 try {
-                    const dataConCronograma = aplicarCronogramaAutomaticoSiAplica(data);
-                    await crearNuevoProyecto(nombreProyecto, dataConCronograma);
+                    await crearNuevoProyecto(nombreProyecto, data);
                     document.getElementById('proyectoInfoModal').classList.add('hidden');
                     showToast('Proyecto creado');
                 } catch (err) {
@@ -3783,12 +3623,7 @@
                 }
             } else {
                 const infoActual = (await getProjectInfo(selectedProjectId)) || {};
-                const finalData = { ...infoActual, ...data };
-                if (finalData.fechaInicioContractual || finalData.fechaFinContractual) {
-                    finalData.cronogramaAuto = false;
-                    finalData.cronogramaPlan = [];
-                }
-                await saveProjectInfo(selectedProjectId, finalData);
+                await saveProjectInfo(selectedProjectId, { ...infoActual, ...data });
                 await renderInfoProyecto(selectedProjectId);
                 document.getElementById('proyectoInfoModal').classList.add('hidden');
                 showToast('Datos guardados');
@@ -3848,8 +3683,7 @@
             await seguimientoFolder.getDirectoryHandle('1. ACTAS', { create: true });
             await projectFolder.getDirectoryHandle('6. ESTADOS DE PAGO', { create: true });
 
-            const dataFinal = aplicarCronogramaAutomaticoSiAplica(data);
-            await saveProjectInfo(projectFolder.name, dataFinal);
+            await saveProjectInfo(projectFolder.name, data);
             await scan();
             selectProject(projectFolder.name);
         }
