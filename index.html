@@ -605,26 +605,24 @@
 
                             <!-- Sección: Cronograma General -->
                             <div id="cronoSeccionGeneral" class="hidden">
-                                <div class="max-w-5xl mx-auto">
+                                <div class="max-w-6xl mx-auto">
                                     <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
                                         <div class="flex items-center gap-3">
-                                            <button id="cronoYearPrevBtn2" onclick="cambiarAnioCronoGeneral(-1)" class="p-1.5 rounded-md hover:bg-slate-900/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors">
+                                            <button id="cronoHoyBtn" onclick="irHoyCronoGeneral()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase rounded-md border border-slate-200 transition-colors">Hoy</button>
+                                            <button id="cronoMesPrevBtn" onclick="cambiarMesCronoGeneral(-1)" class="p-1.5 rounded-md hover:bg-slate-900/5 transition-colors">
                                                 <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                                             </button>
-                                            <span id="cronoYearGeneralLabel" class="text-lg font-black text-slate-800 tracking-widest">----</span>
-                                            <button id="cronoYearNextBtn2" onclick="cambiarAnioCronoGeneral(1)" class="p-1.5 rounded-md hover:bg-slate-900/5 disabled:opacity-25 disabled:cursor-not-allowed transition-colors">
+                                            <span id="cronoMesGeneralLabel" class="text-lg font-black text-slate-800 tracking-wide capitalize">----</span>
+                                            <button id="cronoMesNextBtn" onclick="cambiarMesCronoGeneral(1)" class="p-1.5 rounded-md hover:bg-slate-900/5 transition-colors">
                                                 <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                                             </button>
                                         </div>
-                                        <div class="flex gap-4 text-[10px] font-bold uppercase text-slate-500">
-                                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Contractual</span>
-                                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Real</span>
-                                        </div>
+                                        <div id="cronoLeyenda" class="flex flex-wrap gap-3 text-[10px] font-bold uppercase text-slate-500"></div>
                                     </div>
 
                                     <div id="cronoStatsRow" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                                         <div class="glass-card p-5 border-l-4 border-slate-300">
-                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Proyectos del Año</p>
+                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Proyectos del Mes</p>
                                             <p id="cronoStatTotal" class="text-2xl font-black text-slate-900 mt-1">0</p>
                                         </div>
                                         <div class="glass-card p-5 border-l-4 border-emerald-500">
@@ -635,14 +633,13 @@
                                             <p class="text-[9px] font-black text-red-600 uppercase tracking-widest">Atrasados</p>
                                             <p id="cronoStatAtrasados" class="text-2xl font-black text-red-600 mt-1">0</p>
                                         </div>
-                                        <div class="glass-card p-5 border-l-4 border-amber-400">
-                                            <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest">Atraso Promedio</p>
-                                            <p id="cronoStatPromedio" class="text-2xl font-black text-amber-600 mt-1">--</p>
+                                        <div class="glass-card p-5 border-l-4 border-blue-400">
+                                            <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest">Atraso Promedio</p>
+                                            <p id="cronoStatPromedio" class="text-2xl font-black text-blue-600 mt-1">--</p>
                                         </div>
                                     </div>
-                                    <div class="glass-card p-6">
-                                        <div id="cronoGeneralMeses" class="flex text-[9px] font-black text-slate-400 uppercase mb-3 pb-2 border-b border-slate-100"></div>
-                                        <div id="cronoGeneralFilas"></div>
+                                    <div class="glass-card p-4 md:p-6 overflow-x-auto">
+                                        <div id="cronoCalendarGrid" class="min-w-[720px]"></div>
                                     </div>
                                 </div>
                             </div>
@@ -3022,97 +3019,225 @@
             }
         }
 
-        // Fila de mini-Gantt (contractual arriba, real abajo) escalada a un año calendario completo,
-        // usada en el Cronograma General. Las fechas fuera del año se recortan a sus bordes.
-        function filaGantt(cs, ce, rs, re, year) {
-            const yStart = new Date(year, 0, 1).getTime();
-            const yEnd = new Date(year, 11, 31).getTime();
-            const span = yEnd - yStart;
+        // ==========================================================
+        // CRONOGRAMA GENERAL — vista de calendario mensual
+        // ----------------------------------------------------------
+        // Cada proyecto se dibuja como UNA barra sobre su rango de
+        // ejecución (fechas reales si ya se registraron; si no, las
+        // contractuales). Color por proyecto, asignado de forma estable
+        // por nombre (así cada proyecto conserva siempre el mismo color
+        // sin importar qué mes se esté viendo).
+        //
+        // Si la fecha real difiere de la contractual, la porción del
+        // rango que quedó FUERA de lo originalmente planeado se pinta
+        // de rojo: ese rojo es siempre un color SECUNDARIO (jamás el
+        // color de un proyecto) y es el indicador de "esta fecha se
+        // actualizó". Si no hay cambio, toda la barra va en el color
+        // del proyecto.
+        // ==========================================================
 
-            const pct = (str) => {
-                const d = parseFechaLocal(str);
-                if (!d) return null;
-                const t = Math.min(Math.max(d.getTime(), yStart), yEnd);
-                return ((t - yStart) / span) * 100;
-            };
+        const CRONO_COLORES_PROYECTO = [
+            { bg: 'bg-blue-600',   dot: 'bg-blue-600' },
+            { bg: 'bg-indigo-500', dot: 'bg-indigo-500' },
+            { bg: 'bg-sky-500',    dot: 'bg-sky-500' },
+            { bg: 'bg-cyan-600',   dot: 'bg-cyan-600' },
+            { bg: 'bg-purple-500', dot: 'bg-purple-500' },
+            { bg: 'bg-teal-600',   dot: 'bg-teal-600' },
+            { bg: 'bg-blue-800',   dot: 'bg-blue-800' },
+            { bg: 'bg-violet-500', dot: 'bg-violet-500' },
+        ];
+        const CRONO_COLOR_CAMBIO = { bg: 'bg-red-500', dot: 'bg-red-500' };
 
-            const barra = (start, end, colorClass) => {
-                const left = pct(start);
-                if (left === null) return '';
-                if (!end) {
-                    return `<div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full ${colorClass} border-2 border-white shadow" style="left:${left}%"></div>`;
-                }
-                const right = pct(end);
-                const width = Math.max(right - left, 0.6);
-                return `<div class="absolute top-1/2 -translate-y-1/2 h-2 rounded-full ${colorClass}" style="left:${left}%; width:${width}%"></div>`;
-            };
-
-            return `
-                <div class="relative h-2.5 bg-slate-100 rounded-full mb-1.5">${(cs || ce) ? barra(cs, ce, 'bg-gradient-to-r from-blue-500 to-blue-700 shadow') : ''}</div>
-                <div class="relative h-2.5 bg-slate-50 rounded-full">${(rs || re) ? barra(rs, re, 'bg-gradient-to-r from-amber-400 to-orange-600 shadow') : ''}</div>
-            `;
+        function colorProyecto(index) {
+            return CRONO_COLORES_PROYECTO[index % CRONO_COLORES_PROYECTO.length];
         }
 
-        let cronoYearGeneral = null;
+        // Calcula el/los segmento(s) (en timestamps) que hay que dibujar para un
+        // proyecto. Devuelve null si no tiene ninguna fecha registrada todavía.
+        function segmentosEjecucion(info) {
+            const planStart = info.fechaInicioContractual || null;
+            const planEnd = info.fechaFinContractual || null;
+            const realStart = info.fechaInicioReal || null;
+            const realEnd = info.fechaFinReal || null;
 
-        window.cambiarAnioCronoGeneral = (delta) => {
-            const anios = [...new Set(projects.map(anioNumerico).filter(n => n !== null))];
-            if (!anios.length) return;
-            const min = Math.min(...anios), max = Math.max(...anios);
-            let next = (cronoYearGeneral ?? max) + delta;
-            if (next < min) next = min;
-            if (next > max) next = max;
-            cronoYearGeneral = next;
+            const start = realStart || planStart;
+            const end = realEnd || planEnd || start;
+            if (!start) return null;
+
+            const cambiada = !!planStart && !!planEnd &&
+                ((realStart && realStart !== planStart) || (realEnd && realEnd !== planEnd));
+
+            if (!cambiada) {
+                const t1 = parseFechaLocal(start).getTime();
+                const t2 = parseFechaLocal(end).getTime();
+                return [{ start: Math.min(t1, t2), end: Math.max(t1, t2), cambio: false }];
+            }
+
+            const pStart = parseFechaLocal(planStart).getTime();
+            const pEnd = parseFechaLocal(planEnd).getTime();
+            const rStart = parseFechaLocal(start).getTime();
+            const rEnd = parseFechaLocal(end).getTime();
+            const totalStart = Math.min(pStart, rStart);
+            const totalEnd = Math.max(pEnd, rEnd);
+
+            const segmentos = [];
+            if (totalStart < pStart) segmentos.push({ start: totalStart, end: pStart, cambio: true });
+            segmentos.push({ start: Math.max(totalStart, pStart), end: Math.min(totalEnd, pEnd), cambio: false });
+            if (totalEnd > pEnd) segmentos.push({ start: pEnd, end: totalEnd, cambio: true });
+            return segmentos.filter(s => s.end >= s.start);
+        }
+
+        // Genera las semanas completas (domingo a sábado) que hay que dibujar
+        // para que quepa el mes completo, igual que una grilla de calendario normal.
+        function semanasDelMes(year, month) {
+            const primerDiaMes = new Date(year, month, 1);
+            const ultimoDiaMes = new Date(year, month + 1, 0);
+            const inicioGrilla = new Date(primerDiaMes);
+            inicioGrilla.setDate(inicioGrilla.getDate() - inicioGrilla.getDay());
+            const finGrilla = new Date(ultimoDiaMes);
+            finGrilla.setDate(finGrilla.getDate() + (6 - finGrilla.getDay()));
+
+            const semanas = [];
+            let cursor = new Date(inicioGrilla);
+            while (cursor <= finGrilla) {
+                const dias = [];
+                for (let i = 0; i < 7; i++) {
+                    dias.push(new Date(cursor));
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+                semanas.push(dias);
+            }
+            return semanas;
+        }
+
+        let cronoAnioGeneral = null;
+        let cronoMesGeneral = null; // 0-11
+
+        function inicializarCronoGeneralSiHaceFalta() {
+            if (cronoAnioGeneral === null || cronoMesGeneral === null) {
+                const hoy = new Date();
+                cronoAnioGeneral = hoy.getFullYear();
+                cronoMesGeneral = hoy.getMonth();
+            }
+        }
+
+        window.irHoyCronoGeneral = () => {
+            const hoy = new Date();
+            cronoAnioGeneral = hoy.getFullYear();
+            cronoMesGeneral = hoy.getMonth();
             renderCronogramaGeneral();
         };
 
+        window.cambiarMesCronoGeneral = (delta) => {
+            inicializarCronoGeneralSiHaceFalta();
+            let m = cronoMesGeneral + delta;
+            let y = cronoAnioGeneral;
+            if (m < 0) { m = 11; y--; }
+            if (m > 11) { m = 0; y++; }
+            cronoMesGeneral = m;
+            cronoAnioGeneral = y;
+            renderCronogramaGeneral();
+        };
+
+        const MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const DIAS_SEMANA = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'];
+        const ALTO_BARRA = 22; // px por fila de barra apilada dentro de una semana
+
         function renderCronogramaGeneral() {
-            const anios = [...new Set(projects.map(anioNumerico).filter(n => n !== null))];
-            if (!anios.length) {
-                document.getElementById('cronoGeneralFilas').innerHTML = '<p class="text-center text-slate-400 text-sm py-16">No hay proyectos cargados todavía.</p>';
-                document.getElementById('cronoGeneralMeses').innerHTML = '';
-                return;
-            }
-            const minAnio = Math.min(...anios), maxAnio = Math.max(...anios);
-            if (cronoYearGeneral === null) cronoYearGeneral = maxAnio;
-            if (cronoYearGeneral < minAnio) cronoYearGeneral = minAnio;
-            if (cronoYearGeneral > maxAnio) cronoYearGeneral = maxAnio;
-            const year = cronoYearGeneral;
+            inicializarCronoGeneralSiHaceFalta();
+            const year = cronoAnioGeneral;
+            const month = cronoMesGeneral;
+            document.getElementById('cronoMesGeneralLabel').innerText = `${MESES_LARGO[month]} de ${year}`;
 
-            document.getElementById('cronoYearGeneralLabel').innerText = year;
-            document.getElementById('cronoYearPrevBtn2').disabled = year <= minAnio;
-            document.getElementById('cronoYearNextBtn2').disabled = year >= maxAnio;
+            const semanas = semanasDelMes(year, month);
+            const inicioVista = semanas[0][0].getTime();
+            const finVista = semanas[semanas.length - 1][6].getTime() + 86400000 - 1;
 
-            const meses = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-            document.getElementById('cronoGeneralMeses').innerHTML = meses.map(m => `<span class="flex-1 text-center">${m}</span>`).join('');
+            // Color estable por proyecto: se asigna por orden alfabético de TODOS los
+            // proyectos (no solo los del mes visible), así un proyecto no cambia de
+            // color al navegar entre meses.
+            const ordenColor = [...projects].sort((a, b) => a.name.localeCompare(b.name));
+            const colorPorProyecto = new Map(ordenColor.map((p, i) => [p.id, colorProyecto(i)]));
 
-            const proyectosAnio = projects.filter(p => anioNumerico(p) === year).sort((a, b) => a.name.localeCompare(b.name));
+            const conRango = projects
+                .map(p => ({ p, segmentos: segmentosEjecucion(p.info || {}) }))
+                .filter(x => x.segmentos && x.segmentos.length);
 
+            const enElMes = conRango.filter(({ segmentos }) => {
+                const s = Math.min(...segmentos.map(sg => sg.start));
+                const e = Math.max(...segmentos.map(sg => sg.end));
+                return e >= inicioVista && s <= finVista;
+            }).sort((a, b) => a.p.name.localeCompare(b.p.name));
+
+            // --- Estadísticas del mes visible ---
             let aTiempo = 0, atrasados = 0, sumaAtrasos = 0, conteoAtrasos = 0;
-            proyectosAnio.forEach(p => {
+            enElMes.forEach(({ p }) => {
                 const estado = estadoProyecto(p.info || {});
                 if (estado.label === 'A Tiempo' || estado.label === 'Adelantado') aTiempo++;
                 if (estado.label === 'Atrasado') { atrasados++; sumaAtrasos += estado.delta; conteoAtrasos++; }
             });
-            document.getElementById('cronoStatTotal').innerText = proyectosAnio.length;
+            document.getElementById('cronoStatTotal').innerText = enElMes.length;
             document.getElementById('cronoStatATiempo').innerText = aTiempo;
             document.getElementById('cronoStatAtrasados').innerText = atrasados;
             document.getElementById('cronoStatPromedio').innerText = conteoAtrasos ? `${Math.round(sumaAtrasos / conteoAtrasos)} días` : '--';
 
-            document.getElementById('cronoGeneralFilas').innerHTML = proyectosAnio.map(p => {
-                const info = p.info || {};
-                const estado = estadoProyecto(info);
-                return `
-                    <div class="py-3 border-b border-slate-100 last:border-0">
-                        <p class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full ${estado.dot} shrink-0"></span>
-                            <span class="truncate min-w-0">${p.name}</span>
-                            <span class="${estado.text} text-[9px] font-black uppercase ml-auto shrink-0">${estado.label}</span>
-                        </p>
-                        ${filaGantt(info.fechaInicioContractual, info.fechaFinContractual, info.fechaInicioReal, info.fechaFinReal, year)}
-                    </div>
-                `;
-            }).join('') || '<p class="text-center text-slate-400 text-xs py-16">No hay proyectos en este año.</p>';
+            // --- Leyenda: un punto de color por proyecto visible + el rojo de "fecha actualizada" ---
+            const leyenda = enElMes.map(({ p }) => {
+                const color = colorPorProyecto.get(p.id);
+                return `<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${color.dot}"></span> ${p.name}</span>`;
+            });
+            if (enElMes.some(({ segmentos }) => segmentos.some(s => s.cambio))) {
+                leyenda.push(`<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${CRONO_COLOR_CAMBIO.dot}"></span> Fecha actualizada</span>`);
+            }
+            document.getElementById('cronoLeyenda').innerHTML = leyenda.join('');
+
+            // --- Grilla ---
+            const hoyStr = new Date().toDateString();
+            let html = `<div class="grid grid-cols-7 text-[9px] font-black text-slate-400 uppercase mb-2">
+                ${DIAS_SEMANA.map(d => `<div class="text-center py-1">${d}</div>`).join('')}
+            </div>`;
+
+            semanas.forEach(dias => {
+                const semStart = dias[0].getTime();
+                const semEnd = dias[6].getTime() + 86400000 - 1;
+
+                const enSemana = enElMes.filter(({ segmentos }) => segmentos.some(s => s.end >= semStart && s.start <= semEnd));
+                const alturaBarras = enSemana.length ? enSemana.length * ALTO_BARRA + 4 : 0;
+
+                html += `<div class="grid grid-cols-7 border-t border-slate-100 relative" style="min-height:${44 + alturaBarras}px">`;
+                dias.forEach(d => {
+                    const esMesActual = d.getMonth() === month;
+                    const esHoy = d.toDateString() === hoyStr;
+                    html += `<div class="border-l border-slate-50 first:border-l-0 p-1.5">
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${esHoy ? 'bg-blue-600 text-white' : esMesActual ? 'text-slate-600' : 'text-slate-300'}">${d.getDate()}</span>
+                    </div>`;
+                });
+
+                html += `<div class="absolute left-0 right-0 top-7">`;
+                enSemana.forEach(({ p, segmentos }, fila) => {
+                    const color = colorPorProyecto.get(p.id);
+                    segmentos.forEach((seg, segIdx) => {
+                        const segS = Math.max(seg.start, semStart);
+                        const segE = Math.min(seg.end, semEnd);
+                        if (segE < segS) return;
+                        const diaInicio = Math.floor((segS - semStart) / 86400000);
+                        const diaFin = Math.floor((segE - semStart) / 86400000);
+                        const left = (diaInicio / 7) * 100;
+                        const width = ((diaFin - diaInicio + 1) / 7) * 100;
+                        const claseColor = seg.cambio ? CRONO_COLOR_CAMBIO.bg : color.bg;
+                        const mostrarNombre = segIdx === 0 && segS === seg.start;
+                        html += `<div class="absolute h-[19px] ${claseColor} rounded text-white text-[9px] font-bold flex items-center px-1.5 truncate shadow-sm" style="left:${left}%; width:calc(${width}% - 2px); top:${fila * ALTO_BARRA}px;" title="${p.name}">
+                            ${mostrarNombre ? p.name : ''}
+                        </div>`;
+                    });
+                });
+                html += `</div></div>`;
+            });
+
+            document.getElementById('cronoCalendarGrid').innerHTML = html;
+            if (!enElMes.length) {
+                document.getElementById('cronoCalendarGrid').insertAdjacentHTML('beforeend', '<p class="text-center text-slate-400 text-sm py-8">Ningún proyecto tiene fechas de ejecución en este mes.</p>');
+            }
         }
 
         function renderSidebar() {
