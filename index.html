@@ -1883,6 +1883,15 @@
             .trim();
         }
 
+        // Genera un arreglo [{n:1}, {n:2}, ..., {n:cantidad}] para alimentar los loops
+        // de tabla en las plantillas .docx (ej: {#paneles}{n}{/paneles}). Así las tablas
+        // de seriales (Paneles/Inversor/Batería) quedan con exactamente el número de
+        // filas que indica la Info del Proyecto, en vez de un número fijo en la plantilla.
+        function arrayNumerado(cantidad) {
+            const n = parseInt(cantidad, 10) || 0;
+            return Array.from({ length: n }, (_, i) => ({ n: i + 1 }));
+        }
+
         async function renderActaTemplate(docId, projectId, extraData = {}) {
             const p = projects.find(x => x.id === projectId);
 
@@ -1927,6 +1936,9 @@
                     municipio: info.municipio || '',
                     departamento: info.departamento || '',
                     direccion: info.direccion || '',
+                    paneles: arrayNumerado(info.numPaneles),
+                    inversores: arrayNumerado(info.numInversores),
+                    baterias: arrayNumerado(info.numBaterias),
                     ...extraData
                 });
 
