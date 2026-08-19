@@ -782,11 +782,11 @@
                                 <label class="text-[9px] font-black text-slate-400 uppercase whitespace-nowrap">Tipo Proyecto</label>
                                 <input type="hidden" id="infoTipoProyecto" value="">
                                 <div id="infoTipoProyectoChips" class="flex flex-wrap gap-1 mt-1.5">
-                                    <button type="button" data-value="On-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">On-Grid</button>
-                                    <button type="button" data-value="Off-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Off-Grid</button>
-                                    <button type="button" data-value="Híbrido" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Híbrido</button>
-                                    <button type="button" data-value="Aislado" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Aislado</button>
-                                    <button type="button" data-value="Otro" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap')" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Otro</button>
+                                    <button type="button" data-value="On-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap'); toggleInfoBateriaFields()" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">On-Grid</button>
+                                    <button type="button" data-value="Off-Grid" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap'); toggleInfoBateriaFields()" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Off-Grid</button>
+                                    <button type="button" data-value="Híbrido" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap'); toggleInfoBateriaFields()" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Híbrido</button>
+                                    <button type="button" data-value="Aislado" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap'); toggleInfoBateriaFields()" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Aislado</button>
+                                    <button type="button" data-value="Otro" onclick="seleccionarChip('infoTipoProyecto','infoTipoProyectoChips',this,'infoTipoProyectoOtroWrap'); toggleInfoBateriaFields()" class="chip-btn px-1.5 py-1 rounded border border-slate-200 text-[9px] font-bold text-slate-600">Otro</button>
                                 </div>
                                 <div id="infoTipoProyectoOtroWrap" class="hidden mt-1">
                                     <input id="infoTipoProyectoOtro" placeholder="Especifica" class="w-full p-1.5 bg-slate-50 border border-slate-200 rounded-md text-[10px] outline-none focus:ring-2 focus:ring-blue-500">
@@ -825,6 +825,28 @@
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Inversor</label>
                                 <input id="infoReferenciaInversor" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <!-- Datos de Batería: solo aplica (y solo se muestra) si el Tipo de Proyecto
+                             es Híbrido u Off-Grid. Se activa/oculta desde toggleInfoBateriaFields(). -->
+                        <div id="infoBateriaWrap" class="hidden bg-blue-50/60 border border-blue-100 rounded-md p-4">
+                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                                <i class="fa-solid fa-car-battery"></i> Datos de Batería
+                            </p>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase">N° Baterías</label>
+                                    <input id="infoNumBaterias" type="number" class="w-full p-3 mt-1 bg-white border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase">Referencia Batería</label>
+                                    <input id="infoReferenciaBateria" class="w-full p-3 mt-1 bg-white border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase">Potencia Batería</label>
+                                    <input id="infoPotenciaBateria" class="w-full p-3 mt-1 bg-white border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: 5 kWh">
+                                </div>
                             </div>
                         </div>
 
@@ -1951,6 +1973,30 @@
             await saveProjectField(projectId, 'actas_materiales', data);
         }
 
+        // Arma las líneas de "Equipos Instalados" por defecto, tomadas de la Info del
+        // Proyecto (N° + marca + referencia de paneles e inversores, y batería si el
+        // proyecto es Híbrido u Off-Grid). Cada línea sigue el formato
+        // "N unidad(es) Tipo Marca Referencia". Así en el acta solo falta agregar la
+        // estructura (eso vive en "Instalaciones y Componentes", que se deja vacío/manual).
+        async function equiposPorDefecto(projectId) {
+            const info = (await getProjectInfo(projectId)) || {};
+            const lineas = [];
+            const unidadTxt = (n) => Number(n) === 1 ? 'unidad' : 'unidades';
+
+            if (info.numPaneles) {
+                lineas.push([info.numPaneles, unidadTxt(info.numPaneles), 'Panel', info.marcaPaneles, info.referenciaPanel].filter(Boolean).join(' '));
+            }
+            if (info.numInversores) {
+                lineas.push([info.numInversores, unidadTxt(info.numInversores), 'Inversor', info.marcaFabricante, info.referenciaInversor].filter(Boolean).join(' '));
+            }
+            const aplicaBateria = info.tipoProyecto === 'Híbrido' || info.tipoProyecto === 'Off-Grid';
+            if (aplicaBateria && (info.numBaterias || info.referenciaBateria || info.potenciaBateria)) {
+                const numBat = info.numBaterias || '1';
+                lineas.push([numBat, unidadTxt(numBat), 'Batería', info.referenciaBateria, info.potenciaBateria].filter(Boolean).join(' '));
+            }
+            return lineas;
+        }
+
         window.abrirModalMaterialesActa = async (docId, projectId) => {
             const actaConfig = CONFIG.act.find(a => a.id === docId);
             materialesModalDocId = docId;
@@ -1959,7 +2005,12 @@
             document.getElementById('materialesModalTitle').innerText = actaConfig ? actaConfig.label : 'Acta';
             const guardado = await getActaMateriales(projectId);
             document.getElementById('materialesEntregaInput').value = guardado.entrega || '';
-            document.getElementById('materialesEquiposInput').value = (guardado.equipos || []).join('\n');
+            // Si ya se guardó una lista de equipos manualmente antes, se respeta tal cual
+            // (para no pisar ediciones); si no, se prellena con los datos del proyecto.
+            const equiposIniciales = (guardado.equipos && guardado.equipos.length)
+                ? guardado.equipos
+                : await equiposPorDefecto(projectId);
+            document.getElementById('materialesEquiposInput').value = equiposIniciales.join('\n');
             document.getElementById('materialesComponentesInput').value = (guardado.componentes || []).join('\n');
             document.getElementById('materialesModal').classList.remove('hidden');
         };
@@ -3561,10 +3612,16 @@
                     ${campoSmall('Clasificación', clasificacionTxt)}
                     ${campoSmall('Diseñador', info.disenador)}
                 </div>
-                <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="grid grid-cols-2 gap-3 ${(info.tipoProyecto === 'Híbrido' || info.tipoProyecto === 'Off-Grid') ? 'mb-3' : 'mb-6'}">
                     ${campo('Referencia Panel', info.referenciaPanel)}
                     ${campo('Referencia Inversor', info.referenciaInversor)}
                 </div>
+                ${(info.tipoProyecto === 'Híbrido' || info.tipoProyecto === 'Off-Grid') ? `
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    ${campo('N° Baterías', info.numBaterias)}
+                    ${campo('Referencia Batería', info.referenciaBateria)}
+                    ${campo('Potencia Batería', info.potenciaBateria)}
+                </div>` : ''}
 
                 <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2">Datos del Cliente</p>
                 <div class="grid grid-cols-2 gap-3 mb-3">
@@ -3653,6 +3710,15 @@
             }
         }
 
+        // Muestra la casilla de "Datos de Batería" en el formulario de Info del
+        // Proyecto solo cuando el Tipo de Proyecto elegido es Híbrido u Off-Grid
+        // (los únicos esquemas que realmente llevan batería).
+        function toggleInfoBateriaFields() {
+            const tipo = document.getElementById('infoTipoProyecto').value;
+            const aplica = tipo === 'Híbrido' || tipo === 'Off-Grid';
+            document.getElementById('infoBateriaWrap').classList.toggle('hidden', !aplica);
+        }
+
         let modalMode = 'create';
 
         window.abrirModalNuevoProyecto = () => {
@@ -3667,6 +3733,7 @@
             setChipValue('infoTipoProyecto', 'infoTipoProyectoChips', 'infoTipoProyectoOtroWrap', '');
             setChipValue('infoClasificacionServicio', 'infoClasificacionServicioChips', 'infoClasificacionServicioOtroWrap', '');
             setChipValue('infoDisenador', 'infoDisenadorChips', 'infoDisenadorOtroWrap', '');
+            toggleInfoBateriaFields();
             document.getElementById('proyectoInfoModal').classList.remove('hidden');
         };
 
@@ -3688,6 +3755,9 @@
             document.getElementById('infoMarcaFabricante').value = info.marcaFabricante || '';
             document.getElementById('infoNumInversores').value = info.numInversores || '';
             document.getElementById('infoReferenciaInversor').value = info.referenciaInversor || '';
+            document.getElementById('infoReferenciaBateria').value = info.referenciaBateria || '';
+            document.getElementById('infoPotenciaBateria').value = info.potenciaBateria || '';
+            document.getElementById('infoNumBaterias').value = info.numBaterias || '';
             document.getElementById('infoNicTrf').value = info.nicTrf || '';
             document.getElementById('infoReferenciaMedidor').value = info.referenciaMedidor || '';
             document.getElementById('infoRadicado').value = info.radicado || '';
@@ -3699,6 +3769,7 @@
             document.getElementById('infoDepartamento').value = info.departamento || '';
             poblarMunicipios(info.municipio || '');
             setChipValue('infoTipoProyecto', 'infoTipoProyectoChips', 'infoTipoProyectoOtroWrap', info.tipoProyecto || '', info.tipoProyectoOtro || '');
+            toggleInfoBateriaFields();
             setChipValue('infoClasificacionServicio', 'infoClasificacionServicioChips', 'infoClasificacionServicioOtroWrap', info.clasificacionServicio || '', info.clasificacionServicioOtro || '');
             setChipValue('infoDisenador', 'infoDisenadorChips', 'infoDisenadorOtroWrap', info.disenador || '');
             document.getElementById('infoTelefono').value = info.telefono || '';
@@ -3718,6 +3789,9 @@
                 marcaFabricante: document.getElementById('infoMarcaFabricante').value.trim(),
                 numInversores: document.getElementById('infoNumInversores').value.trim(),
                 referenciaInversor: document.getElementById('infoReferenciaInversor').value.trim(),
+                referenciaBateria: document.getElementById('infoReferenciaBateria').value.trim(),
+                potenciaBateria: document.getElementById('infoPotenciaBateria').value.trim(),
+                numBaterias: document.getElementById('infoNumBaterias').value.trim(),
                 nicTrf: document.getElementById('infoNicTrf').value.trim(),
                 referenciaMedidor: document.getElementById('infoReferenciaMedidor').value.trim(),
                 radicado: document.getElementById('infoRadicado').value.trim(),
