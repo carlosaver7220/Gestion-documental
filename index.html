@@ -2533,6 +2533,35 @@
                     data['foto_' + k] = !!imagenesData['foto_' + k];
                 }
 
+                // La plantilla decide fila por fila con estos 3 flags (no le alcanza con
+                // foto_x_1/foto_x_2 sueltos): si llegan las 2 fotos, si llega solo la 1,
+                // o si llega solo la 2. Así la celda que falta se elimina en vez de quedar
+                // como un cuadro vacío, y si no llega ninguna, la tabla completa desaparece.
+                const seccionesFotoPar = ['bajante', 'bastidor', 'ac', 'tablero', 'bateria', 'medicion_ac', 'inversor'];
+                seccionesFotoPar.forEach((nombre) => {
+                    const f1 = data['foto_' + nombre + '_1'];
+                    const f2 = data['foto_' + nombre + '_2'];
+                    data['ambos_' + nombre] = f1 && f2;
+                    data['solo_' + nombre + '_1'] = f1 && !f2;
+                    data['solo_' + nombre + '_2'] = f2 && !f1;
+                });
+
+                // Secciones con 3 casillas: la 3ra es independiente del par 1-2.
+                const seccionesFotoTriple = ['paneles', 'medicion_dc'];
+                seccionesFotoTriple.forEach((nombre) => {
+                    const f1 = data['foto_' + nombre + '_1'];
+                    const f2 = data['foto_' + nombre + '_2'];
+                    const f3 = data['foto_' + nombre + '_3'];
+                    data['ambos_' + nombre] = f1 && f2;
+                    data['solo_' + nombre + '_1'] = f1 && !f2;
+                    data['solo_' + nombre + '_2'] = f2 && !f1;
+                    data['solo_' + nombre + '_3'] = !!f3;
+                });
+
+                // Sección de una sola casilla (Punto de Conexión): la plantilla usa
+                // solo_conexion_1 igual que las de 2/3 casillas, no basta con foto_conexion_1.
+                data['solo_conexion_1'] = !!data['foto_conexion_1'];
+
                 doc.render(data);
 
                 const buf = doc.getZip().generate({ type: 'uint8array' });
