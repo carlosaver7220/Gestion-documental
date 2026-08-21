@@ -1147,17 +1147,8 @@
 
                         <p class="text-[10px] text-slate-400 leading-relaxed -mt-2">Los datos básicos (proyecto, cliente, dirección, potencia) se toman automáticamente de <span class="font-bold text-slate-500">Datos del Proyecto</span>. Aquí solo completas lo específico de la instalación y el registro fotográfico.</p>
 
-                        <!-- Tipo de Sistema -->
-                        <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de Sistema</label>
-                            <div id="informeTipoSistemaChips" class="flex flex-wrap gap-1.5 mt-1">
-                                <button type="button" data-value="On Grid" onclick="seleccionarChip('informeTipoSistema','informeTipoSistemaChips',this,'informeTipoSistemaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">On Grid</button>
-                                <button type="button" data-value="Off Grid" onclick="seleccionarChip('informeTipoSistema','informeTipoSistemaChips',this,'informeTipoSistemaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Off Grid</button>
-                                <button type="button" data-value="Híbrido" onclick="seleccionarChip('informeTipoSistema','informeTipoSistemaChips',this,'informeTipoSistemaOtroWrap')" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Híbrido</button>
-                            </div>
-                            <input type="hidden" id="informeTipoSistema">
-                            <div id="informeTipoSistemaOtroWrap" class="hidden"></div>
-                        </div>
+                        <!-- Tipo de Sistema y Batería ya NO se piden aquí: se toman automáticamente
+                             de Datos del Proyecto (info.tipoProyecto / info.referenciaBateria / etc). -->
 
                         <!-- Smart Meter -->
                         <div>
@@ -1170,24 +1161,15 @@
                             <div id="informeSmartMeterOtroWrap" class="hidden"></div>
                         </div>
 
-                        <!-- Batería -->
+                        <!-- Elaboró (va en la firma del informe: Nombre + Cargo. La Empresa es fija
+                             en la plantilla como "SMART ENERGY ING", no se pide aquí). -->
                         <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase">Batería</label>
-                            <div id="informeBateriaChips" class="flex flex-wrap gap-1.5 mt-1">
-                                <button type="button" data-value="Si" onclick="seleccionarChip('informeBateria','informeBateriaChips',this,'informeBateriaOtroWrap'); toggleInformeBateria(true)" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">Sí</button>
-                                <button type="button" data-value="No" onclick="seleccionarChip('informeBateria','informeBateriaChips',this,'informeBateriaOtroWrap'); toggleInformeBateria(false)" class="chip-btn px-2.5 py-1.5 rounded border border-slate-200 text-[10px] font-bold text-slate-600">No</button>
-                            </div>
-                            <input type="hidden" id="informeBateria">
-                            <div id="informeBateriaOtroWrap" class="hidden"></div>
-                            <div id="informeBateriaDatosWrap" class="hidden grid grid-cols-2 gap-3 mt-3">
-                                <div>
-                                    <label class="text-[10px] font-black text-slate-400 uppercase">Referencia</label>
-                                    <input id="informeBateriaReferencia" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-black text-slate-400 uppercase">Potencia</label>
-                                    <input id="informeBateriaPotencia" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                                </div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Elaboró <span class="text-red-500">*</span></label>
+                            <div id="informeElaboroChips" class="flex flex-wrap gap-1.5 mt-1"></div>
+                            <input type="hidden" id="informeElaboro">
+                            <div id="informeElaboroOtroWrap" class="hidden mt-2 space-y-2">
+                                <input id="informeElaboroOtroNombre" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre completo">
+                                <input id="informeElaboroOtroCargo" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Cargo">
                             </div>
                         </div>
 
@@ -2423,20 +2405,63 @@
         // aparte de las Actas (carpeta y plantilla propias).
         // ==========================================================
         function toggleInformeBateria(tieneBateria) {
-            document.getElementById('informeBateriaDatosWrap').classList.toggle('hidden', !tieneBateria);
             document.getElementById('informeFotoBateriaWrap').classList.toggle('hidden', !tieneBateria);
+        }
+
+        // Resuelve el Elaboró del Informe General (solo Nombre + Cargo; la Empresa es
+        // fija "SMART ENERGY ING" en la plantilla). Igual que resolverPersona, pero sin
+        // pedir cédula/empresa porque el informe no los necesita.
+        function resolverElaboroInforme() {
+            const valor = document.getElementById('informeElaboro').value;
+            if (!valor) return { nombre: '', cargo: '' };
+            if (valor === 'Otro') {
+                return {
+                    nombre: document.getElementById('informeElaboroOtroNombre').value.trim(),
+                    cargo: document.getElementById('informeElaboroOtroCargo').value.trim(),
+                };
+            }
+            const datos = PERSONAL[valor] || {};
+            return { nombre: valor, cargo: datos.cargo || '' };
         }
 
         let informeProjectId = null;
 
-        window.abrirModalInforme = (projectId) => {
+        window.abrirModalInforme = async (projectId) => {
             informeProjectId = projectId;
             document.getElementById('informeForm').reset();
-            ['informeTipoSistema', 'informeSmartMeter', 'informeBateria'].forEach(id => document.getElementById(id).value = '');
+            ['informeSmartMeter', 'informeElaboro'].forEach(id => document.getElementById(id).value = '');
             [...document.querySelectorAll('#informeForm .chip-btn')].forEach(b => b.classList.remove('chip-active'));
-            toggleInformeBateria(false);
+            document.getElementById('informeElaboroOtroWrap').classList.add('hidden');
+            poblarChipsPersonal('informeElaboroChips', ELABORO_OPCIONES, 'informeElaboro', 'informeElaboroOtroWrap');
+
+            // Tipo de Sistema y Batería ya no se preguntan: se leen de Información del
+            // Proyecto. Solo usamos ese dato aquí para saber si mostrar el bloque de
+            // fotos de Batería (si el proyecto no es Híbrido/Off-Grid, no aplica).
+            const info = (await getProjectInfo(projectId)) || {};
+            const tieneBateria = info.tipoProyecto === 'Híbrido' || info.tipoProyecto === 'Off-Grid';
+            toggleInformeBateria(tieneBateria);
+
             document.getElementById('informeModal').classList.remove('hidden');
         };
+
+        // Texto de la sección "Instalación de Paneles en Cubierta" del informe: se arma
+        // con los datos reales del proyecto (mismo criterio que la primera estrofa del
+        // resumen en generarResumenProyecto) en vez de un texto genérico fijo.
+        function generarTextoPanelesInforme(info, tipoSistemaTxt) {
+            let txt = 'Se realizó la instalación de';
+            txt += info.numPaneles ? ` ${info.numPaneles} paneles solares fotovoltaicos` : ' los paneles solares fotovoltaicos';
+            if (info.marcaPaneles) txt += ` marca ${info.marcaPaneles}`;
+            txt += ' sobre la cubierta';
+            if (info.potenciaAC) txt += `, con una potencia AC de ${info.potenciaAC} kW`;
+            if (info.potenciaDC) txt += `${info.potenciaAC ? ' y' : ' con'} una potencia DC instalada de ${info.potenciaDC} kWp`;
+            if (info.numInversores) {
+                txt += `, mediante ${info.numInversores} inversor${Number(info.numInversores) === 1 ? '' : 'es'}`;
+                if (info.marcaFabricante) txt += ` marca ${info.marcaFabricante}`;
+            }
+            if (tipoSistemaTxt) txt += `, bajo esquema ${tipoSistemaTxt}`;
+            txt += '. La fijación se ejecutó garantizando la estabilidad mecánica del sistema y el correcto alineamiento de los módulos para optimizar la captación solar.';
+            return txt;
+        }
 
         // Todas las secciones de fotos que pide la plantilla, con su cantidad de casillas.
         // La sección "bateria" solo se envía a la plantilla si tieneBateria = true.
@@ -2462,6 +2487,14 @@
                 const p = projects.find(x => x.id === informeProjectId);
                 const info = await getProjectInfo(informeProjectId);
                 const nombreLimpio = limpiarNombreProyecto(p.name);
+
+                const elaboroInforme = resolverElaboroInforme();
+                if (!elaboroInforme.nombre) {
+                    alert('Selecciona quién elaboró el informe.');
+                    btn.disabled = false;
+                    btn.innerText = 'Generar Informe';
+                    return;
+                }
 
                 // 1. Leer las fotos que sí se subieron (todas opcionales)
                 const imagenesData = {};
@@ -2494,9 +2527,14 @@
                 const hoy = new Date();
                 const fechaLarga = `${hoy.getDate()} de ${meses[hoy.getMonth()]} del ${hoy.getFullYear()}`;
 
-                const tipoSistema = document.getElementById('informeTipoSistema').value;
+                // Tipo de sistema y batería ya no se preguntan en este formulario: se toman
+                // de Información del Proyecto (mismo criterio que usa el resto de la app,
+                // ver aplicaBateria/toggleInfoBateriaFields).
+                const tipoSistemaInfo = info.tipoProyecto === 'Otro' ? info.tipoProyectoOtro : info.tipoProyecto;
                 const smartMeter = document.getElementById('informeSmartMeter').value;
-                const tieneBateria = document.getElementById('informeBateria').value === 'Si';
+                const tieneBateria = info.tipoProyecto === 'Híbrido' || info.tipoProyecto === 'Off-Grid';
+
+                const observacionesTxt = document.getElementById('informeObservaciones').value.trim();
 
                 const data = {
                     proyecto: nombreLimpio,
@@ -2508,9 +2546,11 @@
                     potenciaac: info.potenciaAC ? `${info.potenciaAC}` : '',
                     fecha: fechaLarga,
 
-                    chk_ongrid: chk(tipoSistema === 'On Grid'),
-                    chk_offgrid: chk(tipoSistema === 'Off Grid'),
-                    chk_hibrido: chk(tipoSistema === 'Híbrido'),
+                    texto_paneles: generarTextoPanelesInforme(info, tipoSistemaInfo),
+
+                    chk_ongrid: chk(info.tipoProyecto === 'On-Grid'),
+                    chk_offgrid: chk(info.tipoProyecto === 'Off-Grid'),
+                    chk_hibrido: chk(info.tipoProyecto === 'Híbrido'),
 
                     chk_smartmeter_si: chk(smartMeter === 'Si'),
                     chk_smartmeter_no: chk(smartMeter === 'No'),
@@ -2518,14 +2558,19 @@
                     chk_bateria_si: chk(tieneBateria),
                     chk_bateria_no: chk(!tieneBateria),
                     tieneBateria: tieneBateria,
-                    bateria_referencia: tieneBateria ? document.getElementById('informeBateriaReferencia').value.trim() : '',
-                    bateria_potencia: tieneBateria ? document.getElementById('informeBateriaPotencia').value.trim() : '',
+                    bateria_referencia: tieneBateria ? (info.referenciaBateria || '') : '',
+                    bateria_potencia: tieneBateria ? (info.potenciaBateria || '') : '',
 
                     calibre_tierra: document.getElementById('informeCalibreTierra').value.trim(),
                     calibre_acometida: document.getElementById('informeCalibreAcometida').value.trim(),
                     calibre_ac: document.getElementById('informeCalibreAc').value.trim(),
 
-                    observaciones: document.getElementById('informeObservaciones').value.trim(),
+                    observaciones: observacionesTxt,
+                    hay_observaciones: !!observacionesTxt,
+
+                    elaboro: elaboroInforme.nombre,
+                    cargo: elaboroInforme.cargo,
+                    empresa: 'SMART ENERGY ING',
                 };
                 // Las fotos: solo se manda la clave (truthy) si sí se subió esa foto, así el
                 // bloque {#foto_x}...{/foto_x} de la plantilla se oculta solo cuando no hay imagen.
