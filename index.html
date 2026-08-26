@@ -771,8 +771,16 @@
                                 <input id="infoNumPaneles" type="number" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase whitespace-nowrap">Potencia Panel</label>
+                                <input id="infoPotenciaPanel" type="number" step="0.01" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: 550">
+                            </div>
+                            <div>
                                 <label class="text-[9px] font-black text-slate-400 uppercase whitespace-nowrap">N° Inversores</label>
                                 <input id="infoNumInversores" type="number" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase whitespace-nowrap">Potencia Inversor</label>
+                                <input id="infoPotenciaInversor" type="number" step="0.01" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: 5">
                             </div>
                             <div>
                                 <label class="text-[9px] font-black text-slate-400 uppercase whitespace-nowrap">Ref. Medidor</label>
@@ -1874,12 +1882,20 @@
             return Array.from({ length: n }, (_, i) => ({ n: i + 1 }));
         }
 
-        async function renderActaTemplate(docId, projectId, extraData = {}) {
+        // opts.configArr: de qué lista (CONFIG.act o CONFIG.ing) sacar el label/tipo del docId.
+        // opts.folderKey: en qué carpeta del proyecto guardar el archivo generado
+        // ('actFolder' para Actas, 'ingFolder' para Bóveda Técnica).
+        async function renderActaTemplate(docId, projectId, extraData = {}, opts = {}) {
+            const configArr = opts.configArr || CONFIG.act;
+            const folderKey = opts.folderKey || 'actFolder';
             const p = projects.find(x => x.id === projectId);
+            const targetFolder = p ? p[folderKey] : null;
 
-            if (!p || !p.actFolder) {
-                console.error('FALLO: proyecto o actFolder no existe', { p });
-                alert('Carpeta 5. INFORME DE SEGUIMIENTO/1. ACTAS no encontrada.');
+            if (!p || !targetFolder) {
+                console.error('FALLO: proyecto o carpeta destino no existe', { p, folderKey });
+                alert(folderKey === 'ingFolder'
+                    ? 'Carpeta 1. INGENIERIA DE DETALLE no encontrada.'
+                    : 'Carpeta 5. INFORME DE SEGUIMIENTO/1. ACTAS no encontrada.');
                 return false;
             }
 
@@ -1894,7 +1910,7 @@
             try {
                 const plantillasFolder = await currentHandle.getDirectoryHandle('Plantillas');
 
-                const actaConfig = CONFIG.act.find(a => a.id === docId);
+                const actaConfig = configArr.find(a => a.id === docId);
                 const nombreActa = actaConfig ? actaConfig.label : docId;
                 const nombreArchivoPlantilla = `${docId} ${nombreActa}.docx`;
 
@@ -1906,6 +1922,8 @@
                 const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
                 const hoy = new Date();
                 const fechaLarga = `${hoy.getDate()} de ${meses[hoy.getMonth()]} del ${hoy.getFullYear()}`;
+
+                const tipoProyectoTexto = info.tipoProyecto === 'Otro' ? (info.tipoProyectoOtro || '') : (info.tipoProyecto || '');
 
                 const zip = new PizZip(arrayBuffer);
                 const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
@@ -1921,12 +1939,25 @@
                     paneles: arrayNumerado(info.numPaneles),
                     inversores: arrayNumerado(info.numInversores),
                     baterias: arrayNumerado(info.numBaterias),
+                    // Tags propios del acta "Declaración de Cumplimiento" (bóveda técnica),
+                    // que en la plantilla vienen con esta grafía exacta (mayúsculas, guiones,
+                    // tildes) distinta a los tags "genéricos" de arriba usados por otras actas.
+                    numPaneles: info.numPaneles || '',
+                    numInversores: info.numInversores || '',
+                    potenciaDC: info.potenciaDC || '',
+                    potenciaAC: info.potenciaAC || '',
+                    'tipo-proyecto': tipoProyectoTexto,
+                    'potencia-panel': info.potenciaPanel || '',
+                    'potencia-inversor': info.potenciaInversor || '',
+                    'referencia-inversor': info.referenciaInversor || '',
+                    'dirección': info.direccion || '',
+                    'identificación': info.identificacion || '',
                     ...extraData
                 });
 
                 const buf = doc.getZip().generate({ type: 'uint8array' });
                 const fileName = `${docId} ${nombreActa} - ${nombreLimpio}.docx`;
-                const actaHandle = await p.actFolder.getFileHandle(fileName, { create: true });
+                const actaHandle = await targetFolder.getFileHandle(fileName, { create: true });
                 const writable = await actaHandle.createWritable();
                 await writable.write(buf);
                 await writable.close();
@@ -1943,7 +1974,13 @@
 
         // Actas "simples": se generan directo con los datos que ya tiene el proyecto
         window.generarActa = async (docId, projectId) => {
-            await renderActaTemplate(docId, projectId, {});
+            await renderActaTemplate(docId, projectId, {}, { configArr: CONFIG.act, folderKey: 'actFolder' });
+        };
+
+        // Ítems "generables" de Bóveda Técnica (ej: Declaración de Cumplimiento):
+        // misma lógica que las Actas, pero el archivo se guarda en 1. INGENIERIA DE DETALLE.
+        window.generarActaBoveda = async (docId, projectId) => {
+            await renderActaTemplate(docId, projectId, {}, { configArr: CONFIG.ing, folderKey: 'ingFolder' });
         };
 
         // ----------------------------------------------------------
@@ -2676,7 +2713,13 @@
         const CONFIG = {
             ing: [
                 { id: "1.", label: "Diagrama Unifilar" }, { id: "2.", label: "Certificación Inversor" },
-                { id: "3-4.", label: "Parametrización" }, { id: "5.", label: "RETIE Construcción" },
+                { id: "3-4.", label: "Parametrización" },
+                // "Generable": a diferencia de los demás (que solo se detectan/suben a mano),
+                // este se genera desde una plantilla .docx igual que las Actas, pero el archivo
+                // se guarda aquí en Bóveda Técnica (1. INGENIERIA DE DETALLE), no en Actas.
+                // nombreArchivoPlantilla = "5. RETIE Construcción.docx" — si el archivo real en
+                // la carpeta Plantillas se llama distinto, avísame para ajustarlo.
+                { id: "5.", label: "RETIE Construcción", tipo: 'generable' },
                 { id: "6.", label: "Cédula Catastral" }, { id: "7.", label: "Certificado Tradición" },
                 { id: "8.", label: "FT Inversor" }, { id: "9.", label: "FT Panel" },
                 { id: "10.", label: "Dispositivo Transferencia" }, { id: "11.", label: "Cuadro de Cargas" },
@@ -2886,6 +2929,15 @@
             const informeFile = filesDossier.find(x => /informe/i.test(x.n) && /\.(docx|pdf)$/i.test(x.n.trim()));
 
             const mapItems = (cfg, files) => cfg.map(c => {
+            // Ítems "generables" (ej: Declaración de Cumplimiento) se comportan como las
+            // Actas: cuentan como "found" solo si ya existe el .pdf firmado; si solo hay
+            // un .docx es un borrador generado sin firmar todavía (permite "Regenerar").
+            if (c.tipo === 'generable') {
+                const matches = files.filter(x => x.n.trim().startsWith(c.id + ' '));
+                const pdfFile = matches.find(x => x.n.toLowerCase().endsWith('.pdf'));
+                const docxFile = matches.find(x => x.n.toLowerCase().endsWith('.docx'));
+                return { ...c, found: !!pdfFile, handle: pdfFile?.h, generated: !!docxFile, docxHandle: docxFile?.h };
+            }
             const f = files.find(x => x.n.trim().startsWith(c.id));
             return {...c, found: !!f, handle: f?.h};
             });
@@ -3477,41 +3529,52 @@
         };
         async function renderDocModule(p) {
             // Ingeniería y Actas
-            const actionBtn = (found, type, docId) => found ? 
-                `<button onclick="openFile('${p.id}','${docId}','${type}')" class="btn-action btn-view">Abrir</button>` : 
-                `<button onclick="uploadFile('${p.id}','${docId}','${type}')" class="btn-action btn-upload">Subir</button>`;
-            const actActionBtn = (found, docId, generated) => {
-            if (found) {
-                return `<button onclick="openFile('${p.id}','${docId}','act')" class="btn-action btn-view">Abrir</button>`;
-            }
-            const actaConfig = CONFIG.act.find(a => a.id === docId);
-            const tipo = actaConfig ? actaConfig.tipo : 'simple';
-
-            if (tipo === 'materiales') {
-                const label = generated ? 'Recrear' : 'Crear';
-                const title = generated ? 'title="Ya existe un borrador sin firmar, esto lo reemplaza"' : '';
-                return `<button onclick="abrirModalMaterialesActa('${docId}','${p.id}')" class="btn-action btn-upload" ${title}>${label}</button>`;
-            }
-            if (tipo === 'fotos') {
-                return `<button onclick="crearActaConFotos('${docId}','${p.id}')" class="btn-action btn-upload">Crear</button>`;
-            }
-            if (generated) {
-                return `<button onclick="generarActa('${docId}','${p.id}')" class="btn-action btn-upload" title="Ya existe un borrador sin firmar, esto lo reemplaza">Regenerar</button>`;
-            }
-            return `<button onclick="generarActa('${docId}','${p.id}')" class="btn-action btn-upload">Generar</button>`;
+            const actionBtn = (item, type, docId) => {
+                let botones = '';
+                if (item.tipo === 'generable') {
+                    const label = item.generated ? 'Regenerar' : 'Generar';
+                    const title = item.generated ? 'title="Ya existe un borrador sin firmar, esto lo reemplaza"' : '';
+                    botones += `<button onclick="generarActaBoveda('${docId}','${p.id}')" class="btn-action btn-upload" ${title}>${label}</button>`;
+                    botones += `<button onclick="uploadFile('${p.id}','${docId}','${type}')" class="btn-action btn-upload">Subir</button>`;
+                    if (item.found) botones += `<button onclick="openFile('${p.id}','${docId}','${type}')" class="btn-action btn-view">Abrir</button>`;
+                    return botones;
+                }
+                // Ítems normales de Bóveda Técnica: solo se detectan/suben a mano, sin plantilla.
+                return item.found
+                    ? `<button onclick="openFile('${p.id}','${docId}','${type}')" class="btn-action btn-view">Abrir</button>`
+                    : `<button onclick="uploadFile('${p.id}','${docId}','${type}')" class="btn-action btn-upload">Subir</button>`;
+            };
+            const actActionBtn = (item, docId) => {
+                const actaConfig = CONFIG.act.find(a => a.id === docId);
+                const tipo = actaConfig ? actaConfig.tipo : 'simple';
+                let botones = '';
+                if (tipo === 'materiales') {
+                    const label = item.generated ? 'Recrear' : 'Crear';
+                    const title = item.generated ? 'title="Ya existe un borrador sin firmar, esto lo reemplaza"' : '';
+                    botones += `<button onclick="abrirModalMaterialesActa('${docId}','${p.id}')" class="btn-action btn-upload" ${title}>${label}</button>`;
+                } else if (tipo === 'fotos') {
+                    botones += `<button onclick="crearActaConFotos('${docId}','${p.id}')" class="btn-action btn-upload">Crear</button>`;
+                } else {
+                    const label = item.generated ? 'Regenerar' : 'Generar';
+                    const title = item.generated ? 'title="Ya existe un borrador sin firmar, esto lo reemplaza"' : '';
+                    botones += `<button onclick="generarActa('${docId}','${p.id}')" class="btn-action btn-upload" ${title}>${label}</button>`;
+                }
+                botones += `<button onclick="uploadFile('${p.id}','${docId}','act')" class="btn-action btn-upload">Subir</button>`;
+                if (item.found) botones += `<button onclick="openFile('${p.id}','${docId}','act')" class="btn-action btn-view">Abrir</button>`;
+                return botones;
             };
 
             document.getElementById('listIng').innerHTML = p.ingItems.map(i => `
                 <div class="flex items-center justify-between p-4 bg-white border ${i.found ? 'border-blue-100' : 'border-slate-100'} rounded-md shadow-sm">
                     <span class="text-xs font-bold text-slate-700 truncate pr-2">${i.label}</span>
-                    ${actionBtn(i.found, 'ing', i.id)}
+                    <div class="flex gap-1.5">${actionBtn(i, 'ing', i.id)}</div>
                 </div>
             `).join('');
 
             document.getElementById('listAct').innerHTML = p.actItems.map(i => `
                 <div class="flex items-center justify-between p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors">
                     <span class="text-[10px] font-bold text-slate-500">${i.label}</span>
-                    ${actActionBtn(i.found, i.id, i.generated)}
+                    <div class="flex gap-1.5">${actActionBtn(i, i.id)}</div>
                 </div>
             `).join('');
 
@@ -3837,9 +3900,11 @@
             document.getElementById('infoPotenciaDC').value = info.potenciaDC || '';
             document.getElementById('infoMarcaPaneles').value = info.marcaPaneles || '';
             document.getElementById('infoNumPaneles').value = info.numPaneles || '';
+            document.getElementById('infoPotenciaPanel').value = info.potenciaPanel || '';
             document.getElementById('infoReferenciaPanel').value = info.referenciaPanel || '';
             document.getElementById('infoMarcaFabricante').value = info.marcaFabricante || '';
             document.getElementById('infoNumInversores').value = info.numInversores || '';
+            document.getElementById('infoPotenciaInversor').value = info.potenciaInversor || '';
             document.getElementById('infoReferenciaInversor').value = info.referenciaInversor || '';
             document.getElementById('infoReferenciaBateria').value = info.referenciaBateria || '';
             document.getElementById('infoPotenciaBateria').value = info.potenciaBateria || '';
@@ -3871,9 +3936,11 @@
                 potenciaDC: document.getElementById('infoPotenciaDC').value.trim(),
                 marcaPaneles: document.getElementById('infoMarcaPaneles').value.trim(),
                 numPaneles: document.getElementById('infoNumPaneles').value.trim(),
+                potenciaPanel: document.getElementById('infoPotenciaPanel').value.trim(),
                 referenciaPanel: document.getElementById('infoReferenciaPanel').value.trim(),
                 marcaFabricante: document.getElementById('infoMarcaFabricante').value.trim(),
                 numInversores: document.getElementById('infoNumInversores').value.trim(),
+                potenciaInversor: document.getElementById('infoPotenciaInversor').value.trim(),
                 referenciaInversor: document.getElementById('infoReferenciaInversor').value.trim(),
                 referenciaBateria: document.getElementById('infoReferenciaBateria').value.trim(),
                 potenciaBateria: document.getElementById('infoPotenciaBateria').value.trim(),
