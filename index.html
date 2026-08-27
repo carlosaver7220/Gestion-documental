@@ -1914,7 +1914,39 @@
                 const nombreActa = actaConfig ? actaConfig.label : docId;
                 const nombreArchivoPlantilla = `${docId} ${nombreActa}.docx`;
 
-                const plantillaHandle = await plantillasFolder.getFileHandle(nombreArchivoPlantilla);
+                // Antes se buscaba el archivo por nombre EXACTO ("${docId} ${label}.docx"),
+                // lo cual truena con NotFoundError si el archivo real en Plantillas tiene un
+                // espacio, tilde o mayúscula distinta a la que quedó configurada acá. Ahora se
+                // busca por PREFIJO del docId (igual que ya hace el resto de la app para
+                // detectar archivos existentes), que es mucho más tolerante a esas diferencias.
+                const plantillasEntries = [];
+                for await (const entry of plantillasFolder.values()) {
+                    if (entry.kind === 'file') plantillasEntries.push(entry);
+                }
+                const plantillaHandle = plantillasEntries.find(x =>
+                    x.name.trim().startsWith(docId + ' ') && /\.docx$/i.test(x.name.trim())
+                );
+
+                if (!plantillaHandle) {
+                    const candidatos = plantillasEntries
+                        .filter(x => x.name.trim().startsWith(docId))
+                        .map(x => x.name)
+                        .join('\n');
+                    console.error('FALLO: plantilla no encontrada en Plantillas/', {
+                        buscado: nombreArchivoPlantilla,
+                        docId,
+                        archivosConEsePrefijo: candidatos || '(ninguno)'
+                    });
+                    alert(
+                        `No se encontró la plantilla para "${nombreActa}" en la carpeta Plantillas.\n\n` +
+                        `Se buscó un archivo .docx que empiece por "${docId} ".\n\n` +
+                        (candidatos
+                            ? `Archivos encontrados que empiezan por "${docId}":\n${candidatos}`
+                            : `No hay ningún archivo en Plantillas que empiece por "${docId}".`)
+                    );
+                    return false;
+                }
+
                 const arrayBuffer = await (await plantillaHandle.getFile()).arrayBuffer();
 
                 const nombreLimpio = limpiarNombreProyecto(p.name);
