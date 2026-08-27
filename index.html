@@ -1977,10 +1977,41 @@
             await renderActaTemplate(docId, projectId, {}, { configArr: CONFIG.act, folderKey: 'actFolder' });
         };
 
-        // Ítems "generables" de Bóveda Técnica (ej: Declaración de Cumplimiento):
+        // Datos para las Actas de Declaración de Cumplimiento (Diseño / Construcción).
+        // Estas dos plantillas usan sus propios nombres de tag (abreviados, distintos a los
+        // genéricos que ya arma renderActaTemplate para las demás actas), así que se arman
+        // aparte aquí y se pasan como extraData.
+        // NOTA: se manda Npanel y Npaneles (mismo valor) por si alguna de las dos plantillas
+        // quedó con el tag en plural; no estorba si el que no se usa no aparece en el .docx.
+        async function datosDeclaracionCumplimiento(projectId) {
+            const info = (await getProjectInfo(projectId)) || {};
+            const tipoProyectoTexto = info.tipoProyecto === 'Otro' ? (info.tipoProyectoOtro || '') : (info.tipoProyecto || '');
+            const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+            const hoy = new Date();
+            return {
+                TP: tipoProyectoTexto,
+                PDC: info.potenciaDC || '',
+                PAC: info.potenciaAC || '',
+                dia: String(hoy.getDate()),
+                mes: meses[hoy.getMonth()],
+                ano: String(hoy.getFullYear()),
+                Npanel: info.numPaneles || '',
+                Npaneles: info.numPaneles || '',
+                Mpanel: info.marcaPaneles || '',
+                Ppanel: info.potenciaPanel || '',
+                Rpanel: info.referenciaPanel || '',
+                Ninversor: info.numInversores || '',
+                Minversor: info.marcaFabricante || '',
+                Pinversor: info.potenciaInversor || '',
+                Rinversor: info.referenciaInversor || ''
+            };
+        }
+
+        // Ítems "generables" de Bóveda Técnica (Declaración de Diseño / Construcción):
         // misma lógica que las Actas, pero el archivo se guarda en 1. INGENIERIA DE DETALLE.
         window.generarActaBoveda = async (docId, projectId) => {
-            await renderActaTemplate(docId, projectId, {}, { configArr: CONFIG.ing, folderKey: 'ingFolder' });
+            const extraData = await datosDeclaracionCumplimiento(projectId);
+            await renderActaTemplate(docId, projectId, extraData, { configArr: CONFIG.ing, folderKey: 'ingFolder' });
         };
 
         // ----------------------------------------------------------
@@ -2715,11 +2746,15 @@
                 { id: "1.", label: "Diagrama Unifilar" }, { id: "2.", label: "Certificación Inversor" },
                 { id: "3-4.", label: "Parametrización" },
                 // "Generable": a diferencia de los demás (que solo se detectan/suben a mano),
-                // este se genera desde una plantilla .docx igual que las Actas, pero el archivo
+                // estos se generan desde una plantilla .docx igual que las Actas, pero el archivo
                 // se guarda aquí en Bóveda Técnica (1. INGENIERIA DE DETALLE), no en Actas.
-                // nombreArchivoPlantilla = "5. RETIE Construcción.docx" — si el archivo real en
-                // la carpeta Plantillas se llama distinto, avísame para ajustarlo.
-                { id: "5.", label: "RETIE Construcción", tipo: 'generable' },
+                // Antes era una sola plantilla ("Acta de Declaracion de Coonstruccion") con las
+                // dos declaraciones (Diseño y Construcción) juntas; ahora están separadas en dos
+                // archivos .docx, cada uno con su propio ítem. Los nombres de plantilla deben
+                // coincidir EXACTO con los archivos en la carpeta Plantillas:
+                // "5. Acta de declaracion de Diseño.docx" y "5.1. Acta de Declaracion de Construccion.docx"
+                { id: "5.", label: "Acta de declaracion de Diseño", tipo: 'generable' },
+                { id: "5.1.", label: "Acta de Declaracion de Construccion", tipo: 'generable' },
                 { id: "6.", label: "Cédula Catastral" }, { id: "7.", label: "Certificado Tradición" },
                 { id: "8.", label: "FT Inversor" }, { id: "9.", label: "FT Panel" },
                 { id: "10.", label: "Dispositivo Transferencia" }, { id: "11.", label: "Cuadro de Cargas" },
