@@ -3264,18 +3264,18 @@
             const month = cronoMesProyecto;
             document.getElementById('cronoMesProyectoLabel').innerText = `${MESES_LARGO[month]} de ${year}`;
 
-            const segmentos = segmentosEjecucion(info);
-            const enElMes = segmentos && segmentos.length ? [{ p, segmentos }] : [];
+            const filas = segmentosEjecucion(info);
+            const enElMes = filasProyecto(p);
 
             const leyenda = [`<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${CRONO_COLOR_PROYECTO_INDIVIDUAL.dot}"></span> ${p.name}</span>`];
-            if (segmentos && segmentos.some(s => s.cambio)) {
-                leyenda.push(`<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${CRONO_COLOR_CAMBIO.dot}"></span> Fecha actualizada</span>`);
+            if (filas && filas.some(f => f.segmentos.some(s => s.fantasma))) {
+                leyenda.push(`<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded ${CRONO_COLOR_PROYECTO_INDIVIDUAL.bg} opacity-40"></span> Planificado / fuera de fecha</span>`);
             }
             document.getElementById('cronoLeyendaProyecto').innerHTML = leyenda.join('');
 
             document.getElementById('cronoCalendarGridProyecto').innerHTML = construirGrillaCronograma(year, month, enElMes, () => CRONO_COLOR_PROYECTO_INDIVIDUAL, 'clickDiaCronoProyecto');
             if (!enElMes.length) {
-                document.getElementById('cronoCalendarGridProyecto').insertAdjacentHTML('beforeend', '<p class="text-center text-slate-400 text-sm py-8">Este proyecto aún no tiene fechas de ejecución registradas. Toca el número de un día para definir el inicio real.</p>');
+                document.getElementById('cronoCalendarGridProyecto').insertAdjacentHTML('beforeend', '<p class="text-center text-slate-400 text-sm py-8">Este proyecto aún no tiene fechas de ejecución registradas. Define la fecha contractual en Info, o toca el número de un día para definir el inicio real.</p>');
             }
         }
 
@@ -3311,25 +3311,23 @@
         // ==========================================================
         // CRONOGRAMA GENERAL — vista de calendario mensual
         // ----------------------------------------------------------
-        // Cada proyecto se dibuja como UNA barra sobre su rango de
-        // ejecución (fechas reales si ya se registraron; si no, las
-        // contractuales). Color por proyecto, asignado de forma estable
+        // Cada proyecto puede dibujar hasta DOS barras (filas) en el
+        // calendario: la "plan" (rango contractual, siempre visible en
+        // cuanto se registra la fecha contractual desde Info) y la
+        // "real" (rango de ejecución real, solo si ya se definió tocando
+        // el calendario). Color por proyecto, asignado de forma estable
         // por nombre (así cada proyecto conserva siempre el mismo color
         // sin importar qué mes se esté viendo).
         //
-        // Si la fecha real difiere de la contractual, la porción del
-        // rango que quedó FUERA de lo originalmente planeado se pinta
-        // de rojo: ese rojo es siempre un color SECUNDARIO (jamás el
-        // color de un proyecto) y es el indicador de "esta fecha se
-        // actualizó". Si no hay cambio, toda la barra va en el color
-        // del proyecto.
+        // La fila "plan" va SIEMPRE semi-transparente (es lo proyectado,
+        // no lo confirmado). La fila "real" va sólida en la parte que
+        // coincide con la ventana contractual, y semi-transparente en la
+        // parte que se salió de esa ventana (así se ve dónde se corrió).
         // ==========================================================
 
-        // Azul y rojo quedan RESERVADOS y nunca entran en esta paleta:
-        // - Azul (CRONO_COLOR_PROYECTO_INDIVIDUAL) es el color fijo que usa
-        //   cualquier proyecto dentro de SU PROPIO Cronograma de Proyecto (no
-        //   importa que se repita entre proyectos: ahí solo se ve uno a la vez).
-        // - Rojo (CRONO_COLOR_CAMBIO) es el indicador de "fecha actualizada".
+        // Azul queda RESERVADO y nunca entra en esta paleta: es el color fijo que usa
+        // cualquier proyecto dentro de SU PROPIO Cronograma de Proyecto (no importa que
+        // se repita entre proyectos: ahí solo se ve uno a la vez).
         const CRONO_COLORES_PROYECTO = [
             { bg: 'bg-indigo-500',  dot: 'bg-indigo-500' },
             { bg: 'bg-purple-500',  dot: 'bg-purple-500' },
@@ -3341,7 +3339,8 @@
             { bg: 'bg-orange-500',  dot: 'bg-orange-500' },
             { bg: 'bg-pink-500',    dot: 'bg-pink-500' },
         ];
-        const CRONO_COLOR_CAMBIO = { bg: 'bg-red-500', dot: 'bg-red-500' };
+        // Rojo queda eliminado como indicador: ahora la desviación respecto a lo
+        // contractual se marca con transparencia (fantasma), no con un color aparte.
         const CRONO_COLOR_PROYECTO_INDIVIDUAL = { bg: 'bg-blue-600', dot: 'bg-blue-600' };
 
         // Se repite (cicla) con módulo una vez se agotan los colores disponibles.
@@ -3349,39 +3348,66 @@
             return CRONO_COLORES_PROYECTO[index % CRONO_COLORES_PROYECTO.length];
         }
 
-        // Calcula el/los segmento(s) (en timestamps) que hay que dibujar para un
-        // proyecto. Devuelve null si no tiene ninguna fecha registrada todavía.
+        // Calcula las FILAS (barras) que hay que dibujar para un proyecto. Devuelve
+        // null si no tiene ninguna fecha registrada todavía. Cada fila es
+        // { segmentos: [{start,end,fantasma}], mostrarNombre }:
+        //
+        // - Fila "plan": se dibuja SIEMPRE que haya fecha contractual, sin importar
+        //   si ya hay fechas reales o no. Va completa en fantasma:true (semi-transparente)
+        //   porque es lo proyectado, no lo confirmado.
+        // - Fila "real": solo si hay fecha real de inicio. La porción que cae DENTRO
+        //   de la ventana contractual va sólida (fantasma:false); la porción que
+        //   quedó fuera de esa ventana (antes del inicio contractual o después del
+        //   fin contractual) también va semi-transparente (fantasma:true), para dar
+        //   a entender que ahí es donde se corrió respecto a lo planeado.
         function segmentosEjecucion(info) {
             const planStart = info.fechaInicioContractual || null;
             const planEnd = info.fechaFinContractual || null;
             const realStart = info.fechaInicioReal || null;
             const realEnd = info.fechaFinReal || null;
 
-            const start = realStart || planStart;
-            const end = realEnd || planEnd || start;
-            if (!start) return null;
+            const filas = [];
 
-            const cambiada = !!planStart && !!planEnd &&
-                ((realStart && realStart !== planStart) || (realEnd && realEnd !== planEnd));
-
-            if (!cambiada) {
-                const t1 = parseFechaLocal(start).getTime();
-                const t2 = parseFechaLocal(end).getTime();
-                return [{ start: Math.min(t1, t2), end: Math.max(t1, t2), cambio: false }];
+            if (planStart) {
+                const pStart = parseFechaLocal(planStart).getTime();
+                const pEnd = parseFechaLocal(planEnd || planStart).getTime();
+                filas.push({
+                    tipo: 'plan',
+                    segmentos: [{ start: Math.min(pStart, pEnd), end: Math.max(pStart, pEnd), fantasma: true }],
+                    mostrarNombre: !realStart // si aún no hay fecha real, esta barra es la única referencia visual
+                });
             }
 
-            const pStart = parseFechaLocal(planStart).getTime();
-            const pEnd = parseFechaLocal(planEnd).getTime();
-            const rStart = parseFechaLocal(start).getTime();
-            const rEnd = parseFechaLocal(end).getTime();
-            const totalStart = Math.min(pStart, rStart);
-            const totalEnd = Math.max(pEnd, rEnd);
+            if (realStart) {
+                const rStart = parseFechaLocal(realStart).getTime();
+                const rEnd = parseFechaLocal(realEnd || realStart).getTime();
+                const segmentosReal = [];
 
-            const segmentos = [];
-            if (totalStart < pStart) segmentos.push({ start: totalStart, end: pStart, cambio: true });
-            segmentos.push({ start: Math.max(totalStart, pStart), end: Math.min(totalEnd, pEnd), cambio: false });
-            if (totalEnd > pEnd) segmentos.push({ start: pEnd, end: totalEnd, cambio: true });
-            return segmentos.filter(s => s.end >= s.start);
+                if (planStart && planEnd) {
+                    const pStart = parseFechaLocal(planStart).getTime();
+                    const pEnd = parseFechaLocal(planEnd).getTime();
+                    if (rStart < pStart) segmentosReal.push({ start: rStart, end: Math.min(pStart, rEnd), fantasma: true });
+                    const dentroS = Math.max(rStart, pStart), dentroE = Math.min(rEnd, pEnd);
+                    if (dentroE >= dentroS) segmentosReal.push({ start: dentroS, end: dentroE, fantasma: false });
+                    if (rEnd > pEnd) segmentosReal.push({ start: Math.max(pEnd, rStart), end: rEnd, fantasma: true });
+                } else {
+                    segmentosReal.push({ start: rStart, end: rEnd, fantasma: false });
+                }
+
+                filas.push({ tipo: 'real', segmentos: segmentosReal.filter(s => s.end >= s.start), mostrarNombre: true });
+            }
+
+            return filas.length ? filas : null;
+        }
+
+        // Aplana las filas de un proyecto (ver segmentosEjecucion) a la forma plana
+        // { p, segmentos, mostrarNombre } que espera construirGrillaCronograma —
+        // cada fila cuenta como una barra propia, así un proyecto puede ocupar 1 o 2
+        // renglones en el calendario (plan + real) cuando ambas fechas existen.
+        function filasProyecto(p) {
+            const filas = segmentosEjecucion(p.info || {});
+            if (!filas) return [];
+            return filas.map(f => ({ p, segmentos: f.segmentos, mostrarNombre: f.mostrarNombre }));
         }
 
         // Genera las semanas completas (domingo a sábado) que hay que dibujar
@@ -3472,7 +3498,7 @@
                 });
 
                 html += `<div class="absolute left-0 right-0 top-7">`;
-                enSemana.forEach(({ p, segmentos }, fila) => {
+                enSemana.forEach(({ p, segmentos, mostrarNombre: mostrarNombreFila }, fila) => {
                     const color = colorFn(p);
                     segmentos.forEach((seg, segIdx) => {
                         const segS = Math.max(seg.start, semStart);
@@ -3482,9 +3508,9 @@
                         const diaFin = Math.floor((segE - semStart) / 86400000);
                         const left = (diaInicio / 7) * 100;
                         const width = ((diaFin - diaInicio + 1) / 7) * 100;
-                        const claseColor = seg.cambio ? CRONO_COLOR_CAMBIO.bg : color.bg;
-                        const mostrarNombre = segIdx === 0 && segS === seg.start;
-                        html += `<div class="absolute h-[19px] ${claseColor} rounded text-white text-[9px] font-bold flex items-center px-1.5 truncate shadow-sm" style="left:${left}%; width:calc(${width}% - 2px); top:${fila * ALTO_BARRA}px;" title="${p.name}">
+                        const claseOpacidad = seg.fantasma ? 'opacity-40' : '';
+                        const mostrarNombre = mostrarNombreFila && segIdx === 0 && segS === seg.start;
+                        html += `<div class="absolute h-[19px] ${color.bg} ${claseOpacidad} rounded text-white text-[9px] font-bold flex items-center px-1.5 truncate shadow-sm" style="left:${left}%; width:calc(${width}% - 2px); top:${fila * ALTO_BARRA}px;" title="${p.name}${seg.fantasma ? ' (planificado / fuera de fecha)' : ''}">
                             ${mostrarNombre ? p.name : ''}
                         </div>`;
                     });
@@ -3510,35 +3536,42 @@
             const ordenColor = [...projects].sort((a, b) => a.name.localeCompare(b.name));
             const colorPorProyecto = new Map(ordenColor.map((p, i) => [p.id, colorProyecto(i)]));
 
+            // Lista a nivel PROYECTO (no por fila) — para estadísticas y leyenda, donde
+            // cada proyecto debe contar una sola vez aunque dibuje 2 barras (plan + real).
             const conRango = projects
-                .map(p => ({ p, segmentos: segmentosEjecucion(p.info || {}) }))
-                .filter(x => x.segmentos && x.segmentos.length);
+                .map(p => ({ p, filas: segmentosEjecucion(p.info || {}) }))
+                .filter(x => x.filas && x.filas.length);
 
-            const enElMes = conRango.filter(({ segmentos }) => {
-                const s = Math.min(...segmentos.map(sg => sg.start));
-                const e = Math.max(...segmentos.map(sg => sg.end));
+            const proyectosEnElMes = conRango.filter(({ filas }) => {
+                const todos = filas.flatMap(f => f.segmentos);
+                const s = Math.min(...todos.map(sg => sg.start));
+                const e = Math.max(...todos.map(sg => sg.end));
                 return e >= inicioVista && s <= finVista;
             }).sort((a, b) => a.p.name.localeCompare(b.p.name));
 
+            // Lista a nivel FILA (aplanada) — la que de verdad dibuja el calendario:
+            // cada proyecto aporta 1 o 2 barras (plan / real) según qué fechas tenga.
+            const enElMes = proyectosEnElMes.flatMap(({ p }) => filasProyecto(p));
+
             // --- Estadísticas del mes visible ---
             let aTiempo = 0, atrasados = 0, sumaAtrasos = 0, conteoAtrasos = 0;
-            enElMes.forEach(({ p }) => {
+            proyectosEnElMes.forEach(({ p }) => {
                 const estado = estadoProyecto(p.info || {});
                 if (estado.label === 'A Tiempo' || estado.label === 'Adelantado') aTiempo++;
                 if (estado.label === 'Atrasado') { atrasados++; sumaAtrasos += estado.delta; conteoAtrasos++; }
             });
-            document.getElementById('cronoStatTotal').innerText = enElMes.length;
+            document.getElementById('cronoStatTotal').innerText = proyectosEnElMes.length;
             document.getElementById('cronoStatATiempo').innerText = aTiempo;
             document.getElementById('cronoStatAtrasados').innerText = atrasados;
             document.getElementById('cronoStatPromedio').innerText = conteoAtrasos ? `${Math.round(sumaAtrasos / conteoAtrasos)} días` : '--';
 
-            // --- Leyenda: un punto de color por proyecto visible + el rojo de "fecha actualizada" ---
-            const leyenda = enElMes.map(({ p }) => {
+            // --- Leyenda: un punto de color por proyecto visible + nota de qué es la transparencia ---
+            const leyenda = proyectosEnElMes.map(({ p }) => {
                 const color = colorPorProyecto.get(p.id);
                 return `<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${color.dot}"></span> ${p.name}</span>`;
             });
-            if (enElMes.some(({ segmentos }) => segmentos.some(s => s.cambio))) {
-                leyenda.push(`<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full ${CRONO_COLOR_CAMBIO.dot}"></span> Fecha actualizada</span>`);
+            if (enElMes.some(({ segmentos }) => segmentos.some(s => s.fantasma))) {
+                leyenda.push(`<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-slate-400 opacity-40"></span> Planificado / fuera de fecha</span>`);
             }
             document.getElementById('cronoLeyenda').innerHTML = leyenda.join('');
 
