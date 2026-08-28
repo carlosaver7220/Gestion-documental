@@ -1923,9 +1923,36 @@
                 for await (const entry of plantillasFolder.values()) {
                     if (entry.kind === 'file') plantillasEntries.push(entry);
                 }
-                const plantillaHandle = plantillasEntries.find(x =>
-                    x.name.trim().startsWith(docId + ' ') && /\.docx$/i.test(x.name.trim())
-                );
+
+                // Quita tildes, pasa a minúsculas y normaliza espacios, para poder comparar
+                // nombres sin que una tilde o mayúscula distinta cuente como "no coincide".
+                const normalizar = s => s
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .toLowerCase()
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                const nombreEsperadoNorm = normalizar(nombreArchivoPlantilla);
+
+                // 1) Coincidencia EXACTA (normalizada): evita que "5." elija por error otro
+                //    archivo que también empiece por "5. " en Plantillas (ej: otra acta que
+                //    coincidencialmente comparte el mismo número, como "5. Acta de Entrega
+                //    de Capacitacion.docx" vs "5. Acta de Declaracion de Diseño.docx").
+                let plantillaHandle = plantillasEntries.find(x => normalizar(x.name) === nombreEsperadoNorm);
+
+                // 2) Si no hay coincidencia exacta (ej: typo en el nombre real del archivo),
+                //    se cae al prefijo del docId como respaldo, tal como antes.
+                if (!plantillaHandle) {
+                    plantillaHandle = plantillasEntries.find(x =>
+                        x.name.trim().startsWith(docId + ' ') && /\.docx$/i.test(x.name.trim())
+                    );
+                    if (plantillaHandle) {
+                        console.warn('Plantilla encontrada por PREFIJO (no coincidencia exacta), revisa el nombre del archivo:', {
+                            buscado: nombreArchivoPlantilla,
+                            encontrado: plantillaHandle.name
+                        });
+                    }
+                }
 
                 if (!plantillaHandle) {
                     const candidatos = plantillasEntries
