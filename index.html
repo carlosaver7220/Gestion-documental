@@ -19,6 +19,10 @@
     <script src="libs/pizzip.min.js"></script>
     <script src="libs/docxtemplater.min.js"></script>
     <script src="libs/imagemodulo.js"></script>
+    <!-- Informe General de Proyecto: ya no usa plantilla Word, se genera en PDF.
+         El motor es informe-pdf.js, compartido con plantilla-de-proyecto.html. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="informe-pdf.js"></script>
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
@@ -1153,10 +1157,51 @@
                     </div>
                     <form id="informeForm" class="flex-1 overflow-y-auto p-6 space-y-6">
 
-                        <p class="text-[10px] text-slate-400 leading-relaxed -mt-2">Los datos básicos (proyecto, cliente, dirección, potencia) se toman automáticamente de <span class="font-bold text-slate-500">Datos del Proyecto</span>. Aquí solo completas lo específico de la instalación y el registro fotográfico.</p>
+                        <p class="text-[10px] text-slate-400 leading-relaxed -mt-2">El proyecto, cliente, dirección, potencias, paneles, inversores y baterías se toman automáticamente de <span class="font-bold text-slate-500">Datos del Proyecto</span>. Aquí solo completas lo específico de la ejecución y el registro fotográfico.</p>
 
-                        <!-- Tipo de Sistema y Batería ya NO se piden aquí: se toman automáticamente
-                             de Datos del Proyecto (info.tipoProyecto / info.referenciaBateria / etc). -->
+                        <!-- Resumen de lo que se tomó de Datos del Proyecto -->
+                        <div id="informeResumenAuto" class="p-3 bg-slate-50 border border-slate-200 rounded-md text-[10px] text-slate-500 leading-relaxed"></div>
+
+                        <!-- Configuración de la instalación -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Nombre corto (encabezado)</label>
+                                <input id="informeNombreCorto" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Proyecto solar Jerzzen Téllez">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de predio</label>
+                                <select id="informeTipoPredio" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="residencial">Residencial (vivienda)</option>
+                                    <option value="comercial">Comercial (establecimiento)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Canalización AC</label>
+                                <select id="informeCanalizacionAC" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="bandeja">Bandeja portacables</option>
+                                    <option value="tuberia">Tubería (EMT / IMC + coraza)</option>
+                                    <option value="mixto">Mixta</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Canalización DC</label>
+                                <select id="informeCanalizacionDC" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="bandeja">Bandeja portacables</option>
+                                    <option value="tuberia">Tubería DC (EMT / IMC + coraza)</option>
+                                    <option value="mixto">Mixta</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase">Protecciones DC</label>
+                                <select id="informeProteccionesDC" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="fusibles">Fusibles gPV + DPS DC</option>
+                                    <option value="ninguna">Sin protecciones DC dedicadas</option>
+                                </select>
+                            </div>
+                        </div>
 
                         <!-- Smart Meter -->
                         <div>
@@ -1167,18 +1212,6 @@
                             </div>
                             <input type="hidden" id="informeSmartMeter">
                             <div id="informeSmartMeterOtroWrap" class="hidden"></div>
-                        </div>
-
-                        <!-- Elaboró (va en la firma del informe: Nombre + Cargo. La Empresa es fija
-                             en la plantilla como "SMART ENERGY ING", no se pide aquí). -->
-                        <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase">Elaboró <span class="text-red-500">*</span></label>
-                            <div id="informeElaboroChips" class="flex flex-wrap gap-1.5 mt-1"></div>
-                            <input type="hidden" id="informeElaboro">
-                            <div id="informeElaboroOtroWrap" class="hidden mt-2 space-y-2">
-                                <input id="informeElaboroOtroNombre" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre completo">
-                                <input id="informeElaboroOtroCargo" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Cargo">
-                            </div>
                         </div>
 
                         <!-- Calibres -->
@@ -1197,80 +1230,63 @@
                             </div>
                         </div>
 
-                        <!-- Registro fotográfico -->
+                        <!-- Transformador / operador de red -->
                         <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Registro Fotográfico <span class="text-slate-300 normal-case font-semibold">(todas opcionales)</span></p>
+                            <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Disponibilidad del transformador</p>
+                            <p class="text-[10px] text-slate-400 mb-2 leading-relaxed">Datos del resumen del transformador del portal del operador (la misma captura que subes en la sección "Disponibilidad del transformador").</p>
+                            <div class="grid grid-cols-3 gap-3">
+                                <input id="informeOperadorRed" value="AFINIA" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Operador de red">
+                                <input id="informeTrafoCodigo" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Código transformador">
+                                <input id="informeTrafoMatricula" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Matrícula">
+                            </div>
+                            <div class="grid grid-cols-4 gap-3 mt-3">
+                                <input id="informeTrafoKva" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Potencia (kVA)">
+                                <input id="informeTrafoTensionPrim" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tensión primaria">
+                                <input id="informeTrafoTensionSec" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tensión secundaria">
+                                <input id="informeTrafoOcupacion" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ocupación (%)">
+                            </div>
+                        </div>
 
-                            <div class="space-y-4">
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">1. Instalación de Paneles en Cubierta</p>
-                                    <div class="grid grid-cols-3 gap-3">
-                                        <input type="file" accept="image/*" id="informeFoto_paneles_1" class="w-full text-[10px]">
-                                        <input type="file" accept="image/*" id="informeFoto_paneles_2" class="w-full text-[10px]">
-                                        <input type="file" accept="image/*" id="informeFoto_paneles_3" class="w-full text-[10px]">
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">2. Bajante de Cubierta</p>
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <input type="file" accept="image/*" id="informeFoto_bajante_1" class="w-full text-[10px]">
-                                        <input type="file" accept="image/*" id="informeFoto_bajante_2" class="w-full text-[10px]">
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">3. Bastidor</p>
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <input type="file" accept="image/*" id="informeFoto_bastidor_1" class="w-full text-[10px]">
-                                        <input type="file" accept="image/*" id="informeFoto_bastidor_2" class="w-full text-[10px]">
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">4. Tubería AC</p>
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <input type="file" accept="image/*" id="informeFoto_ac_1" class="w-full text-[10px]">
-                                        <input type="file" accept="image/*" id="informeFoto_ac_2" class="w-full text-[10px]">
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">5. Punto de Conexión</p>
-                                    <input type="file" accept="image/*" id="informeFoto_conexion_1" class="w-full text-[10px]">
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">6. Tablero de Protecciones (Breakers y DPS)</p>
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <input type="file" accept="image/*" id="informeFoto_tablero_1" class="w-full text-[10px]">
-                                        <input type="file" accept="image/*" id="informeFoto_tablero_2" class="w-full text-[10px]">
-                                    </div>
-                                </div>
-                                <div id="informeFotoBateriaWrap" class="hidden">
-                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">7. Batería</p>
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <input type="file" accept="image/*" id="informeFoto_bateria_1" class="w-full text-[10px]">
-                                        <input type="file" accept="image/*" id="informeFoto_bateria_2" class="w-full text-[10px]">
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">8. Mediciones de Tensión Paneles (DC)</p>
-                                    <div class="grid grid-cols-3 gap-3">
-                                        <input type="file" accept="image/*" id="informeFoto_medicion_dc_1" class="w-full text-[10px]">
-                                        <input type="file" accept="image/*" id="informeFoto_medicion_dc_2" class="w-full text-[10px]">
-                                        <input type="file" accept="image/*" id="informeFoto_medicion_dc_3" class="w-full text-[10px]">
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">9. Mediciones de Tensión AC</p>
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <input type="file" accept="image/*" id="informeFoto_medicion_ac_1" class="w-full text-[10px]">
-                                        <input type="file" accept="image/*" id="informeFoto_medicion_ac_2" class="w-full text-[10px]">
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-600 uppercase mb-1.5">10. Inversor en Marcha</p>
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <input type="file" accept="image/*" id="informeFoto_inversor_1" class="w-full text-[10px]">
-                                        <input type="file" accept="image/*" id="informeFoto_inversor_2" class="w-full text-[10px]">
-                                    </div>
-                                </div>
+                        <!-- Impermeabilización (opcional) -->
+                        <div>
+                            <label class="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                                <input type="checkbox" id="informeIncluyeImper" class="w-auto">
+                                Incluir sección "Pruebas de impermeabilización"
+                            </label>
+                            <textarea id="informeImperTexto" class="w-full p-3 mt-2 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[70px] outline-none focus:ring-2 focus:ring-blue-500" placeholder="Opcional: deja vacío para usar el texto estándar de la prueba hidráulica."></textarea>
+                        </div>
+
+                        <!-- Portada -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Imagen de portada</label>
+                            <input type="file" accept="image/*" id="informePortada" class="w-full mt-1 text-[10px]">
+                            <p class="text-[10px] text-slate-400 mt-1">Va en la franja central de la portada. Si no subes ninguna, se usa un bloque de color.</p>
+                        </div>
+
+                        <!-- Registro fotográfico: una fila por sección de la plantilla -->
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Registro Fotográfico <span class="text-slate-300 normal-case font-semibold">(todas opcionales)</span></p>
+                            <p class="text-[10px] text-slate-400 mb-3 leading-relaxed">Puedes seleccionar varias fotos por sección. Una sección sin fotos simplemente no aparece en el informe ni en la tabla de contenido.</p>
+                            <div id="informeFotosSecciones" class="space-y-3"></div>
+                        </div>
+
+                        <!-- Fotos extra con pie personalizado -->
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Fotos adicionales <span class="text-slate-300 normal-case font-semibold">(van al final, en "Anexos")</span></p>
+                            <div id="informeFotosExtra" class="space-y-2"></div>
+                            <button type="button" onclick="agregarFotoExtraInforme()" class="mt-2 w-full py-2 border-2 border-dashed border-slate-300 rounded-md text-[10px] font-bold text-slate-500 hover:bg-slate-50 transition-colors">+ Agregar foto adicional</button>
+                        </div>
+
+                        <!-- Técnico que ejecutó (firma del informe) -->
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Técnico que ejecutó la instalación <span class="text-red-500">*</span></label>
+                            <p class="text-[10px] text-slate-400 mt-0.5 mb-1">Aparece al final del informe como bloque de firma (nombre, rol y cédula).</p>
+                            <div id="informeElaboroChips" class="flex flex-wrap gap-1.5 mt-1"></div>
+                            <input type="hidden" id="informeElaboro">
+                            <div id="informeElaboroOtroWrap" class="hidden mt-2 grid grid-cols-3 gap-2">
+                                <input id="informeElaboroOtroNombre" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre completo">
+                                <input id="informeElaboroOtroCargo" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Rol / Cargo">
+                                <input id="informeElaboroOtroCedula" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Cédula">
                             </div>
                         </div>
 
@@ -1280,7 +1296,7 @@
                             <textarea id="informeObservaciones" class="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-md text-sm min-h-[90px] outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                         </div>
 
-                        <button id="informeSubmitBtn" type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-md hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Generar Informe</button>
+                        <button id="informeSubmitBtn" type="submit" class="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-md hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">Generar Informe PDF</button>
                     </form>
                 </div>
             </div>
@@ -2533,82 +2549,145 @@
         };
 
         // ==========================================================
-        // INFORME GENERAL DE PROYECTO — vive en "4. DOSSIER_<NOMBRE>",
-        // aparte de las Actas (carpeta y plantilla propias).
+        // INFORME GENERAL DE PROYECTO — vive en "4. DOSSIER_<NOMBRE>".
+        //
+        // Ya NO usa plantilla de Word: se genera como PDF con el motor
+        // informe-pdf.js (el mismo de plantilla-de-proyecto.html). Todo lo que
+        // ya está en Datos del Proyecto (Supabase) se rellena solo; en el modal
+        // únicamente se piden los datos de ejecución y las fotos.
         // ==========================================================
-        function toggleInformeBateria(tieneBateria) {
-            document.getElementById('informeFotoBateriaWrap').classList.toggle('hidden', !tieneBateria);
-        }
 
-        // Resuelve el Elaboró del Informe General (solo Nombre + Cargo; la Empresa es
-        // fija "SMART ENERGY ING" en la plantilla). Igual que resolverPersona, pero sin
-        // pedir cédula/empresa porque el informe no los necesita.
-        function resolverElaboroInforme() {
+        // Resuelve el técnico que ejecutó la instalación: nombre, rol/cargo y
+        // cédula. Va al bloque de firma al final del informe.
+        function resolverTecnicoInforme() {
             const valor = document.getElementById('informeElaboro').value;
-            if (!valor) return { nombre: '', cargo: '' };
+            if (!valor) return { nombre: '', cargo: '', cedula: '' };
             if (valor === 'Otro') {
                 return {
                     nombre: document.getElementById('informeElaboroOtroNombre').value.trim(),
                     cargo: document.getElementById('informeElaboroOtroCargo').value.trim(),
+                    cedula: document.getElementById('informeElaboroOtroCedula').value.trim(),
                 };
             }
             const datos = PERSONAL[valor] || {};
-            return { nombre: valor, cargo: datos.cargo || '' };
+            const limpiar = v => (!v || v === 'PENDIENTE') ? '' : v;
+            return {
+                nombre: valor,
+                cargo: limpiar(datos.cargo),
+                cedula: limpiar(datos.cedula),
+                empresa: datos.empresa,
+            };
         }
 
         let informeProjectId = null;
+        let informeContadorExtra = 0;
+
+        // Traduce Datos del Proyecto (Supabase) a la forma que espera el motor
+        // del PDF. Todo lo que se pueda deducir de la app se deduce aquí.
+        function construirDatosInforme(project, info) {
+            const nombreLimpio = limpiarNombreProyecto(project.name);
+            const ubicacion = [info.direccion, info.municipio, info.departamento].filter(Boolean).join(', ');
+
+            const mapaTipo = { 'On-Grid': 'ongrid', 'Híbrido': 'hibrido', 'Off-Grid': 'offgrid' };
+            const tipoSistema = mapaTipo[info.tipoProyecto] || 'ongrid';
+            const tieneBateria = tipoSistema === 'hibrido' || tipoSistema === 'offgrid';
+
+            // Un inversor por cada unidad declarada, todos de la misma marca/referencia.
+            const cuantos = Math.max(1, parseInt(info.numInversores) || 1);
+            const inversores = Array.from({ length: cuantos }, () => ({
+                marca: info.marcaFabricante || '',
+                modelo: info.referenciaInversor || '',
+                potencia: '',
+            }));
+
+            const clasif = (info.clasificacionServicio === 'Otro' ? info.clasificacionServicioOtro : info.clasificacionServicio) || '';
+            const tipoPredio = /comerc|industr|oficial/i.test(clasif) ? 'comercial' : 'residencial';
+
+            return {
+                nombre: nombreLimpio,
+                nombreCorto: nombreLimpio,
+                cliente: info.dueno || '',
+                identificacion: info.identificacion || '',
+                ubicacion: ubicacion || '',
+                fecha: new Date().getFullYear(),
+                tipoPredio,
+                potenciaDC: info.potenciaDC || '',
+                potenciaAC: info.potenciaAC || '',
+                numPaneles: parseInt(info.numPaneles) || 0,
+                marcaPaneles: info.marcaPaneles || '',
+                modeloPaneles: info.referenciaPanel || '',
+                potenciaPanel: '',
+                tipoSistema,
+                tieneBateria,
+                bateria: {
+                    marca: '',
+                    modelo: info.referenciaBateria || '',
+                    capacidad: info.potenciaBateria || '',
+                    cantidad: info.numBaterias || '',
+                },
+                inversores,
+            };
+        }
 
         window.abrirModalInforme = async (projectId) => {
             informeProjectId = projectId;
-            document.getElementById('informeForm').reset();
+            const form = document.getElementById('informeForm');
+            form.reset();
             ['informeSmartMeter', 'informeElaboro'].forEach(id => document.getElementById(id).value = '');
-            [...document.querySelectorAll('#informeForm .chip-btn')].forEach(b => b.classList.remove('chip-active'));
+            [...form.querySelectorAll('.chip-btn')].forEach(b => b.classList.remove('chip-active'));
             document.getElementById('informeElaboroOtroWrap').classList.add('hidden');
+            document.getElementById('informeOperadorRed').value = 'AFINIA';
             poblarChipsPersonal('informeElaboroChips', ELABORO_OPCIONES, 'informeElaboro', 'informeElaboroOtroWrap');
 
-            // Tipo de Sistema y Batería ya no se preguntan: se leen de Información del
-            // Proyecto. Solo usamos ese dato aquí para saber si mostrar el bloque de
-            // fotos de Batería (si el proyecto no es Híbrido/Off-Grid, no aplica).
+            const project = projects.find(x => x.id === projectId);
             const info = (await getProjectInfo(projectId)) || {};
-            const tieneBateria = info.tipoProyecto === 'Híbrido' || info.tipoProyecto === 'Off-Grid';
-            toggleInformeBateria(tieneBateria);
+            const base = construirDatosInforme(project, info);
+
+            document.getElementById('informeNombreCorto').value = base.nombreCorto;
+            document.getElementById('informeTipoPredio').value = base.tipoPredio;
+
+            // Resumen de lo que se está tomando de Datos del Proyecto, para que se
+            // vea de una qué falta por llenar allá antes de generar el informe.
+            const dato = (label, valor) => `<span class="font-bold text-slate-600">${label}:</span> ${valor || '<span class="text-red-400">falta</span>'}`;
+            document.getElementById('informeResumenAuto').innerHTML = [
+                dato('Cliente', base.cliente),
+                dato('Ubicación', base.ubicacion),
+                dato('Potencia', [base.potenciaDC && base.potenciaDC + ' kWp', base.potenciaAC && base.potenciaAC + ' kW'].filter(Boolean).join(' / ')),
+                dato('Paneles', base.numPaneles ? `${base.numPaneles} × ${base.marcaPaneles || '?'} ${base.modeloPaneles || ''}`.trim() : ''),
+                dato('Inversores', base.inversores.length ? `${base.inversores.length} × ${base.inversores[0].marca || '?'} ${base.inversores[0].modelo || ''}`.trim() : ''),
+                dato('Sistema', info.tipoProyecto),
+                base.tieneBateria ? dato('Batería', [base.bateria.cantidad && base.bateria.cantidad + ' ×', base.bateria.modelo, base.bateria.capacidad].filter(Boolean).join(' ')) : null,
+            ].filter(Boolean).join(' &nbsp;·&nbsp; ');
+
+            // Lista guiada de fotos: una fila por sección real de la plantilla.
+            const cont = document.getElementById('informeFotosSecciones');
+            cont.innerHTML = window.InformePDF.SECCIONES_FOTOS.map((s, i) => `
+                <div class="grid grid-cols-12 gap-2 items-center">
+                    <p class="col-span-4 text-[10px] font-bold text-slate-600 leading-tight">${i + 1}. ${s.label}</p>
+                    <input type="file" accept="image/*" multiple data-seccion="${s.id}" class="informe-foto-seccion col-span-5 w-full text-[10px]">
+                    <input type="text" data-desc-seccion="${s.id}" placeholder="Pie de foto (opcional)" class="col-span-3 w-full p-1.5 bg-slate-50 border border-slate-200 rounded text-[10px] outline-none focus:ring-2 focus:ring-blue-500">
+                </div>`).join('');
+
+            document.getElementById('informeFotosExtra').innerHTML = '';
+            informeContadorExtra = 0;
 
             document.getElementById('informeModal').classList.remove('hidden');
         };
 
-        // Texto de la sección "Instalación de Paneles en Cubierta" del informe: se arma
-        // con los datos reales del proyecto (mismo criterio que la primera estrofa del
-        // resumen en generarResumenProyecto) en vez de un texto genérico fijo.
-        function generarTextoPanelesInforme(info, tipoSistemaTxt) {
-            let txt = 'Se realizó la instalación de';
-            txt += info.numPaneles ? ` ${info.numPaneles} paneles solares fotovoltaicos` : ' los paneles solares fotovoltaicos';
-            if (info.marcaPaneles) txt += ` marca ${info.marcaPaneles}`;
-            txt += ' sobre la cubierta';
-            if (info.potenciaAC) txt += `, con una potencia AC de ${info.potenciaAC} kW`;
-            if (info.potenciaDC) txt += `${info.potenciaAC ? ' y' : ' con'} una potencia DC instalada de ${info.potenciaDC} kWp`;
-            if (info.numInversores) {
-                txt += `, mediante ${info.numInversores} inversor${Number(info.numInversores) === 1 ? '' : 'es'}`;
-                if (info.marcaFabricante) txt += ` marca ${info.marcaFabricante}`;
-            }
-            if (tipoSistemaTxt) txt += `, bajo esquema ${tipoSistemaTxt}`;
-            txt += '. La fijación se ejecutó garantizando la estabilidad mecánica del sistema y el correcto alineamiento de los módulos para optimizar la captación solar.';
-            return txt;
-        }
-
-        // Todas las secciones de fotos que pide la plantilla, con su cantidad de casillas.
-        // La sección "bateria" solo se envía a la plantilla si tieneBateria = true.
-        const INFORME_FOTO_KEYS = [
-            'paneles_1', 'paneles_2', 'paneles_3',
-            'bajante_1', 'bajante_2',
-            'bastidor_1', 'bastidor_2',
-            'ac_1', 'ac_2',
-            'conexion_1',
-            'tablero_1', 'tablero_2',
-            'bateria_1', 'bateria_2',
-            'medicion_dc_1', 'medicion_dc_2', 'medicion_dc_3',
-            'medicion_ac_1', 'medicion_ac_2',
-            'inversor_1', 'inversor_2'
-        ];
+        // Fila para una foto suelta que no encaja en ninguna sección: va al
+        // grupo "Anexos" del informe con el título que se le ponga.
+        window.agregarFotoExtraInforme = () => {
+            informeContadorExtra++;
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-12 gap-2 items-center';
+            div.innerHTML = `
+                <input type="text" placeholder="Título de la sección" class="informe-extra-titulo col-span-4 w-full p-1.5 bg-slate-50 border border-slate-200 rounded text-[10px] outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="file" accept="image/*" multiple class="informe-extra-file col-span-5 w-full text-[10px]">
+                <input type="text" placeholder="Pie de foto" class="informe-extra-desc col-span-2 w-full p-1.5 bg-slate-50 border border-slate-200 rounded text-[10px] outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="button" class="col-span-1 text-red-400 hover:text-red-600 text-sm font-black">✕</button>`;
+            div.querySelector('button').onclick = () => div.remove();
+            document.getElementById('informeFotosExtra').appendChild(div);
+        };
 
         document.getElementById('informeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -2616,133 +2695,71 @@
             btn.disabled = true;
             btn.innerText = 'Generando...';
             try {
+                if (!window.InformePDF || !window.jspdf) {
+                    throw new Error('No se cargó el motor del informe (informe-pdf.js / jsPDF).');
+                }
+
                 const p = projects.find(x => x.id === informeProjectId);
-                const info = await getProjectInfo(informeProjectId);
+                const info = (await getProjectInfo(informeProjectId)) || {};
                 const nombreLimpio = limpiarNombreProyecto(p.name);
 
-                const elaboroInforme = resolverElaboroInforme();
-                if (!elaboroInforme.nombre) {
-                    alert('Selecciona quién elaboró el informe.');
-                    btn.disabled = false;
-                    btn.innerText = 'Generar Informe';
+                const tecnico = resolverTecnicoInforme();
+                if (!tecnico.nombre) {
+                    alert('Selecciona el técnico que ejecutó la instalación.');
                     return;
                 }
 
-                // 1. Leer las fotos que sí se subieron (todas opcionales)
-                const imagenesData = {};
-                for (const k of INFORME_FOTO_KEYS) {
-                    const input = document.getElementById('informeFoto_' + k);
-                    const file = input?.files?.[0];
-                    if (file) {
-                        // El punto de conexión ocupa el ancho completo de la celda en la plantilla;
-                        // el resto va a dos o tres columnas, así que se escalan un poco más chico.
-                        const maxW = k === 'conexion_1' ? 700 : 450;
-                        const maxH = k === 'conexion_1' ? 400 : 350;
-                        imagenesData['foto_' + k] = await leerImagenComoDatos(file, maxW, maxH);
-                    }
-                }
-
-                const imageOpts = {
-                    centered: true,
-                    getImage: (tagValue, tagName) => imagenesData[tagName].buffer,
-                    getSize: (img, tagValue, tagName) => [imagenesData[tagName].width, imagenesData[tagName].height],
+                // 1. Datos: base automática desde el proyecto + lo del formulario.
+                const datos = construirDatosInforme(p, info);
+                datos.nombreCorto = document.getElementById('informeNombreCorto').value.trim() || datos.nombre;
+                datos.tipoPredio = document.getElementById('informeTipoPredio').value;
+                datos.canalizacion = document.getElementById('informeCanalizacionAC').value;
+                datos.canalizacionDC = document.getElementById('informeCanalizacionDC').value;
+                datos.proteccionesDC = document.getElementById('informeProteccionesDC').value;
+                datos.smartMeter = document.getElementById('informeSmartMeter').value;
+                datos.calibreTierra = document.getElementById('informeCalibreTierra').value.trim();
+                datos.calibreAcometida = document.getElementById('informeCalibreAcometida').value.trim();
+                datos.calibreAC = document.getElementById('informeCalibreAc').value.trim();
+                datos.operadorRed = document.getElementById('informeOperadorRed').value.trim();
+                datos.trafo = {
+                    codigo: document.getElementById('informeTrafoCodigo').value.trim(),
+                    matricula: document.getElementById('informeTrafoMatricula').value.trim(),
+                    kva: document.getElementById('informeTrafoKva').value.trim(),
+                    tensionPrim: document.getElementById('informeTrafoTensionPrim').value.trim(),
+                    tensionSec: document.getElementById('informeTrafoTensionSec').value.trim(),
+                    ocupacion: document.getElementById('informeTrafoOcupacion').value.trim(),
                 };
-                const imageModule = new window.ImageModule(imageOpts);
+                datos.incluyeImpermeabilizacion = document.getElementById('informeIncluyeImper').checked;
+                datos.impermeabilizacionTexto = document.getElementById('informeImperTexto').value.trim();
+                datos.observaciones = document.getElementById('informeObservaciones').value.trim();
+                datos.tecnico = tecnico;
 
-                const plantillasFolder = await currentHandle.getDirectoryHandle('Plantillas');
-                const plantillaHandle = await plantillasFolder.getFileHandle(INFORME_CONFIG.plantilla);
-                const arrayBuffer = await (await plantillaHandle.getFile()).arrayBuffer();
-                const zip = new PizZip(arrayBuffer);
-                const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true, modules: [imageModule] });
-
-                const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-                const hoy = new Date();
-                const fechaLarga = `${hoy.getDate()} de ${meses[hoy.getMonth()]} del ${hoy.getFullYear()}`;
-
-                // Tipo de sistema y batería ya no se preguntan en este formulario: se toman
-                // de Información del Proyecto (mismo criterio que usa el resto de la app,
-                // ver aplicaBateria/toggleInfoBateriaFields).
-                const tipoSistemaInfo = info.tipoProyecto === 'Otro' ? info.tipoProyectoOtro : info.tipoProyecto;
-                const smartMeter = document.getElementById('informeSmartMeter').value;
-                const tieneBateria = info.tipoProyecto === 'Híbrido' || info.tipoProyecto === 'Off-Grid';
-
-                const observacionesTxt = document.getElementById('informeObservaciones').value.trim();
-
-                const data = {
-                    proyecto: nombreLimpio,
-                    direccion: info.direccion || '',
-                    dueno: info.dueno || '',
-                    identificacion: info.identificacion || '',
-                    municipio: info.municipio || '',
-                    departamento: info.departamento || '',
-                    potenciaac: info.potenciaAC ? `${info.potenciaAC}` : '',
-                    fecha: fechaLarga,
-
-                    texto_paneles: generarTextoPanelesInforme(info, tipoSistemaInfo),
-
-                    chk_ongrid: chk(info.tipoProyecto === 'On-Grid'),
-                    chk_offgrid: chk(info.tipoProyecto === 'Off-Grid'),
-                    chk_hibrido: chk(info.tipoProyecto === 'Híbrido'),
-
-                    chk_smartmeter_si: chk(smartMeter === 'Si'),
-                    chk_smartmeter_no: chk(smartMeter === 'No'),
-
-                    chk_bateria_si: chk(tieneBateria),
-                    chk_bateria_no: chk(!tieneBateria),
-                    tieneBateria: tieneBateria,
-                    bateria_referencia: tieneBateria ? (info.referenciaBateria || '') : '',
-                    bateria_potencia: tieneBateria ? (info.potenciaBateria || '') : '',
-
-                    calibre_tierra: document.getElementById('informeCalibreTierra').value.trim(),
-                    calibre_acometida: document.getElementById('informeCalibreAcometida').value.trim(),
-                    calibre_ac: document.getElementById('informeCalibreAc').value.trim(),
-
-                    observaciones: observacionesTxt,
-                    hay_observaciones: !!observacionesTxt,
-
-                    elaboro: elaboroInforme.nombre,
-                    cargo: elaboroInforme.cargo,
-                    empresa: 'SMART ENERGY ING',
-                };
-                // Las fotos: solo se manda la clave (truthy) si sí se subió esa foto, así el
-                // bloque {#foto_x}...{/foto_x} de la plantilla se oculta solo cuando no hay imagen.
-                for (const k of INFORME_FOTO_KEYS) {
-                    data['foto_' + k] = !!imagenesData['foto_' + k];
-                }
-
-                // La plantilla decide fila por fila con estos 3 flags (no le alcanza con
-                // foto_x_1/foto_x_2 sueltos): si llegan las 2 fotos, si llega solo la 1,
-                // o si llega solo la 2. Así la celda que falta se elimina en vez de quedar
-                // como un cuadro vacío, y si no llega ninguna, la tabla completa desaparece.
-                const seccionesFotoPar = ['bajante', 'bastidor', 'ac', 'tablero', 'bateria', 'medicion_ac', 'inversor'];
-                seccionesFotoPar.forEach((nombre) => {
-                    const f1 = data['foto_' + nombre + '_1'];
-                    const f2 = data['foto_' + nombre + '_2'];
-                    data['ambos_' + nombre] = f1 && f2;
-                    data['solo_' + nombre + '_1'] = f1 && !f2;
-                    data['solo_' + nombre + '_2'] = f2 && !f1;
+                // 2. Fotos por sección (varias por sección) + las adicionales.
+                const fotos = [];
+                document.querySelectorAll('.informe-foto-seccion').forEach(input => {
+                    const seccion = input.dataset.seccion;
+                    const desc = document.querySelector(`[data-desc-seccion="${seccion}"]`)?.value.trim() || '';
+                    const etiqueta = window.InformePDF.SECCIONES_FOTOS.find(s => s.id === seccion)?.label || '';
+                    [...(input.files || [])].forEach(archivo => {
+                        fotos.push({ seccion, archivo, descripcion: desc || etiqueta });
+                    });
+                });
+                document.querySelectorAll('#informeFotosExtra > div').forEach(fila => {
+                    const titulo = fila.querySelector('.informe-extra-titulo').value.trim() || 'Sección adicional';
+                    const desc = fila.querySelector('.informe-extra-desc').value.trim();
+                    [...(fila.querySelector('.informe-extra-file').files || [])].forEach(archivo => {
+                        fotos.push({ seccion: 'personalizada', archivo, descripcion: desc || titulo, tituloPersonalizado: titulo });
+                    });
                 });
 
-                // Secciones con 3 casillas: la 3ra es independiente del par 1-2.
-                const seccionesFotoTriple = ['paneles', 'medicion_dc'];
-                seccionesFotoTriple.forEach((nombre) => {
-                    const f1 = data['foto_' + nombre + '_1'];
-                    const f2 = data['foto_' + nombre + '_2'];
-                    const f3 = data['foto_' + nombre + '_3'];
-                    data['ambos_' + nombre] = f1 && f2;
-                    data['solo_' + nombre + '_1'] = f1 && !f2;
-                    data['solo_' + nombre + '_2'] = f2 && !f1;
-                    data['solo_' + nombre + '_3'] = !!f3;
-                });
+                // 3. Portada (opcional)
+                const portadaFile = document.getElementById('informePortada').files[0];
+                const portadaData = portadaFile ? await window.InformePDF.loadImageFromFile(portadaFile) : null;
 
-                // Sección de una sola casilla (Punto de Conexión): la plantilla usa
-                // solo_conexion_1 igual que las de 2/3 casillas, no basta con foto_conexion_1.
-                data['solo_conexion_1'] = !!data['foto_conexion_1'];
-
-                doc.render(data);
-
-                const buf = doc.getZip().generate({ type: 'uint8array' });
-                const fileName = `1. Informe General de Proyecto - ${nombreLimpio}.docx`;
+                // 4. Generar el PDF
+                const blob = await window.InformePDF.generarInformePDF(datos, fotos, portadaData);
+                const buf = new Uint8Array(await blob.arrayBuffer());
+                const fileName = `1. Informe General de Proyecto - ${nombreLimpio}.pdf`;
 
                 // La carpeta "4. DOSSIER_<NOMBRE>" ya se crea al crear el proyecto; si no
                 // se detectó (proyectos antiguos o carpeta renombrada), se crea aquí mismo.
@@ -2765,10 +2782,9 @@
                 alert('No se pudo generar el informe: ' + err.message);
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'Generar Informe';
+                btn.innerText = 'Generar Informe PDF';
             }
         });
-
         // Actualizar nombres de archivos al seleccionar
         ['kickoff', 'recibo', 'contrato'].forEach(type => {
             document.getElementById(`${type}File`).onchange = e => {
@@ -2843,7 +2859,9 @@
 
         // El Informe General de Proyecto vive en "4. DOSSIER_<NOMBRE>", con plantilla propia
         // (no es una acta más, tiene su modal y su detección de carpeta separada).
-        const INFORME_CONFIG = { label: 'Informe General de Proyecto', plantilla: '1. Informe General de Proyecto.docx' };
+        // El informe ya no depende de una plantilla .docx: se genera en PDF con
+        // informe-pdf.js, así que aquí solo queda su etiqueta.
+        const INFORME_CONFIG = { label: 'Informe General de Proyecto' };
 
         // El 100% general se reparte: la mitad es la Bóveda Técnica (ingeniería), y la
         // otra mitad se divide en partes iguales entre Actas, Informe, OR y RETIE.
