@@ -33,7 +33,7 @@
          cualquier app de navegador viaja en el código. Lo que sí importa es
          que en "Orígenes autorizados de JavaScript" esté exactamente la URL
          donde corre la app. -->
-    <script>window.DRIVE_CLIENT_ID = 'PEGAR_AQUI_EL_CLIENT_ID.apps.googleusercontent.com';</script>
+    <script>window.DRIVE_CLIENT_ID = '242185480634-v1q8l1qh2pcb89okufsslj115s6f2o9r.apps.googleusercontent.com';</script>
     <script src="drive-fs.js"></script>
     <script src="drive-ui.js"></script>
     <style>
@@ -5149,8 +5149,15 @@
         function mensajeErrorDrive(e) {
             const msg = (e && e.message) || String(e);
             const code = e && e.code;
+            if (code === 'no_client_id') return msg;
             if (code === 'popup_closed' || code === 'popup_failed_to_open') {
-                return 'Se cerró la ventana de Google (o el navegador bloqueó el popup). Permite las ventanas emergentes para este sitio.';
+                // "Popup window closed" es lo único que reporta Google cuando la
+                // ventana emergente se cierra, sin importar por qué: puede que el
+                // usuario la cerrara, o que dentro se hubiera mostrado un error
+                // de configuración (Client ID inválido, origen no autorizado) que
+                // nunca sale del popup. Por eso el mensaje menciona las dos cosas.
+                return 'Se cerró la ventana de Google. Si mostraba un error, revisa el Client ID y que ' +
+                    window.location.origin + ' esté en los orígenes autorizados de Cloud Console.';
             }
             if (code === 'access_denied') {
                 return 'Google denegó el acceso. Si la app está en modo Prueba, tu correo debe estar en la lista de usuarios de prueba.';

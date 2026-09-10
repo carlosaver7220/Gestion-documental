@@ -154,10 +154,23 @@
     const tokenValid = () => !!accessToken && Date.now() < tokenExpiresAt;
 
     async function initTokenClient() {
-        await loadGis();
-        if (!clientId()) {
-            throw new Error('Falta configurar DRIVE_CLIENT_ID (el Client ID de Google Cloud Console).');
+        // Se valida ANTES de abrir nada. Con un Client ID inválido, Google abre
+        // la ventana emergente, muestra dentro un "Error 401: invalid_client" y
+        // al cerrarla GIS solo informa "Popup window closed": el motivo real
+        // nunca sale del popup y el error despista por completo.
+        const id = clientId();
+        if (!id || /^PEGAR_AQUI/.test(id) || !/\.apps\.googleusercontent\.com$/.test(id)) {
+            const e = new Error(
+                'Falta pegar el Client ID de Google en index.html (la línea de window.DRIVE_CLIENT_ID). '
+                + 'Se saca de Google Cloud Console > Credenciales y termina en .apps.googleusercontent.com. '
+                + 'Está explicado en CONFIGURAR-DRIVE.md, paso 4.'
+            );
+            e.name = 'DriveAuthError';
+            e.code = 'no_client_id';
+            throw e;
         }
+
+        await loadGis();
         if (tokenClient) return tokenClient;
         tokenClient = window.google.accounts.oauth2.initTokenClient({
             client_id: clientId(),

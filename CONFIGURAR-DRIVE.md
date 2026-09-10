@@ -36,7 +36,11 @@ Reglas que Google aplica al pie de la letra:
 
 - **Sin barra al final.** `https://...app/` con barra NO sirve.
 - **Sin ruta.** Solo el dominio, nada de `/index.html`.
-- El de `localhost` es para probar desde el computador antes de subir a Vercel.
+- **`localhost` y `127.0.0.1` son orígenes DISTINTOS** para Google, aunque para
+  el computador sean lo mismo. Si registras uno y abres el otro en el
+  navegador, falla. Elige uno y sé consistente: aquí usamos `localhost`.
+- El de `localhost` es solo para probar desde el computador; para el uso real
+  (y para el celular) lo que cuenta es el de Vercel.
 
 **URIs de redireccionamiento autorizados** puede quedar vacío: este flujo no
 usa redirección, todo pasa en una ventana emergente.
