@@ -755,6 +755,10 @@
                                 <input id="infoNicTrf" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase whitespace-nowrap">N° ODIR</label>
+                                <input id="infoOdir" placeholder="ODIR-014612" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
                                 <label class="text-[9px] font-black text-slate-400 uppercase whitespace-nowrap">Potencia (DC)</label>
                                 <input id="infoPotenciaDC" type="number" step="0.01" class="w-full p-2.5 mt-1 bg-slate-50 border border-slate-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
@@ -1898,6 +1902,21 @@
             return Array.from({ length: n }, (_, i) => ({ n: i + 1 }));
         }
 
+        // Filas "pareadas" para tablas que ponen inversores y baterías LADO A LADO.
+        // Devuelve una fila por índice con el número de cada lado (vacío si esa lista es
+        // más corta), para que la plantilla use UN SOLO loop de fila. Antes la plantilla
+        // tenía {#inversores}...{/inversores} y {#baterias}...{/baterias} en el MISMO
+        // <w:tr>: docxtemplater expande cada uno como loop de fila, los dos rangos se
+        // cruzan y truena con "Unbalanced loop tag".
+        function filasPareadas(a, b) {
+            const na = parseInt(a, 10) || 0;
+            const nb = parseInt(b, 10) || 0;
+            return Array.from({ length: Math.max(na, nb) }, (_, i) => ({
+                ninv: i < na ? i + 1 : '',
+                nbat: i < nb ? i + 1 : ''
+            }));
+        }
+
         // opts.configArr: de qué lista (CONFIG.act o CONFIG.ing) sacar el label/tipo del docId.
         // opts.folderKey: en qué carpeta del proyecto guardar el archivo generado
         // ('actFolder' para Actas, 'ingFolder' para Bóveda Técnica).
@@ -2014,6 +2033,8 @@
                     paneles: arrayNumerado(info.numPaneles),
                     inversores: arrayNumerado(info.numInversores),
                     baterias: arrayNumerado(info.numBaterias),
+                    // Tabla inversor|batería lado a lado, un solo loop de fila (ver filasPareadas).
+                    filasEquipos: filasPareadas(info.numInversores, info.numBaterias),
                     // Tags propios del acta "Declaración de Cumplimiento" (bóveda técnica),
                     // que en la plantilla vienen con esta grafía exacta (mayúsculas, guiones,
                     // tildes) distinta a los tags "genéricos" de arriba usados por otras actas.
@@ -3895,9 +3916,10 @@
 
             list.innerHTML = `
                 <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2">Datos Técnicos</p>
-                <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
+                <div class="grid grid-cols-3 sm:grid-cols-7 gap-2 mb-4">
                     ${campoSmall('Radicado', info.radicado)}
                     ${campoSmall('NIC/TRF', info.nicTrf)}
+                    ${campoSmall('N° ODIR', info.odir)}
                     ${campoSmall('Potencia (DC)', info.potenciaDC ? `${info.potenciaDC} kWp` : '')}
                     ${campoSmall('Potencia (AC)', info.potenciaAC ? `${info.potenciaAC} kW` : '')}
                     ${campoSmall('Marca Inversor', info.marcaFabricante)}
@@ -4062,6 +4084,7 @@
             document.getElementById('infoNicTrf').value = info.nicTrf || '';
             document.getElementById('infoReferenciaMedidor').value = info.referenciaMedidor || '';
             document.getElementById('infoRadicado').value = info.radicado || '';
+            document.getElementById('infoOdir').value = info.odir || '';
             document.getElementById('infoFechaInicioContractual').value = info.fechaInicioContractual || '';
             document.getElementById('infoFechaFinContractual').value = info.fechaFinContractual || '';
             document.getElementById('infoDueno').value = info.dueno || '';
@@ -4098,6 +4121,9 @@
                 nicTrf: document.getElementById('infoNicTrf').value.trim(),
                 referenciaMedidor: document.getElementById('infoReferenciaMedidor').value.trim(),
                 radicado: document.getElementById('infoRadicado').value.trim(),
+                // Radicado del RETIE ante Odir. Es lo que permite que el bot de correo
+                // reconozca a qué proyecto pertenece un "Proyecto Aprobado ODIR-XXXXXX".
+                odir: document.getElementById('infoOdir').value.trim(),
                 fechaInicioContractual: document.getElementById('infoFechaInicioContractual').value,
                 fechaFinContractual: document.getElementById('infoFechaFinContractual').value,
                 tipoProyecto: document.getElementById('infoTipoProyecto').value.trim(),
