@@ -23,6 +23,19 @@
          El motor es informe-pdf.js, compartido con plantilla-de-proyecto.html. -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="informe-pdf.js"></script>
+
+    <!-- Google Drive: permite usar la app desde el celular, donde no existe la
+         File System Access API (showDirectoryPicker solo va en Chrome/Edge de
+         escritorio). drive-fs.js expone handles con la MISMA interfaz que los
+         del sistema de archivos, así que el resto del código no cambia.
+         El Client ID sale de Google Cloud Console > Credenciales > ID de
+         cliente de OAuth 2.0 (tipo "Aplicación web"). No es un secreto: en
+         cualquier app de navegador viaja en el código. Lo que sí importa es
+         que en "Orígenes autorizados de JavaScript" esté exactamente la URL
+         donde corre la app. -->
+    <script>window.DRIVE_CLIENT_ID = 'PEGAR_AQUI_EL_CLIENT_ID.apps.googleusercontent.com';</script>
+    <script src="drive-fs.js"></script>
+    <script src="drive-ui.js"></script>
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
@@ -40,9 +53,72 @@
             width: 100vw;
         }
 
-        .sidebar-bg { 
-            background-color: #f1f5f9; 
-            border-right: 1px solid #e2e8f0; 
+        .sidebar-bg {
+            background-color: #f1f5f9;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        /* ================= MÓVIL =================================
+           En escritorio el sidebar es una columna fija de 320px. En un
+           celular eso se come la pantalla entera, así que por debajo de
+           768px pasa a ser un cajón que se desliza desde la izquierda,
+           con una barra superior propia para abrirlo.
+           ========================================================= */
+        .mobile-topbar { display: none; }
+        .nav-backdrop { display: none; }
+
+        @media (max-width: 767px) {
+            /* 100dvh en vez de 100vh: en el navegador del celular la barra de
+               direcciones aparece y desaparece, y con 100vh el contenido queda
+               cortado por debajo. */
+            body, .app-wrapper { height: 100dvh; }
+
+            .mobile-topbar {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.625rem 0.875rem;
+                background: #ffffff;
+                border-bottom: 1px solid #e2e8f0;
+                flex-shrink: 0;
+                z-index: 30;
+            }
+
+            .app-sidebar {
+                position: fixed;
+                top: 0; left: 0; bottom: 0;
+                width: 86vw;
+                max-width: 340px;
+                z-index: 60;
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+                box-shadow: 0 0 40px rgba(15, 23, 42, 0.25);
+            }
+            .nav-open .app-sidebar { transform: translateX(0); }
+
+            .nav-backdrop {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.45);
+                z-index: 55;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.25s ease;
+            }
+            .nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
+
+            /* Los paddings generosos del escritorio dejan sin aire al
+               contenido en una pantalla de 375px. */
+            .glass-card { padding: 1.5rem !important; }
+
+            /* Cualquier tabla ancha se desplaza sola en vez de reventar el
+               ancho de la página. */
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+
+            /* Evita el zoom automático de iOS al enfocar un campo: Safari
+               hace zoom si la letra mide menos de 16px. */
+            input, select, textarea { font-size: 16px !important; }
         }
 
         .project-card { 
@@ -210,25 +286,77 @@
 
     <div class="app-wrapper">
         <!-- Sidebar -->
-        <aside class="w-80 sidebar-bg flex flex-col overflow-hidden shrink-0">
+        <!-- Fondo oscuro que aparece con el cajón abierto (solo móvil) -->
+        <div class="nav-backdrop" onclick="toggleNav(false)"></div>
+
+        <aside class="app-sidebar w-80 sidebar-bg flex flex-col overflow-hidden shrink-0">
             <div class="p-8 flex items-center gap-4 border-b border-slate-200">
                 <img src="img/logo.png" alt="Smart Energy" class="h-10 w-auto max-w-full">
             </div>
 
+            <!-- ORIGEN DE LA RUTA MAESTRA
+                 Dos modos excluyentes: carpeta local (rápida, solo Chrome/Edge
+                 de escritorio) o Google Drive (funciona también en celular).
+                 Mientras no hay conexión se ven las dos opciones; en cuanto se
+                 conecta una, el bloque de elección se oculta por completo y
+                 queda solo la tarjeta del origen activo. -->
             <div class="p-6">
-                <button id="btnSettings" class="w-full flex items-center justify-between p-4 bg-white/60 rounded-md border border-slate-200 hover:border-blue-500/50 transition-all group">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2 bg-blue-500/10 rounded group-hover:bg-blue-500/20 transition-colors">
+
+                <!-- Sin conectar: elegir origen -->
+                <div id="sourceDisconnected">
+                    <p class="text-[8px] font-black text-slate-500 uppercase mb-2 tracking-wider">Conectar Ruta Maestra</p>
+
+                    <button id="btnConnectLocal" class="w-full flex items-center gap-3 p-3.5 bg-white/60 rounded-md border border-slate-200 hover:border-blue-500/50 hover:bg-white transition-all group text-left">
+                        <div class="p-2 bg-blue-500/10 rounded group-hover:bg-blue-500/20 transition-colors shrink-0">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                             </svg>
                         </div>
-                        <div class="text-left">
-                            <p class="text-[8px] font-black text-slate-500 uppercase">Ruta Maestra</p>
-                            <p id="pathDisplay" class="text-xs font-bold text-slate-700 truncate w-36">Sin Conexión</p>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-slate-700">Carpeta local</p>
+                            <p class="text-[9px] text-slate-400 leading-tight">Más rápida · solo en computador</p>
                         </div>
+                    </button>
+
+                    <button id="btnConnectDrive" class="w-full mt-2 flex items-center gap-3 p-3.5 bg-white/60 rounded-md border border-slate-200 hover:border-emerald-500/50 hover:bg-white transition-all group text-left">
+                        <div class="p-2 bg-emerald-500/10 rounded group-hover:bg-emerald-500/20 transition-colors shrink-0">
+                            <svg class="h-4 w-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M7.7 3l-5.6 9.7L4.9 18l5.6-9.7L7.7 3zm2.1 0l5.6 9.7h5.6L15.4 3H9.8zM6.2 19h11.2l2.8-4.9H9L6.2 19z"/>
+                            </svg>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-slate-700">Google Drive</p>
+                            <p class="text-[9px] text-slate-400 leading-tight">Funciona en celular</p>
+                        </div>
+                    </button>
+
+                    <p id="localUnsupportedNote" class="hidden mt-2 text-[9px] text-slate-400 leading-snug">
+                        Este navegador no puede abrir carpetas del computador. Conéctate por Google Drive.
+                    </p>
+                </div>
+
+                <!-- Conectado: solo el origen activo -->
+                <div id="sourceConnected" class="hidden">
+                    <div class="p-4 bg-white/60 rounded-md border border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <div id="sourceIconWrap" class="p-2 rounded shrink-0 bg-blue-500/10">
+                                <svg id="sourceIconLocal" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                </svg>
+                                <svg id="sourceIconDrive" class="hidden h-4 w-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M7.7 3l-5.6 9.7L4.9 18l5.6-9.7L7.7 3zm2.1 0l5.6 9.7h5.6L15.4 3H9.8zM6.2 19h11.2l2.8-4.9H9L6.2 19z"/>
+                                </svg>
+                            </div>
+                            <div class="text-left min-w-0 flex-1">
+                                <p id="sourceLabel" class="text-[8px] font-black text-slate-500 uppercase">Ruta Maestra</p>
+                                <p id="pathDisplay" class="text-xs font-bold text-slate-700 truncate">Sin Conexión</p>
+                                <p id="sourceAccount" class="hidden text-[9px] text-slate-400 truncate"></p>
+                            </div>
+                        </div>
+                        <button id="btnChangeSource" class="w-full mt-3 py-2 text-[9px] font-black uppercase text-slate-500 hover:text-slate-800 border border-slate-200 hover:border-slate-300 rounded transition-colors">Cambiar origen</button>
                     </div>
-                </button>
+                </div>
+
                 <button id="btnReactivate" class="hidden w-full mt-3 py-3 bg-blue-600 text-white text-[10px] font-black uppercase rounded shadow-lg shadow-blue-900/40 hover:bg-blue-500 active:scale-95 transition-all">Reconectar</button>
             </div>
 
@@ -260,7 +388,18 @@
 
         <!-- Main Content -->
         <main class="flex-1 overflow-hidden flex flex-col relative">
-            
+
+            <!-- Barra superior de móvil: abre el cajón y muestra el proyecto activo -->
+            <div class="mobile-topbar">
+                <button onclick="toggleNav()" class="p-2 -ml-1 text-slate-600 active:scale-90 transition-transform" aria-label="Abrir menú">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                <img src="img/logo2.png" alt="" class="h-6 w-6 shrink-0">
+                <p id="mobileProjectName" class="text-xs font-bold text-slate-700 truncate flex-1">Gestión Documental</p>
+            </div>
+
             <!-- 0. Estado Vacío -->
             <div id="loadingState" class="flex-1 flex flex-col items-center justify-center view-transition">
                 <div class="text-center p-12 glass-card max-w-sm">
@@ -1582,24 +1721,129 @@
             await writable.close();
         }
 
-        async function intentarReconexionSilenciosa() {
-        return new Promise((resolve) => {
-            const rootReq = db.transaction(STORES.SETTINGS).objectStore(STORES.SETTINGS).get('root');
-            rootReq.onsuccess = async () => {
-            const saved = rootReq.result;
-            if (!saved) { resolve(); return; }
-            const permiso = await saved.queryPermission({ mode: 'readwrite' });
-            if (permiso === 'granted') {
-                currentHandle = saved;
-                document.getElementById('btnReactivate').classList.add('hidden');
-                document.getElementById('pathDisplay').innerText = currentHandle.name;
-                await scan();
-            } else {
-                document.getElementById('btnReactivate').classList.remove('hidden');
+        // ====================================================================
+        // ORIGEN DE ARCHIVOS: CARPETA LOCAL vs GOOGLE DRIVE
+        // --------------------------------------------------------------------
+        // currentHandle puede ser un FileSystemDirectoryHandle real (modo
+        // local) o un DriveDirectoryHandle de drive-fs.js (modo Drive). Ambos
+        // exponen la misma interfaz, así que scan(), analyze() y todo lo demás
+        // funcionan igual sin saber cuál les tocó.
+        // ====================================================================
+
+        // 'local' | 'drive' | null
+        let sourceMode = null;
+
+        const soportaCarpetaLocal = () => 'showDirectoryPicker' in window;
+
+        /** Pinta el sidebar según haya conexión y de qué tipo. */
+        function renderSourceUI() {
+            const desconectado = document.getElementById('sourceDisconnected');
+            const conectado = document.getElementById('sourceConnected');
+            const conectadoOk = !!currentHandle && !!sourceMode;
+
+            desconectado.classList.toggle('hidden', conectadoOk);
+            conectado.classList.toggle('hidden', !conectadoOk);
+
+            // Si el navegador no puede abrir carpetas del PC (celular, Firefox,
+            // Safari), esa opción ni se ofrece: solo confundiría.
+            document.getElementById('btnConnectLocal').classList.toggle('hidden', !soportaCarpetaLocal());
+            document.getElementById('localUnsupportedNote').classList.toggle('hidden', soportaCarpetaLocal());
+
+            if (!conectadoOk) return;
+
+            const esDrive = sourceMode === 'drive';
+            document.getElementById('sourceIconLocal').classList.toggle('hidden', esDrive);
+            document.getElementById('sourceIconDrive').classList.toggle('hidden', !esDrive);
+            document.getElementById('sourceIconWrap').className =
+                'p-2 rounded shrink-0 ' + (esDrive ? 'bg-emerald-500/10' : 'bg-blue-500/10');
+            document.getElementById('sourceLabel').innerText = esDrive ? 'Ruta Maestra · Drive' : 'Ruta Maestra · Local';
+            document.getElementById('pathDisplay').innerText = currentHandle.name;
+
+            const cuenta = document.getElementById('sourceAccount');
+            const user = esDrive && window.DriveFS ? DriveFS.getUser() : null;
+            cuenta.classList.toggle('hidden', !user);
+            if (user) cuenta.innerText = user.emailAddress || '';
+
+            // "Reconectar" solo tiene sentido en local: es el permiso del
+            // sistema de archivos, que Chrome revoca al cerrar la pestaña.
+            if (esDrive) document.getElementById('btnReactivate').classList.add('hidden');
+        }
+
+        /** Conecta usando Drive con la carpeta ya recordada. */
+        async function conectarDriveGuardado({ interactive }) {
+            if (!window.DriveFS) return false;
+
+            const user = DriveFS.isSignedIn()
+                ? DriveFS.getUser()
+                : (interactive ? await DriveFS.signIn({ interactive: true }) : await DriveFS.resumeSession());
+            if (!user) return false;
+
+            // La carpeta elegida se recuerda en localStorage, así que aunque
+            // toque volver a iniciar sesión no hay que buscarla otra vez.
+            let raiz = DriveFS.savedRoot();
+            if (!raiz) {
+                if (!interactive) return false;
+                const elegida = await DriveUI.pickFolder();
+                if (!elegida) return false;
+                DriveFS.rememberRoot(elegida.id, elegida.name);
+                raiz = elegida;
             }
-            resolve();
-            };
-        });
+
+            const handle = await DriveFS.getRootHandle();
+            if (!handle) return false;
+
+            currentHandle = handle;
+            sourceMode = 'drive';
+            DriveFS.setMode('drive');
+            return true;
+        }
+
+        /** Al abrir la app: intenta volver al origen que se usó la última vez. */
+        async function intentarReconexionSilenciosa() {
+            const modoPrevio = window.DriveFS ? DriveFS.getMode() : null;
+
+            if (modoPrevio === 'drive') {
+                try {
+                    if (await conectarDriveGuardado({ interactive: false })) {
+                        renderSourceUI();
+                        await scan();
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('No se pudo reanudar la sesión de Drive:', e);
+                }
+                // La sesión de Google caducó del todo: se muestran las opciones
+                // otra vez, pero la carpeta sigue recordada para el próximo login.
+                renderSourceUI();
+                return;
+            }
+
+            // Modo local: el handle vive en IndexedDB y hay que revalidar permiso.
+            await new Promise((resolve) => {
+                const rootReq = db.transaction(STORES.SETTINGS).objectStore(STORES.SETTINGS).get('root');
+                rootReq.onsuccess = async () => {
+                    const saved = rootReq.result;
+                    if (!saved) { renderSourceUI(); resolve(); return; }
+                    const permiso = await saved.queryPermission({ mode: 'readwrite' });
+                    if (permiso === 'granted') {
+                        currentHandle = saved;
+                        sourceMode = 'local';
+                        if (window.DriveFS) DriveFS.setMode('local');
+                        document.getElementById('btnReactivate').classList.add('hidden');
+                        renderSourceUI();
+                        await scan();
+                    } else {
+                        // Hay carpeta guardada pero Chrome pide confirmar el
+                        // permiso con un gesto del usuario.
+                        currentHandle = null;
+                        sourceMode = null;
+                        renderSourceUI();
+                        document.getElementById('btnReactivate').classList.remove('hidden');
+                    }
+                    resolve();
+                };
+                rootReq.onerror = () => { renderSourceUI(); resolve(); };
+            });
         }
 
 
@@ -1773,7 +2017,7 @@
 
             try {
                 const handle = await p.preliminarFolder.getFileHandle(fileData.fileName);
-                window.open(URL.createObjectURL(await handle.getFile()), '_blank');
+                await abrirHandle(handle);
             } catch (e) {
                 alert("Error al abrir el archivo");
             }
@@ -2989,6 +3233,15 @@
             spinner.classList.add('flex');
             const temp = [];
             try {
+                // En modo Drive hay que releer el árbol antes de recorrerlo: los
+                // handles sirven desde una caché en memoria (por eso analyze()
+                // no hace ni una petición). Se trae por niveles y en lote, así
+                // que son unas pocas decenas de peticiones para TODO el árbol,
+                // no una por carpeta.
+                if (sourceMode === 'drive' && window.DriveFS) {
+                    await DriveFS.refreshTree(currentHandle.id);
+                }
+
                 for await (const entry of currentHandle.values()) {
                     // Generalizado a 0.N. (no solo 0.1/0.2/0.3) por si se crean más carpetas de año a futuro
                     if (entry.kind === 'directory' && /^0\.\d+\./.test(entry.name)) {
@@ -3021,6 +3274,12 @@
                     }
                 }
             } catch(e) {
+                // Antes esto se tragaba el error en silencio y el escaneo
+                // simplemente "no salía bien" sin decir por qué. Con Drive de
+                // por medio (token caducado, permisos, límite de peticiones)
+                // hace falta verlo.
+                console.error('Error durante el escaneo:', e);
+                showToast('Falló el escaneo: ' + (e && e.message ? e.message : e));
             } finally {
                 spinner.classList.add('hidden');
                 spinner.classList.remove('flex');
@@ -3096,11 +3355,18 @@
             const ingItems = mapItems(CONFIG.ing, filesIng);
             const actItems = mapActItems(CONFIG.act, filesAct);
 
+            // Lectura heredada: antes la info del proyecto vivía en un _data/data.json
+            // dentro de la carpeta; hoy está en Supabase y esto solo queda como
+            // respaldo para proyectos viejos.
+            // Aquí se ABRE sin crear (antes usaba getOrCreateHiddenFolder, que
+            // creaba _data en cada proyecto y en cada escaneo). En local no se
+            // notaba; contra Drive eran decenas de escrituras por escaneo y
+            // carpetas _data sembradas por todos lados.
             let info = null;
             try {
-                const hiddenFolder = await getOrCreateHiddenFolder(handle, '_data');
+                const hiddenFolder = await handle.getDirectoryHandle('_data');
                 info = await readJson(hiddenFolder, 'data.json');
-            } catch (e) {}
+            } catch (e) { /* no existe _data: proyecto nuevo, la info está en Supabase */ }
 
             // --- Detección de estado OR: no basta con "hay archivos" ---
             // Un único archivo "1. RADICADO ..." solo significa que el proyecto quedó
@@ -3686,17 +3952,30 @@
             document.getElementById('projectList').innerHTML = html || '<p class="text-[10px] text-slate-500 text-center py-6 uppercase font-bold">Sin proyectos en este año</p>';
         }
 
+        /**
+         * Abre/cierra el cajón lateral en móvil. En escritorio no hace nada
+         * visible: allí el sidebar es una columna fija y la clase se ignora.
+         */
+        window.toggleNav = (forzar) => {
+            const w = document.querySelector('.app-wrapper');
+            const abrir = forzar === undefined ? !w.classList.contains('nav-open') : !!forzar;
+            w.classList.toggle('nav-open', abrir);
+        };
+
         window.selectProject = (id) => {
             selectedProjectId = id;
             const p = projects.find(x => x.id === id);
             document.getElementById('hubProjectName').innerText = p.name;
             document.getElementById('hubProjectYear').innerText = p.year || '----';
             document.getElementById('devProjectName').innerText = p.name;
+            document.getElementById('mobileProjectName').innerText = p.name;
             renderDocModule(p);
             // Si empleados era la última vista (no es una sección de proyecto),
             // al elegir un proyecto lo natural es caer en el hub.
             switchView(lastProjectView);
             renderSidebar();
+            // En celular el cajón tapa el contenido: al elegir proyecto se cierra.
+            toggleNav(false);
         };
         async function renderDocModule(p) {
             // Ingeniería y Actas
@@ -4265,7 +4544,7 @@
             const p = projects.find(x => x.id === selectedProjectId);
             const files = type === 'or' ? p.filesOrConf : p.filesRetieConf;
             const f = files[idx];
-            if (f?.h) window.open(URL.createObjectURL(await f.h.getFile()), '_blank');
+            if (f?.h) await abrirHandle(f.h);
         };
 
         // (Módulo de Empleados/Actividades eliminado: ya no se usa)
@@ -4653,7 +4932,7 @@
             if (!folder) return alert('No se encontró la carpeta del trámite.');
             try {
                 const handle = await folder.getFileHandle(fileName);
-                window.open(URL.createObjectURL(await handle.getFile()), '_blank');
+                await abrirHandle(handle);
             } catch (e) {
                 alert('No se pudo abrir el archivo: ' + fileName);
             }
@@ -4721,11 +5000,11 @@
         window.openFile = async (pId, dId, type) => {
             const p = projects.find(x => x.id === pId);
             if (type === 'informe') {
-                if (p.informeFile?.h) window.open(URL.createObjectURL(await p.informeFile.h.getFile()), '_blank');
+                if (p.informeFile?.h) await abrirHandle(p.informeFile.h);
                 return;
             }
             const item = (type === 'ing' ? p.ingItems : p.actItems).find(i => i.id === dId);
-            if (item.handle) window.open(URL.createObjectURL(await item.handle.getFile()), '_blank');
+            if (item.handle) await abrirHandle(item.handle);
         };
 
         window.openBudgetFile = async (fileName) => {
@@ -4733,7 +5012,7 @@
             if (!p || !p.budgetFolder) return alert("Carpeta 3. Presupuesto no encontrada.");
             try {
                 const handle = await p.budgetFolder.getFileHandle(fileName);
-                window.open(URL.createObjectURL(await handle.getFile()), '_blank');
+                await abrirHandle(handle);
             } catch (e) {
                 alert("Archivo no encontrado.");
             }
@@ -4752,27 +5031,91 @@
             renderDevelopment();
         };
 
+        /**
+         * Pide un archivo al usuario. showOpenFilePicker solo existe en
+         * Chrome/Edge de escritorio, así que en celular (y en Firefox/Safari)
+         * se cae a un <input type="file"> de toda la vida.
+         * Devuelve un File, o null si el usuario cancela.
+         */
+        async function pedirArchivo(accept) {
+            accept = accept || 'application/pdf';
+            if ('showOpenFilePicker' in window) {
+                try {
+                    const [h] = await window.showOpenFilePicker({
+                        types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }]
+                    });
+                    return await h.getFile();
+                } catch (e) {
+                    if (e && e.name === 'AbortError') return null;
+                    throw e;
+                }
+            }
+            return new Promise((resolve) => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = accept;
+                input.style.display = 'none';
+                document.body.appendChild(input);
+                input.onchange = () => {
+                    const f = input.files && input.files[0] ? input.files[0] : null;
+                    input.remove();
+                    resolve(f);
+                };
+                // Si el usuario cancela, algunos navegadores no disparan nada;
+                // el input queda huérfano en el DOM pero oculto e inofensivo.
+                input.click();
+            });
+        }
+
+        /**
+         * Abre un archivo en otra pestaña.
+         * En modo local hay que descargarlo a memoria y crear un blob URL.
+         * En Drive se abre directo el visor de Google (webViewLink): no baja
+         * el archivo, es instantáneo y en celular se ve mucho mejor que un
+         * blob de PDF, que el navegador móvil a veces ni sabe mostrar.
+         */
+        window.abrirHandle = async (handle) => {
+            if (!handle) return;
+            try {
+                if (handle._isDrive && handle.webViewLink) {
+                    window.open(handle.webViewLink, '_blank', 'noopener');
+                    return;
+                }
+                await abrirHandle(handle);
+            } catch (e) {
+                console.error('No se pudo abrir el archivo:', e);
+                showToast('No se pudo abrir el archivo: ' + (e && e.message ? e.message : e));
+            }
+        };
+
         window.uploadFile = async (pId, dId, type) => {
             try {
-                const [h] = await window.showOpenFilePicker({ types: [{ description: 'PDF', accept: {'application/pdf': ['.pdf']} }] });
+                const archivo = await pedirArchivo();
+                if (!archivo) return;
                 const p = projects.find(x => x.id === pId);
                 const folder = type === 'ing' ? p.ingFolder : p.actFolder;
                 const item = (type === 'ing' ? p.ingItems : p.actItems).find(i => i.id === dId);
                 const dest = await folder.getFileHandle(`${item.id} ${item.label}.pdf`, {create: true});
                 const w = await dest.createWritable();
-                await w.write(await h.getFile());
+                await w.write(archivo);
                 await w.close();
                 await scan();
-            } catch(e){}
+            } catch(e){
+                console.error('Error al subir el archivo:', e);
+                showToast('No se pudo subir el archivo: ' + (e && e.message ? e.message : e));
+            }
         };
 
-        document.getElementById('btnSettings').onclick = async () => {
-            if (!('showDirectoryPicker' in window)) {
-                showToast('Tu navegador no soporta abrir carpetas locales. Usa Chrome o Edge en computador (no funciona en Firefox, Safari, ni en el navegador de celular).');
+        // --- CONEXIÓN: CARPETA LOCAL ---
+        document.getElementById('btnConnectLocal').onclick = async () => {
+            if (!soportaCarpetaLocal()) {
+                showToast('Este navegador no puede abrir carpetas del computador. Conéctate por Google Drive.');
                 return;
             }
             try {
                 currentHandle = await window.showDirectoryPicker();
+                sourceMode = 'local';
+                if (window.DriveFS) DriveFS.setMode('local');
                 db.transaction(STORES.SETTINGS, 'readwrite').objectStore(STORES.SETTINGS).put(currentHandle, 'root');
                 start();
             } catch (e) {
@@ -4781,6 +5124,70 @@
                 console.error('Error al abrir la carpeta:', e);
                 showToast('No se pudo abrir la carpeta: ' + (e && e.message ? e.message : e));
             }
+        };
+
+        // --- CONEXIÓN: GOOGLE DRIVE ---
+        document.getElementById('btnConnectDrive').onclick = async () => {
+            const btn = document.getElementById('btnConnectDrive');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            try {
+                if (await conectarDriveGuardado({ interactive: true })) {
+                    start();
+                }
+            } catch (e) {
+                console.error('Error al conectar Drive:', e);
+                showToast(mensajeErrorDrive(e));
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }
+        };
+
+        // Traduce los fallos típicos de OAuth a algo accionable. Sin esto, un
+        // origen mal registrado en Google Cloud solo produce un error opaco.
+        function mensajeErrorDrive(e) {
+            const msg = (e && e.message) || String(e);
+            const code = e && e.code;
+            if (code === 'popup_closed' || code === 'popup_failed_to_open') {
+                return 'Se cerró la ventana de Google (o el navegador bloqueó el popup). Permite las ventanas emergentes para este sitio.';
+            }
+            if (code === 'access_denied') {
+                return 'Google denegó el acceso. Si la app está en modo Prueba, tu correo debe estar en la lista de usuarios de prueba.';
+            }
+            if (/redirect_uri_mismatch|origin|invalid_client/i.test(msg)) {
+                return 'Google rechazó el origen. En Cloud Console, "Orígenes autorizados de JavaScript" debe incluir ' + window.location.origin;
+            }
+            if (/DRIVE_CLIENT_ID/.test(msg)) return msg;
+            return 'No se pudo conectar con Drive: ' + msg;
+        }
+
+        // --- CAMBIAR DE ORIGEN ---
+        document.getElementById('btnChangeSource').onclick = async () => {
+            if (sourceMode === 'drive') {
+                // Ofrece cambiar de carpeta antes de cerrar sesión del todo:
+                // casi siempre es lo que se quiere.
+                const elegida = await DriveUI.pickFolder(DriveFS.savedRoot());
+                if (elegida) {
+                    DriveFS.rememberRoot(elegida.id, elegida.name);
+                    DriveFS.clearCache();
+                    projects = [];
+                    selectedProjectId = null;
+                    currentHandle = await DriveFS.getRootHandle();
+                    start();
+                    return;
+                }
+                if (!confirm('¿Desconectar la cuenta de Google?')) return;
+                DriveFS.signOut();
+            }
+            currentHandle = null;
+            sourceMode = null;
+            projects = [];
+            selectedProjectId = null;
+            if (window.DriveFS) DriveFS.setMode(null);
+            renderSidebar();
+            renderSourceUI();
+            switchView('empty');
         };
 
         document.getElementById('btnReactivate').addEventListener('click', async () => {
@@ -4792,8 +5199,10 @@
                     const req = await saved.requestPermission({ mode: 'readwrite' });
                     if (req === 'granted') {
                         currentHandle = saved;
+                        sourceMode = 'local';
+                        if (window.DriveFS) DriveFS.setMode('local');
                         document.getElementById('btnReactivate').classList.add('hidden');
-                        document.getElementById('pathDisplay').innerText = currentHandle.name;
+                        renderSourceUI();
                         await scan();
                         limpiarProyectosHuerfanos();
                     } else {
@@ -4806,11 +5215,22 @@
             };
         });
 
+        // Un solo temporizador de refresco, aunque start() se llame varias
+        // veces (al reconectar o al cambiar de carpeta de Drive).
+        let scanTimer = null;
+
         function start() {
             document.getElementById('btnReactivate').classList.add('hidden');
-            document.getElementById('pathDisplay').innerText = currentHandle.name;
+            renderSourceUI();
             scan().then(() => limpiarProyectosHuerfanos());
-            setInterval(scan, 60000);
+            if (scanTimer) clearInterval(scanTimer);
+            // Drive cobra cuota por petición y el refresco reconstruye el árbol
+            // entero, así que allí se espacia más que en local. Y si la pestaña
+            // no está a la vista (celular bloqueado, otra app encima) el
+            // refresco se salta: no sirve de nada y gasta cuota.
+            scanTimer = setInterval(() => {
+                if (!document.hidden) scan();
+            }, sourceMode === 'drive' ? 180000 : 60000);
         }
 
         init();
