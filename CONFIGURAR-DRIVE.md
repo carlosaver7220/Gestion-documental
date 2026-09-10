@@ -110,6 +110,21 @@ secreto, y esta app no lo usa ni lo necesita.
 2. Iniciar sesión con Google y aceptar los permisos (solo la primera vez).
 3. Navegar hasta la carpeta maestra y pulsar **Usar esta carpeta**.
 
+### Si la carpeta maestra te la compartieron
+
+Es el caso normal aquí. Cuando alguien te comparte una carpeta y tú usas
+*"Añadir acceso directo a Drive"*, Drive **no mueve** la carpeta a tu unidad:
+crea un **acceso directo**, que es un tipo de archivo distinto a una carpeta.
+La carpeta real sigue viviendo en **Compartido conmigo**.
+
+El selector llega por los dos caminos, elige el que prefieras:
+
+- **Compartido conmigo** → la carpeta. Es el camino directo.
+- **Mi unidad** → el acceso directo (aparece marcado como "Acceso directo").
+
+Da igual cuál uses: el selector resuelve el acceso directo y guarda siempre el
+identificador de la carpeta real.
+
 De ahí en adelante la carpeta queda recordada en ese dispositivo. Al volver a
 abrir la app, entra sola: reanuda la sesión en silencio y vuelve directo a la
 misma carpeta. Aunque la sesión de Google caduque del todo y toque volver a

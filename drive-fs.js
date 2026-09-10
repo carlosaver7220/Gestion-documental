@@ -36,9 +36,17 @@
     const UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
     const FOLDER_MIME = 'application/vnd.google-apps.folder';
 
+    // Un acceso directo NO es una carpeta: es un tipo de archivo aparte que
+    // apunta a otra cosa. Es lo que crea Drive con "Añadir acceso directo a
+    // Drive" sobre algo que te compartieron. Hay que tratarlos o la carpeta
+    // compartida simplemente no aparece por ningún lado.
+    const SHORTCUT_MIME = 'application/vnd.google-apps.shortcut';
+
     // Campos mínimos: pedir menos hace las respuestas mucho más livianas y el
-    // escaneo notablemente más rápido.
-    const FIELDS = 'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents,webViewLink)';
+    // escaneo notablemente más rápido. shortcutDetails hace falta para saber
+    // a dónde apunta cada acceso directo.
+    const FIELDS = 'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents,webViewLink,shortcutDetails(targetId,targetMimeType))';
+    const FIELDS_CARPETA = 'nextPageToken,files(id,name,mimeType,parents,shortcutDetails(targetId,targetMimeType))';
 
     const LS = {
         token: 'gd_drive_token',
@@ -318,6 +326,26 @@
         if (i >= 0) list.splice(i, 1);
     }
 
+    /**
+     * Convierte un acceso directo en aquello a lo que apunta, conservando el
+     * nombre que se ve en Drive.
+     *
+     * Con esto, el resto del código nunca se entera de que existen los accesos
+     * directos: ve una carpeta o un archivo normal. Es justo lo que hace falta
+     * cuando la Ruta Maestra es una carpeta compartida a la que se le puso un
+     * acceso directo en "Mi unidad" para que Drive Desktop la sincronice.
+     */
+    function resolverAcceso(f) {
+        if (f.mimeType !== SHORTCUT_MIME) return f;
+        const d = f.shortcutDetails;
+        if (!d || !d.targetId) return f;   // acceso directo roto: se deja como está
+        return Object.assign({}, f, {
+            id: d.targetId,
+            mimeType: d.targetMimeType || FOLDER_MIME,
+            _esAcceso: true
+        });
+    }
+
     /** Lista los hijos de varias carpetas de una sola vez. */
     async function listChildrenOf(parentIds) {
         const query = '(' + parentIds.map(id => "'" + qesc(id) + "' in parents").join(' or ') + ')'
@@ -346,9 +374,11 @@
         const wanted = new Set(parentIds);
         for (const f of files) {
             // Un archivo puede tener varios padres; nos interesa el que pedimos.
+            // El padre se mira en el original: un acceso directo cuelga de donde
+            // está el acceso, no de donde vive la carpeta a la que apunta.
             const parent = (f.parents || []).find(p => wanted.has(p));
             if (!parent) continue;
-            childrenCache.get(parent).push(f);
+            childrenCache.get(parent).push(resolverAcceso(f));
         }
     }
 
@@ -363,6 +393,10 @@
         let level = [rootId];
         let depth = 0;
         let folders = 0;
+        // Un acceso directo puede apuntar a una carpeta que ya visitamos (o
+        // incluso a un ancestro). Sin esto, el recorrido daría vueltas en
+        // círculo o repetiría ramas enteras.
+        const vistas = new Set([rootId]);
 
         while (level.length && depth < maxDepth) {
             const batches = chunk(level, BATCH);
@@ -372,8 +406,13 @@
             batches.forEach((b, i) => {
                 const files = results[i] || [];
                 distribute(b, files);
-                for (const f of files) {
-                    if (f.mimeType === FOLDER_MIME) { next.push(f.id); folders++; }
+                for (const bruto of files) {
+                    const f = resolverAcceso(bruto);
+                    if (f.mimeType !== FOLDER_MIME) continue;
+                    if (vistas.has(f.id)) continue;
+                    vistas.add(f.id);
+                    next.push(f.id);
+                    folders++;
                 }
             });
 
@@ -674,22 +713,48 @@
     }
 
     // ------------------------------------------------ búsqueda de carpetas
+    // Las consultas piden carpetas Y accesos directos. Después de resolverlos
+    // se descarta lo que no acabe siendo una carpeta: así un acceso directo a
+    // una carpeta compartida se ve y se navega como una carpeta normal.
+    const SOLO_CARPETAS = "(mimeType = '" + FOLDER_MIME + "' or mimeType = '" + SHORTCUT_MIME + "')";
+
+    function soloCarpetas(files) {
+        return (files || []).map(resolverAcceso).filter(f => f.mimeType === FOLDER_MIME);
+    }
+
     async function listFolders(parentId) {
-        const query = "'" + qesc(parentId) + "' in parents and mimeType = '" + FOLDER_MIME + "' and trashed = false";
+        const query = "'" + qesc(parentId) + "' in parents and " + SOLO_CARPETAS + " and trashed = false";
         const url = API + '/files?q=' + encodeURIComponent(query)
-            + '&fields=' + encodeURIComponent('nextPageToken,files(id,name,mimeType,parents)')
+            + '&fields=' + encodeURIComponent(FIELDS_CARPETA)
+            + '&pageSize=200&orderBy=name&supportsAllDrives=true&includeItemsFromAllDrives=true';
+        const data = await driveJson(url);
+        return soloCarpetas(data.files);
+    }
+
+    /**
+     * Carpetas que otras personas compartieron contigo.
+     * Estas NO están en "Mi unidad": viven en "Compartido conmigo", y sin este
+     * listado no habría forma de llegar a ellas desde el selector.
+     */
+    async function listSharedWithMe() {
+        const query = "sharedWithMe = true and mimeType = '" + FOLDER_MIME + "' and trashed = false";
+        const url = API + '/files?q=' + encodeURIComponent(query)
+            + '&fields=' + encodeURIComponent(FIELDS_CARPETA)
             + '&pageSize=200&orderBy=name&supportsAllDrives=true&includeItemsFromAllDrives=true';
         const data = await driveJson(url);
         return data.files || [];
     }
 
     async function searchFolders(text) {
-        const query = "mimeType = '" + FOLDER_MIME + "' and trashed = false and name contains '" + qesc(text) + "'";
+        // La búsqueda por nombre alcanza todo lo que la cuenta puede ver,
+        // incluido lo compartido, así que sirve de atajo cuando no se sabe
+        // en qué rama está la carpeta.
+        const query = SOLO_CARPETAS + " and trashed = false and name contains '" + qesc(text) + "'";
         const url = API + '/files?q=' + encodeURIComponent(query)
-            + '&fields=' + encodeURIComponent('files(id,name,mimeType,parents)')
+            + '&fields=' + encodeURIComponent(FIELDS_CARPETA)
             + '&pageSize=50&orderBy=name&supportsAllDrives=true&includeItemsFromAllDrives=true';
         const data = await driveJson(url);
-        return data.files || [];
+        return soloCarpetas(data.files);
     }
 
     async function listSharedDrives() {
@@ -722,6 +787,7 @@
         listFolders,
         searchFolders,
         listSharedDrives,
+        listSharedWithMe,
         // modo activo (local / drive), compartido con index.html
         getMode: () => lsGet(LS.mode) || null,
         setMode: (m) => { m ? lsSet(LS.mode, m) : lsDel(LS.mode); },

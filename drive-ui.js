@@ -14,6 +14,10 @@
     'use strict';
 
     const MI_UNIDAD = { id: 'root', name: 'Mi unidad' };
+    // Nivel virtual: no es una carpeta real de Drive, es el listado de lo que
+    // otras personas te compartieron. Va aparte porque "Compartido conmigo" no
+    // cuelga de "Mi unidad" — es otra raíz.
+    const COMPARTIDO = { id: '__compartido__', name: 'Compartido conmigo' };
 
     let overlay = null;
     let state = null;   // { path: [{id,name}], resolve, buscando }
@@ -27,6 +31,7 @@
 
     const ICON_FOLDER = '<svg class="w-5 h-5 shrink-0 text-amber-500" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"/></svg>';
     const ICON_DRIVE = '<svg class="w-5 h-5 shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M7.7 3l-5.6 9.7L4.9 18l5.6-9.7L7.7 3zm2.1 0l5.6 9.7h5.6L15.4 3H9.8zM6.2 19h11.2l2.8-4.9H9L6.2 19z"/></svg>';
+    const ICON_COMPARTIDO = '<svg class="w-5 h-5 shrink-0 text-indigo-500" fill="currentColor" viewBox="0 0 24 24"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>';
 
     function build() {
         overlay = el('div', 'fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4');
@@ -67,7 +72,7 @@
             if (act.dataset.act === 'cerrar') cerrar(null);
             if (act.dataset.act === 'usar') {
                 const actual = state.path[state.path.length - 1];
-                if (actual && actual.id !== '__raices__') cerrar({ id: actual.id, name: actual.name });
+                if (actual && VIRTUALES.indexOf(actual.id) === -1) cerrar({ id: actual.id, name: actual.name });
             }
         });
 
@@ -110,16 +115,22 @@
         });
     }
 
+    // Niveles que no son carpetas reales de Drive y por tanto no se pueden elegir.
+    const VIRTUALES = ['__raices__', COMPARTIDO.id];
+
     function renderSeleccion() {
         const actual = state.path[state.path.length - 1];
         const p = overlay.querySelector('[data-el="seleccion"]');
         const btn = overlay.querySelector('[data-act="usar"]');
-        const valida = actual && actual.id !== '__raices__';
+        const valida = actual && VIRTUALES.indexOf(actual.id) === -1;
         p.textContent = valida ? 'Seleccionada: ' + actual.name : 'Entra en una carpeta para poder elegirla';
         btn.disabled = !valida;
     }
 
     function filaCarpeta(nodo, icono, subtitulo) {
+        // Marca los accesos directos para que se vea por qué una carpeta que
+        // "está en Mi unidad" en realidad vive en otro lado.
+        if (!subtitulo && nodo._esAcceso) subtitulo = 'Acceso directo';
         const fila = el('button', 'w-full flex items-center gap-3 px-3 py-3 rounded-md hover:bg-slate-100 transition-colors text-left');
         fila.innerHTML = icono + '<span class="flex-1 min-w-0">'
             + '<span class="block text-sm font-semibold text-slate-700 truncate">' + escapar(nodo.name) + '</span>'
@@ -152,7 +163,19 @@
                 const unidades = await DriveFS.listSharedDrives();
                 lista.innerHTML = '';
                 lista.appendChild(filaCarpeta(MI_UNIDAD, ICON_DRIVE, 'Tu Drive personal'));
+                lista.appendChild(filaCarpeta(COMPARTIDO, ICON_COMPARTIDO, 'Carpetas que te compartieron'));
                 unidades.forEach(u => lista.appendChild(filaCarpeta(u, ICON_DRIVE, 'Unidad compartida')));
+                return;
+            }
+
+            if (actual.id === COMPARTIDO.id) {
+                const compartidas = await DriveFS.listSharedWithMe();
+                lista.innerHTML = '';
+                if (!compartidas.length) {
+                    lista.appendChild(mensaje('Nadie te ha compartido carpetas.'));
+                    return;
+                }
+                compartidas.forEach(c => lista.appendChild(filaCarpeta(c, ICON_COMPARTIDO)));
                 return;
             }
 
