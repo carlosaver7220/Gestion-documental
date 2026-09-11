@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Energy | Management System</title>
     <link rel="icon" type="image/png" href="img/logo2.png">
+
+    <!-- PWA: permite instalar la app en el celular con su propio icono y sin
+         barra de direcciones. Instalada, el almacenamiento pasa a ser
+         persistente, que es lo que hace que la sesión de Google y la carpeta
+         de Drive elegida sobrevivan entre usos. -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <!-- iOS no lee el manifest: necesita estas tres etiquetas aparte. -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Gestión Doc">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -58,68 +71,6 @@
             border-right: 1px solid #e2e8f0;
         }
 
-        /* ================= MÓVIL =================================
-           En escritorio el sidebar es una columna fija de 320px. En un
-           celular eso se come la pantalla entera, así que por debajo de
-           768px pasa a ser un cajón que se desliza desde la izquierda,
-           con una barra superior propia para abrirlo.
-           ========================================================= */
-        .mobile-topbar { display: none; }
-        .nav-backdrop { display: none; }
-
-        @media (max-width: 767px) {
-            /* 100dvh en vez de 100vh: en el navegador del celular la barra de
-               direcciones aparece y desaparece, y con 100vh el contenido queda
-               cortado por debajo. */
-            body, .app-wrapper { height: 100dvh; }
-
-            .mobile-topbar {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                padding: 0.625rem 0.875rem;
-                background: #ffffff;
-                border-bottom: 1px solid #e2e8f0;
-                flex-shrink: 0;
-                z-index: 30;
-            }
-
-            .app-sidebar {
-                position: fixed;
-                top: 0; left: 0; bottom: 0;
-                width: 86vw;
-                max-width: 340px;
-                z-index: 60;
-                transform: translateX(-100%);
-                transition: transform 0.25s ease;
-                box-shadow: 0 0 40px rgba(15, 23, 42, 0.25);
-            }
-            .nav-open .app-sidebar { transform: translateX(0); }
-
-            .nav-backdrop {
-                display: block;
-                position: fixed;
-                inset: 0;
-                background: rgba(15, 23, 42, 0.45);
-                z-index: 55;
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.25s ease;
-            }
-            .nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
-
-            /* Los paddings generosos del escritorio dejan sin aire al
-               contenido en una pantalla de 375px. */
-            .glass-card { padding: 1.5rem !important; }
-
-            /* Cualquier tabla ancha se desplaza sola en vez de reventar el
-               ancho de la página. */
-            table { display: block; overflow-x: auto; white-space: nowrap; }
-
-            /* Evita el zoom automático de iOS al enfocar un campo: Safari
-               hace zoom si la letra mide menos de 16px. */
-            input, select, textarea { font-size: 16px !important; }
-        }
 
         .project-card { 
             transition: all 0.2s ease;
@@ -174,15 +125,23 @@
             gap: 1.25rem;
         }
 
+        /* ---- BOTONES DE ACCIÓN (Abrir / Subir / Generar / Crear) ----
+           Todos con el MISMO ancho mínimo y el texto centrado. Antes el ancho
+           lo decidía la palabra, así que "Abrir" quedaba mucho más angosto que
+           "Regenerar" y cada fila se veía descuadrada. */
         .btn-action {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
+            justify-content: center;
+            min-width: 6.25rem;
+            padding: 0.5rem 0.75rem;
             border-radius: 0.5rem;
             font-weight: 700;
             font-size: 0.75rem;
+            line-height: 1;
             text-transform: uppercase;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
             transition: all 0.2s;
         }
 
@@ -191,6 +150,30 @@
 
         .btn-upload { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
         .btn-upload:hover { background-color: #1e293b; color: white; }
+
+        /* ---- PESTAÑAS DEL MÓDULO (Info / OR / RETIE / Actas / ...) ----
+           Mismo problema: "OR" medía un tercio de "Bóveda Técnica". Ancho
+           mínimo común para que la parrilla quede pareja. */
+        .tab-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 7.25rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid transparent;
+            font-size: 0.625rem;
+            font-weight: 900;
+            line-height: 1;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+        .tab-btn-off { background-color: #f1f5f9; color: #334155; border-color: #e2e8f0; }
+        .tab-btn-off:hover { background-color: #e2e8f0; }
+        .tab-btn-on { background-color: #2563eb; color: #ffffff; border-color: #2563eb; }
+        .tab-btn-on:hover { background-color: #1d4ed8; }
 
         .view-transition {
             animation: fadeIn 0.4s ease-out;
@@ -280,6 +263,106 @@
             opacity: 0.4;
             cursor: not-allowed;
         }
+        /* ================= MÓVIL =================================
+           En escritorio el sidebar es una columna fija de 320px. En un
+           celular eso se come la pantalla entera, así que por debajo de
+           768px pasa a ser un cajón que se desliza desde la izquierda,
+           con una barra superior propia para abrirlo.
+           ========================================================= */
+        .mobile-topbar { display: none; }
+        .nav-backdrop { display: none; }
+
+        @media (max-width: 767px) {
+            /* 100dvh en vez de 100vh: en el navegador del celular la barra de
+               direcciones aparece y desaparece, y con 100vh el contenido queda
+               cortado por debajo. */
+            body, .app-wrapper { height: 100dvh; }
+
+            .mobile-topbar {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.625rem 0.875rem;
+                background: #ffffff;
+                border-bottom: 1px solid #e2e8f0;
+                flex-shrink: 0;
+                z-index: 30;
+            }
+
+            .app-sidebar {
+                position: fixed;
+                top: 0; left: 0; bottom: 0;
+                width: 86vw;
+                max-width: 340px;
+                z-index: 60;
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+                box-shadow: 0 0 40px rgba(15, 23, 42, 0.25);
+            }
+            .nav-open .app-sidebar { transform: translateX(0); }
+
+            .nav-backdrop {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.45);
+                z-index: 55;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.25s ease;
+            }
+            .nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
+
+            /* Los paddings generosos del escritorio dejan sin aire al
+               contenido en una pantalla de 375px. */
+            .glass-card { padding: 1.5rem !important; }
+
+            /* Cualquier tabla ancha se desplaza sola en vez de reventar el
+               ancho de la página. */
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+
+            /* Evita el zoom automático de iOS al enfocar un campo: Safari
+               hace zoom si la letra mide menos de 16px. */
+            input, select, textarea { font-size: 16px !important; }
+
+            /* Bóveda Técnica: dos columnas de tarjetas no caben en 375px.
+               Una sola columna. */
+            .ing-grid { grid-template-columns: 1fr; gap: 0.625rem; }
+
+            /* Filas de documento: en vez de pelear el ancho con la etiqueta,
+               los botones bajan a su propio renglón y se reparten el ancho en
+               partes iguales. Ahí está el "caos" que se veía: tres botones de
+               100px y el nombre del documento no caben en la misma línea. */
+            /* !important porque Tailwind se carga por CDN e inyecta sus estilos
+               DESPUÉS de este bloque: sin él, su clase .items-center gana por
+               orden de aparición y la etiqueta queda centrada en vez de
+               alineada a la izquierda. */
+            .doc-row { flex-direction: column; align-items: stretch !important; gap: 0.625rem; }
+            .doc-row .btn-row { width: 100%; }
+            .doc-row .btn-row .btn-action { flex: 1 1 0; min-width: 0; padding: 0.625rem 0.5rem; }
+
+            /* El nombre del documento deja de recortarse: en celular hay
+               renglón entero para él. */
+            .doc-row .doc-label { white-space: normal; overflow: visible; text-overflow: clip; }
+
+            /* Las pestañas se desplazan en horizontal en vez de apilarse en
+               una parrilla que ocupa media pantalla. */
+            .tab-scroller {
+                display: flex;
+                gap: 0.5rem;
+                overflow-x: auto;
+                padding-bottom: 0.25rem;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .tab-scroller::-webkit-scrollbar { display: none; }
+            .tab-btn { min-width: auto; flex: 0 0 auto; }
+
+            /* Las tarjetas de contenido respiran menos en móvil. */
+            .glass-card { padding: 1rem !important; }
+            .doc-scroll { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+        }
+
     </style>
 </head>
 <body class="antialiased">
@@ -470,27 +553,38 @@
                 </div>
 
                 <!-- CABECERA FIJA: Nombre + accesos rápidos + % de información (no se mueve con el scroll) -->
-                <div class="shrink-0 bg-white border-b border-slate-200 px-6 py-5 flex items-center justify-between gap-6 flex-wrap">
-                    <div>
+                <div class="shrink-0 bg-white border-b border-slate-200 px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-4 sm:gap-6 flex-wrap">
+                    <!-- En celular el nombre ya va en la barra superior, así que
+                         aquí se oculta: repetirlo gastaba un tercio de la pantalla. -->
+                    <div class="min-w-0 hidden sm:block">
                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nombre de Proyecto</p>
-                        <h2 id="infoHeaderNombre" class="text-xl font-black text-slate-900 tracking-tight">---</h2>
+                        <h2 id="infoHeaderNombre" class="text-base sm:text-xl font-black text-slate-900 tracking-tight">---</h2>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <div class="flex flex-col gap-1.5">
-                            <div class="flex gap-2">
-                                <button onclick="switchDocTab('info')" class="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded border border-blue-600 hover:bg-blue-700 transition-colors">Info</button>
-                                <button id="card-or" onclick="clickTramite('or')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200 transition-colors">OR</button>
-                                <button id="card-retie" onclick="clickTramite('retie')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200 transition-colors">RETIE</button>
+                    <div class="flex items-center gap-4 min-w-0 flex-1 justify-end">
+                        <!-- Pestañas del módulo. En escritorio se reparten en dos
+                             renglones parejos; en celular pasan a una sola tira que
+                             se desliza (ver .tab-scroller). Los estados activo /
+                             inactivo los pinta switchDocTab(). -->
+                        <div class="flex flex-col gap-1.5 min-w-0">
+                            <div class="tab-scroller flex gap-2">
+                                <button data-tab="info" onclick="switchDocTab('info')" class="tab-btn tab-btn-on">Info</button>
+                                <!-- OR y RETIE no son pestañas: son indicadores de estado.
+                                     renderDocModule() les cambia los colores (verde/ámbar/gris)
+                                     según el trámite, así que aquí solo va el color base y NO
+                                     la clase tab-btn-off, que pelearía con esos colores. -->
+                                <button id="card-or" onclick="clickTramite('or')" class="tab-btn bg-slate-100 text-slate-700 border-slate-200">OR</button>
+                                <button id="card-retie" onclick="clickTramite('retie')" class="tab-btn bg-slate-100 text-slate-700 border-slate-200">RETIE</button>
+                                <button data-tab="resumen" onclick="switchDocTab('resumen')" class="tab-btn tab-btn-off">Resumen</button>
                             </div>
-                            <div class="flex gap-2">
-                                <button onclick="switchDocTab('actas')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200 transition-colors">Actas</button>
-                                <button onclick="switchDocTab('boveda')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200 transition-colors">Bóveda Técnica</button>
-                                <button onclick="switchDocTab('preliminar')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200 transition-colors">Preliminar</button>
-                                <button onclick="switchDocTab('cronograma')" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-[10px] font-black uppercase rounded border border-slate-200 hover:bg-slate-200 transition-colors">Planeación</button>
+                            <div class="tab-scroller flex gap-2">
+                                <button data-tab="actas" onclick="switchDocTab('actas')" class="tab-btn tab-btn-off">Actas</button>
+                                <button data-tab="boveda" onclick="switchDocTab('boveda')" class="tab-btn tab-btn-off">Bóveda Técnica</button>
+                                <button data-tab="preliminar" onclick="switchDocTab('preliminar')" class="tab-btn tab-btn-off">Preliminar</button>
+                                <button data-tab="cronograma" onclick="switchDocTab('cronograma')" class="tab-btn tab-btn-off">Planeación</button>
                             </div>
                         </div>
-                        <div class="relative w-14 h-14 shrink-0">
-                            <svg class="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                        <div class="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0">
+                            <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
                                 <path class="text-slate-100" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
                                 <path id="infoCargaCircle" class="text-blue-600" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="0, 100" stroke-linecap="round" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
                             </svg>
@@ -501,8 +595,32 @@
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto px-5 pb-5 pt-4 bg-slate-50/50">
+                <div class="doc-scroll flex-1 overflow-y-auto px-5 pb-5 pt-4 bg-slate-50/50">
                     <div class="max-w-7xl mx-auto">
+
+                        <!-- PESTAÑA: RESUMEN
+                             A diferencia de las demás, esta NO es del proyecto abierto:
+                             muestra en forma de tabla los proyectos del año que esté
+                             seleccionado en el panel lateral. Tocar una fila abre ese
+                             proyecto. -->
+                        <div id="docTab-resumen" class="doc-tab-panel hidden">
+                            <div class="glass-card p-8">
+                                <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
+                                    <div>
+                                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Resumen de Proyectos</h3>
+                                        <p id="resumenSubtitulo" class="text-[10px] text-slate-400 font-bold uppercase tracking-wide mt-0.5">—</p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="text" id="resumenFiltro" oninput="renderResumen()" placeholder="Filtrar..."
+                                            class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-40">
+                                        <button onclick="copiarResumen()" class="btn-action btn-upload">Copiar</button>
+                                    </div>
+                                </div>
+                                <div class="overflow-x-auto -mx-2 px-2">
+                                    <table id="resumenTabla" class="w-full text-left border-collapse"></table>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- PESTAÑA: BÓVEDA TÉCNICA -->
                         <div id="docTab-boveda" class="doc-tab-panel hidden">
@@ -3213,16 +3331,29 @@
             if (tab === 'general') renderCronogramaGeneral();
         };
 
-        // Pestañas dentro del Módulo de Documentación (Info / Bóveda Técnica / Actas / Preliminar / Cronograma)
+        // Pestañas dentro del Módulo de Documentación
+        // (Info / Resumen / Bóveda Técnica / Actas / Preliminar / Cronograma)
+        const DOC_TABS = ['boveda', 'actas', 'info', 'preliminar', 'cronograma', 'resumen'];
+
         window.switchDocTab = (tab) => {
-            ['boveda', 'actas', 'info', 'preliminar', 'cronograma'].forEach(t => {
+            DOC_TABS.forEach(t => {
                 document.getElementById(`docTab-${t}`).classList.toggle('hidden', t !== tab);
             });
+
+            // Antes el resaltado azul estaba fijo en "Info" y nunca se movía, así
+            // que no había forma de saber en qué pestaña estabas.
+            document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
+                const activo = btn.dataset.tab === tab;
+                btn.classList.toggle('tab-btn-on', activo);
+                btn.classList.toggle('tab-btn-off', !activo);
+            });
+
             if (tab === 'preliminar') {
                 const p = projects.find(x => x.id === selectedProjectId);
                 if (p) renderPreliminar();
             }
             if (tab === 'cronograma') { switchCronoTab('proyecto'); }
+            if (tab === 'resumen') renderResumen();
         };
 
         // Escaneo y Lógica de Datos
@@ -3451,6 +3582,138 @@
             if (next > max) next = max;
             sidebarYear = next;
             renderSidebar();
+            // El Resumen depende del año: si está abierto, hay que repintarlo.
+            const panelResumen = document.getElementById('docTab-resumen');
+            if (panelResumen && !panelResumen.classList.contains('hidden')) renderResumen();
+        };
+
+        // ==========================================================
+        // RESUMEN — todos los proyectos del año en forma de tabla
+        // ----------------------------------------------------------
+        // Es la única pestaña que no habla del proyecto abierto: muestra los
+        // proyectos del año seleccionado en el panel lateral, con las columnas
+        // que se consultan a diario (NIC, radicado, estado OR/RETIE, medidor).
+        //
+        // Los datos vienen de dos sitios que ya están cargados, así que pintar
+        // la tabla no genera ni una petición nueva:
+        //   - el estado OR/RETIE lo calculó analyze() al escanear;
+        //   - NIC / radicado / medidor salen de project_info (Supabase), que ya
+        //     quedó en la caché en memoria durante ese mismo escaneo.
+        // ==========================================================
+
+        // Colores por estado, para que la columna se lea de un vistazo.
+        const RESUMEN_COLORES = {
+            'CONFORME':   'bg-emerald-100 text-emerald-700',
+            'APROBADO':   'bg-emerald-100 text-emerald-700',
+            'INSCRITO':   'bg-amber-100 text-amber-700',
+            'AGENDADO':   'bg-amber-100 text-amber-700',
+            'EN TRÁMITE': 'bg-blue-100 text-blue-700',
+            'OBSERVACIONES': 'bg-orange-100 text-orange-700',
+            'DE BAJA':    'bg-red-100 text-red-700'
+        };
+
+        function pillEstado(estado) {
+            const cls = RESUMEN_COLORES[estado] || 'bg-slate-100 text-slate-500';
+            return `<span class="inline-block px-2 py-1 rounded text-[9px] font-black uppercase whitespace-nowrap ${cls}">${escaparHtml(estado || '—')}</span>`;
+        }
+
+        function escaparHtml(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c =>
+                ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        // Guarda las filas ya calculadas para que "Copiar" no tenga que
+        // recalcularlas ni volver a leer el DOM.
+        let resumenFilas = [];
+
+        window.renderResumen = async () => {
+            const tabla = document.getElementById('resumenTabla');
+            const subtitulo = document.getElementById('resumenSubtitulo');
+            if (!tabla) return;
+
+            const delAnio = projects.filter(p =>
+                sidebarYear === null || anioNumerico(p) === sidebarYear || anioNumerico(p) === null
+            );
+
+            const filtro = (document.getElementById('resumenFiltro').value || '').toLowerCase().trim();
+
+            // project_info sale de la caché en memoria; si un proyecto no
+            // estuviera cacheado, esta es la única llamada que se haría.
+            const filas = [];
+            for (const p of delAnio) {
+                const info = (await getProjectInfo(p.id)) || {};
+                filas.push({
+                    id: p.id,
+                    nombre: p.name,
+                    nic: info.nicTrf || '',
+                    radicado: info.radicado || '',
+                    or: p.orStatusDisplay || '',
+                    retie: p.retieStatusDisplay || '',
+                    medidor: info.referenciaMedidor || ''
+                });
+            }
+
+            resumenFilas = filas
+                .filter(f => !filtro || Object.values(f).some(v => String(v).toLowerCase().includes(filtro)))
+                .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+            subtitulo.innerText = `${sidebarYear ?? 'Todos'} · ${resumenFilas.length} proyecto${resumenFilas.length === 1 ? '' : 's'}`;
+
+            if (!resumenFilas.length) {
+                tabla.innerHTML = `<tbody><tr><td class="py-10 text-center text-xs text-slate-400">
+                    ${filtro ? 'Ningún proyecto coincide con el filtro.' : 'No hay proyectos en este año.'}
+                </td></tr></tbody>`;
+                return;
+            }
+
+            const th = 'px-3 py-2.5 text-[9px] font-black text-slate-500 uppercase tracking-wider whitespace-nowrap border-b-2 border-slate-200';
+            const td = 'px-3 py-2.5 text-[11px] text-slate-700 border-b border-slate-100 align-middle';
+
+            tabla.innerHTML = `
+                <thead>
+                    <tr class="bg-slate-50">
+                        <th class="${th} text-left">Proyecto</th>
+                        <th class="${th} text-left">NIC / TRF</th>
+                        <th class="${th} text-left">Radicado</th>
+                        <th class="${th} text-left">OR</th>
+                        <th class="${th} text-left">RETIE</th>
+                        <th class="${th} text-left">Medidor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${resumenFilas.map(f => `
+                        <tr onclick="selectProject('${f.id.replace(/'/g, "\\'")}'); switchDocTab('info');"
+                            class="cursor-pointer hover:bg-blue-50/60 transition-colors">
+                            <td class="${td} font-bold text-slate-800 min-w-[180px]">${escaparHtml(f.nombre)}</td>
+                            <td class="${td} font-mono whitespace-nowrap">${escaparHtml(f.nic) || '<span class="text-slate-300">—</span>'}</td>
+                            <td class="${td} font-mono whitespace-nowrap">${escaparHtml(f.radicado) || '<span class="text-slate-300">—</span>'}</td>
+                            <td class="${td}">${pillEstado(f.or)}</td>
+                            <td class="${td}">${pillEstado(f.retie)}</td>
+                            <td class="${td} font-mono whitespace-nowrap">${escaparHtml(f.medidor) || '<span class="text-slate-300">—</span>'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>`;
+        };
+
+        /**
+         * Copia la tabla al portapapeles separada por tabuladores, que es el
+         * formato que Excel y Google Sheets pegan directamente en celdas.
+         */
+        window.copiarResumen = async () => {
+            if (!resumenFilas.length) { showToast('No hay nada que copiar.'); return; }
+            const encabezado = ['Proyecto', 'NIC/TRF', 'Radicado', 'OR', 'RETIE', 'Medidor'];
+            const texto = [encabezado.join('\t')]
+                .concat(resumenFilas.map(f => [f.nombre, f.nic, f.radicado, f.or, f.retie, f.medidor].join('\t')))
+                .join('\n');
+            try {
+                await navigator.clipboard.writeText(texto);
+                showToast(`${resumenFilas.length} proyecto(s) copiados. Pégalos en Excel.`);
+            } catch (e) {
+                // El portapapeles exige https y un gesto del usuario; si falla,
+                // no se pierde el trabajo: se deja el texto seleccionable.
+                console.error('No se pudo copiar:', e);
+                showToast('El navegador bloqueó el portapapeles.');
+            }
         };
 
         // ==========================================================
@@ -4014,26 +4277,29 @@
                 return botones;
             };
 
+            // doc-row / doc-label / btn-row: en escritorio es una fila (etiqueta a
+            // la izquierda, botones a la derecha); en celular el CSS los apila y
+            // reparte los botones a lo ancho. Ver el bloque @media.
             document.getElementById('listIng').innerHTML = p.ingItems.map(i => `
-                <div class="flex items-center justify-between p-4 bg-white border ${i.found ? 'border-blue-100' : 'border-slate-100'} rounded-md shadow-sm">
-                    <span class="text-xs font-bold text-slate-700 truncate pr-2">${i.label}</span>
-                    <div class="flex gap-1.5">${actionBtn(i, 'ing', i.id)}</div>
+                <div class="doc-row flex items-center justify-between gap-3 p-4 bg-white border ${i.found ? 'border-blue-100' : 'border-slate-100'} rounded-md shadow-sm">
+                    <span class="doc-label text-xs font-bold text-slate-700 truncate">${i.label}</span>
+                    <div class="btn-row flex gap-1.5 shrink-0">${actionBtn(i, 'ing', i.id)}</div>
                 </div>
             `).join('');
 
             document.getElementById('listAct').innerHTML = p.actItems.map(i => `
-                <div class="flex items-center justify-between p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                    <span class="text-[10px] font-bold text-slate-500">${i.label}</span>
-                    <div class="flex gap-1.5">${actActionBtn(i, i.id)}</div>
+                <div class="doc-row flex items-center justify-between gap-3 p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                    <span class="doc-label text-[11px] font-bold text-slate-600 truncate">${i.label}</span>
+                    <div class="btn-row flex gap-1.5 shrink-0">${actActionBtn(i, i.id)}</div>
                 </div>
             `).join('');
 
             document.getElementById('informeRow').innerHTML = `
-                <div class="flex items-center justify-between p-3 border border-slate-100 rounded-md hover:bg-slate-50 transition-colors">
-                    <span class="text-[10px] font-bold text-slate-500">${INFORME_CONFIG.label}</span>
-                    ${p.informeFound
+                <div class="doc-row flex items-center justify-between gap-3 p-3 border border-slate-100 rounded-md hover:bg-slate-50 transition-colors">
+                    <span class="doc-label text-[11px] font-bold text-slate-600 truncate">${INFORME_CONFIG.label}</span>
+                    <div class="btn-row flex gap-1.5 shrink-0">${p.informeFound
                         ? `<button onclick="openFile('${p.id}','informe','informe')" class="btn-action btn-view">Abrir</button>`
-                        : `<button onclick="abrirModalInforme('${p.id}')" class="btn-action btn-upload">Crear</button>`}
+                        : `<button onclick="abrirModalInforme('${p.id}')" class="btn-action btn-upload">Crear</button>`}</div>
                 </div>
             `;
 
@@ -5238,6 +5504,33 @@
             scanTimer = setInterval(() => {
                 if (!document.hidden) scan();
             }, sourceMode === 'drive' ? 180000 : 60000);
+        }
+
+        // ==========================================================
+        // PWA — instalación y persistencia del almacenamiento
+        // ----------------------------------------------------------
+        // Registrar el service worker es lo que habilita instalar la app en el
+        // teléfono. Pedir almacenamiento persistente es lo que evita que el
+        // navegador borre el token y la carpeta recordada cuando anda escaso
+        // de espacio: sin esto, cada cierto tiempo tocaría iniciar sesión y
+        // volver a elegir la carpeta.
+        // ==========================================================
+        if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(e => {
+                    // Que falle no rompe nada: solo se pierde la instalación.
+                    console.warn('No se pudo registrar el service worker:', e);
+                });
+            });
+        }
+
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persisted().then(yaEs => {
+                // El navegador la concede solo si considera que el sitio importa
+                // (instalado, visitado seguido, con permisos). Si dice que no,
+                // la app funciona igual; solo es menos duradera la sesión.
+                if (!yaEs) navigator.storage.persist().catch(() => {});
+            }).catch(() => {});
         }
 
         init();

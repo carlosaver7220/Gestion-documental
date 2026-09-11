@@ -135,6 +135,34 @@ izquierdo.
 
 ---
 
+## Instalar la app en el celular
+
+Vale la pena, y no solo por estética: **instalada, la sesión dura mucho más**.
+El navegador trata el almacenamiento de una app instalada como persistente y
+deja de reciclarlo cuando anda escaso de espacio, así que el token de Google y
+la carpeta elegida sobreviven.
+
+**Android (Chrome):** abrir la app → menú ⋮ → *Instalar aplicación* (o *Agregar
+a pantalla principal*).
+
+**iPhone (Safari):** abrir la app → botón Compartir → *Añadir a pantalla de
+inicio*. Tiene que ser Safari; desde Chrome en iPhone no aparece la opción.
+
+Queda con su icono propio y sin barra de direcciones.
+
+### Sobre la duración de la sesión
+
+El token de Google dura 1 hora y se renueva solo en segundo plano mientras
+tengas sesión de Google abierta en ese dispositivo. En el uso normal no deberías
+volver a iniciar sesión.
+
+Donde puede fallar es en **iPhone**: la prevención de rastreo de Safari a veces
+bloquea la renovación silenciosa, y ahí tocaría entrar de nuevo cada cierto
+tiempo. En Android no pasa. En ese caso la carpeta sigue recordada: solo hay que
+volver a iniciar sesión, no a buscarla.
+
+---
+
 ## Si algo falla
 
 | Lo que ves | Qué revisar |

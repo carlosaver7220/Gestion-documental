@@ -249,6 +249,48 @@
         return requestToken(false);
     }
 
+    // -------------------------------------------------- sesión persistente
+    // Varias llamadas simultáneas no deben disparar varias renovaciones: se
+    // comparte la misma promesa.
+    let renovacionEnCurso = null;
+
+    function renovarSilencioso() {
+        if (renovacionEnCurso) return renovacionEnCurso;
+        renovacionEnCurso = requestToken(false)
+            .catch(e => { throw e; })
+            .finally(() => { renovacionEnCurso = null; });
+        return renovacionEnCurso;
+    }
+
+    /**
+     * Renueva el token ANTES de que caduque, en vez de esperar a que una
+     * petición falle con 401. Sin esto, al volver a la app después de un rato
+     * la primera acción se siente lenta (falla, renueva, reintenta) y en el
+     * peor caso muestra un error antes de recuperarse.
+     *
+     * Se engancha a tres momentos:
+     *   - cada 5 minutos mientras la pestaña está a la vista;
+     *   - al volver a la app (cambio de pestaña, desbloquear el teléfono);
+     *   - al recuperar la conexión.
+     */
+    function iniciarRenovacionAutomatica() {
+        const MARGEN = 5 * 60 * 1000;   // renovar si le quedan menos de 5 min
+
+        const revisar = () => {
+            if (document.hidden) return;          // en segundo plano no vale la pena
+            if (!lsGet(LS.rootId)) return;        // no hay nada conectado por Drive
+            if (tokenExpiresAt - Date.now() > MARGEN) return;
+            renovarSilencioso().catch(() => {
+                // Si falla, no se molesta al usuario aquí: la próxima petición
+                // real volverá a intentarlo y ahí sí se puede informar.
+            });
+        };
+
+        setInterval(revisar, 5 * 60 * 1000);
+        document.addEventListener('visibilitychange', revisar);
+        window.addEventListener('online', revisar);
+    }
+
     // ------------------------------------------------------------ capa HTTP
     /**
      * fetch contra la API de Drive con el token puesto, reintento automático
@@ -795,4 +837,6 @@
         isDriveHandle: (h) => !!(h && h._isDrive),
         clearCache: () => childrenCache.clear()
     };
+
+    iniciarRenovacionAutomatica();
 })();
