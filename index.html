@@ -1746,9 +1746,50 @@
         // Cache simple en memoria para no pegarle a Supabase en cada get()
         const _projectDataCache = new Map();
 
+        // Cuando es true, la caché tiene TODAS las filas de la tabla. Entonces
+        // un código que no esté en ella es un proyecto que todavía no tiene
+        // fila, no un dato pendiente de consultar: por eso deja de hacer falta
+        // preguntar proyecto por proyecto.
+        let _cacheCompleta = false;
+
+        /**
+         * Trae de una sola vez los datos de todos los proyectos.
+         *
+         * Antes cada analyze() consultaba lo suyo por separado: con 84
+         * proyectos eran 84 viajes de ida y vuelta en fila india, medidos en
+         * ~18 s. Esta única consulta trae lo mismo en ~0,3 s.
+         *
+         * Se vuelve a llamar en cada escaneo a propósito: es lo que hace que
+         * aparezca lo que alguien guardó desde otro equipo. Antes la caché se
+         * llenaba una vez y no se refrescaba nunca, y por eso tocaba recargar
+         * la página para ver cambios ajenos.
+         */
+        async function precargarProyectos() {
+            if (!supabaseClient) return;
+            const { data, error } = await supabaseClient
+                .from('proyectos')
+                .select('codigo, datos');
+            if (error) {
+                console.error('Supabase precargarProyectos error:', error);
+                // Sin precarga se puede seguir trabajando: getProjectData
+                // vuelve a consultar de a uno. Lento, pero correcto.
+                _cacheCompleta = false;
+                return;
+            }
+            _projectDataCache.clear();
+            for (const fila of data || []) {
+                if (fila.codigo) _projectDataCache.set(fila.codigo, fila.datos || {});
+            }
+            _cacheCompleta = true;
+        }
+
         async function getProjectData(codigo, { fresh = false } = {}) {
             if (!supabaseClient || !codigo) return {};
-            if (!fresh && _projectDataCache.has(codigo)) return _projectDataCache.get(codigo);
+            if (!fresh) {
+                if (_projectDataCache.has(codigo)) return _projectDataCache.get(codigo);
+                // La precarga ya trajo la tabla entera: si no está, no existe.
+                if (_cacheCompleta) return {};
+            }
             const { data, error } = await supabaseClient
                 .from('proyectos')
                 .select('datos')
@@ -1832,6 +1873,68 @@
                 console.error('Error revisando proyectos huérfanos:', e);
             } finally {
                 _orphanCheckRunning = false;
+            }
+        }
+
+        // ----------------------------------------------------------
+        // CAMBIOS EN VIVO
+        // ----------------------------------------------------------
+        // Lo que alguien guarde desde otro equipo llega aquí en el momento,
+        // sin esperar al refresco periódico ni recargar la página.
+        //
+        // No se re-escanea el disco al recibir un cambio: lo que cambió está
+        // en Supabase, y los archivos siguen donde estaban. Se actualiza la
+        // caché, se recalcula el estado y se repinta. Es instantáneo y no
+        // gasta ni una petición a Drive.
+        //
+        // La tabla ya está publicada en Realtime, así que esto funciona tal
+        // cual. Si alguna vez dejara de hacerlo, no se rompe nada: queda el
+        // refresco periódico, solo que más lento. Para volver a publicarla,
+        // en el SQL Editor de Supabase:
+        //     alter publication supabase_realtime add table public.proyectos;
+        // ----------------------------------------------------------
+        let _canalProyectos = null;
+
+        function escucharCambiosEnVivo() {
+            if (!supabaseClient || _canalProyectos) return;
+            try {
+                _canalProyectos = supabaseClient
+                    .channel('proyectos-en-vivo')
+                    .on('postgres_changes',
+                        { event: '*', schema: 'public', table: 'proyectos' },
+                        (payload) => {
+                            const fila = payload.new && payload.new.codigo ? payload.new : payload.old;
+                            const codigo = fila && fila.codigo;
+                            if (!codigo) return;
+                            if (payload.eventType === 'DELETE') _projectDataCache.delete(codigo);
+                            else _projectDataCache.set(codigo, fila.datos || {});
+                            aplicarCambioEnVivo(codigo);
+                        })
+                    .subscribe((estado) => {
+                        if (estado === 'CHANNEL_ERROR' || estado === 'TIMED_OUT') {
+                            console.warn('Realtime no disponible (' + estado + '). ' +
+                                'Queda el refresco periódico. Para activarlo: ' +
+                                'alter publication supabase_realtime add table public.proyectos;');
+                        }
+                    });
+            } catch (e) {
+                console.warn('No se pudo suscribir a cambios en vivo:', e);
+            }
+        }
+
+        // Refleja en pantalla un cambio que llegó de otro equipo.
+        function aplicarCambioEnVivo(codigo) {
+            const p = projects.find(x => x.id === codigo);
+            if (!p) return; // proyecto que este equipo todavía no ha escaneado
+            const datos = _projectDataCache.get(codigo) || {};
+            if (datos.project_info) p.info = datos.project_info;
+            if (datos.states) p.states = datos.states;
+            recalcularEstado(p);
+
+            renderSidebar();
+            if (selectedProjectId === codigo) {
+                renderDocModule(p);
+                if (!document.getElementById('developmentView').classList.contains('hidden')) renderDevelopment();
             }
         }
 
@@ -3423,6 +3526,40 @@
         };
 
         // Escaneo y Lógica de Datos
+        // Firma del último resultado del escaneo, para no repintar de balde.
+        let _firmaProyectos = null;
+
+        /**
+         * Recalcula el estado visible y el progreso de un proyecto.
+         *
+         * Depende de dos cosas: el estado guardado en Supabase (states) y la
+         * evidencia detectada en los archivos, que ya viene calculada dentro
+         * del proyecto (orConforme / orInscrito / retieConforme). Está aparte
+         * para poder aplicar un cambio recibido en vivo sin volver a leer el
+         * disco: un cambio en Supabase no mueve ningún archivo.
+         */
+        function recalcularEstado(p) {
+            let orStatusDisplay = p.states.or.status;
+            if (orStatusDisplay === 'NO INSCRITO' && p.orConforme) orStatusDisplay = 'CONFORME';
+            else if (orStatusDisplay === 'NO INSCRITO' && p.orInscrito) orStatusDisplay = 'INSCRITO';
+            const retieStatusDisplay = (p.states.retie.status === 'POR AGENDAR' && p.retieConforme)
+                ? 'APROBADO'
+                : p.states.retie.status;
+
+            p.orStatusDisplay = orStatusDisplay;
+            p.retieStatusDisplay = retieStatusDisplay;
+            p.orPct = ESTADO_PCT.or[orStatusDisplay] ?? 0;
+            p.retiePct = ESTADO_PCT.retie[retieStatusDisplay] ?? 0;
+            p.prog = Math.round(
+                p.bovedaPct * PESOS_PROGRESO.boveda +
+                p.actasPct * PESOS_PROGRESO.actas +
+                p.informePct * PESOS_PROGRESO.informe +
+                p.orPct * PESOS_PROGRESO.or +
+                p.retiePct * PESOS_PROGRESO.retie
+            );
+            return p;
+        }
+
         async function scan() {
             if (!currentHandle) return;
             const spinner = document.getElementById('syncSpinner');
@@ -3439,22 +3576,52 @@
                     await DriveFS.refreshTree(currentHandle.id);
                 }
 
+                // Una sola consulta con los datos de todos los proyectos, en
+                // lugar de una por proyecto dentro de analyze().
+                await precargarProyectos();
+
+                // Primero se listan las carpetas y después se analizan en
+                // tandas paralelas. Antes cada proyecto esperaba a que
+                // terminara el anterior, uno detrás de otro.
+                const pendientes = [];
                 for await (const entry of currentHandle.values()) {
                     // Generalizado a 0.N. (no solo 0.1/0.2/0.3) por si se crean más carpetas de año a futuro
                     if (entry.kind === 'directory' && /^0\.\d+\./.test(entry.name)) {
                         const yearMatch = entry.name.match(/(20\d{2})/);
                         const year = yearMatch ? yearMatch[1] : '—';
                         for await (const proj of entry.values()) {
-                            if (proj.kind === 'directory') {
-                                const analyzed = await analyze(proj);
-                                analyzed.year = year;
-                                temp.push(analyzed);
-                            }
+                            if (proj.kind === 'directory') pendientes.push({ proj, year });
                         }
                     }
                 }
+
+                // De a tandas y no todos de golpe: en local son lecturas de
+                // disco reales y abrir 84 a la vez no acelera, atasca.
+                const LOTE = 8;
+                for (let i = 0; i < pendientes.length; i += LOTE) {
+                    const tanda = await Promise.all(
+                        pendientes.slice(i, i + LOTE).map(async ({ proj, year }) => {
+                            const analizado = await analyze(proj);
+                            analizado.year = year;
+                            return analizado;
+                        })
+                    );
+                    temp.push(...tanda);
+                }
+
                 projects = temp.sort((a,b) => b.id.localeCompare(a.id));
-                renderSidebar();
+
+                // El refresco periódico vuelve a pintar aunque no haya cambiado
+                // nada, y eso hace saltar el scroll del sidebar mientras uno
+                // está leyendo. Se compara una firma del resultado y se
+                // redibuja solo si de verdad cambió algo.
+                const firma = JSON.stringify(projects.map(p => [
+                    p.id, p.prog, p.bovedaPct, p.actasPct, p.informePct,
+                    p.orStatusDisplay, p.retieStatusDisplay
+                ]));
+                const huboCambios = firma !== _firmaProyectos;
+                _firmaProyectos = firma;
+                if (huboCambios) renderSidebar();
                 if (!selectedProjectId && projects.length) {
                     // Al conectar por primera vez, entra directo al primer proyecto del año más reciente
                     // (mismo orden alfabético/agrupación que se ve en el sidebar) — ya no hay hub que elegir.
@@ -3463,7 +3630,7 @@
                         .filter(p => (p.year || 'Sin Año') === years[0])
                         .sort((a, b) => a.name.localeCompare(b.name));
                     selectProject(topYearProjects[0].id);
-                } else if (selectedProjectId) {
+                } else if (selectedProjectId && huboCambios) {
                     const p = projects.find(x => x.id === selectedProjectId);
                     if (p) {
                         renderDocModule(p);
@@ -5604,15 +5771,27 @@
             document.getElementById('btnReactivate').classList.add('hidden');
             renderSourceUI();
             scan().then(() => limpiarProyectosHuerfanos());
+            escucharCambiosEnVivo();
             if (scanTimer) clearInterval(scanTimer);
             // Drive cobra cuota por petición y el refresco reconstruye el árbol
             // entero, así que allí se espacia más que en local. Y si la pestaña
             // no está a la vista (celular bloqueado, otra app encima) el
             // refresco se salta: no sirve de nada y gasta cuota.
+            //
+            // Este temporizador ya no es la vía principal para enterarse de los
+            // cambios — de eso se encarga Realtime, al instante. Queda como red
+            // de seguridad y, sobre todo, para detectar archivos nuevos en la
+            // carpeta, que Realtime no ve.
             scanTimer = setInterval(() => {
                 if (!document.hidden) scan();
-            }, sourceMode === 'drive' ? 180000 : 60000);
+            }, sourceMode === 'drive' ? 120000 : 30000);
         }
+
+        // Al volver a la pestaña después de un rato, revisar de una vez en vez
+        // de esperar al siguiente tic del temporizador.
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && currentHandle) scan();
+        });
 
         // ==========================================================
         // PWA — instalación y persistencia del almacenamiento
