@@ -5406,6 +5406,17 @@
          * el archivo, es instantáneo y en celular se ve mucho mejor que un
          * blob de PDF, que el navegador móvil a veces ni sabe mostrar.
          */
+        // Tipos que el navegador sabe pintar en una pestaña. Lo que no esté
+        // aquí (docx, xlsx, dwg, mpp...) se descarga, que es lo único que
+        // puede hacer con ello. El SVG va a descarga a propósito: un blob se
+        // sirve con nuestro origen y un SVG puede traer scripts dentro.
+        const MIME_VISIBLE = {
+            pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg',
+            jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp',
+            bmp: 'image/bmp', txt: 'text/plain', csv: 'text/csv',
+            mp4: 'video/mp4', webm: 'video/webm'
+        };
+
         window.abrirHandle = async (handle) => {
             if (!handle) return;
             try {
@@ -5413,7 +5424,38 @@
                     window.open(handle.webViewLink, '_blank', 'noopener');
                     return;
                 }
-                await abrirHandle(handle);
+                if (typeof handle.getFile !== 'function') {
+                    throw new Error('Esto no es un archivo.');
+                }
+
+                // Modo local (y Drive sin webViewLink): bajarlo a memoria y
+                // abrirlo como blob URL.
+                const file = await handle.getFile();
+                const nombre = file.name || handle.name || 'archivo';
+                const ext = nombre.split('.').pop().toLowerCase();
+                const tipoVisible = MIME_VISIBLE[ext];
+                // Si el sistema no supo decirnos el tipo, lo deducimos de la
+                // extensión: sin esto un PDF se descarga en vez de verse.
+                const tipo = file.type || tipoVisible || 'application/octet-stream';
+                const blob = tipo === file.type ? file : new Blob([file], { type: tipo });
+                const url = URL.createObjectURL(blob);
+
+                // Se usa un <a> y no window.open porque con 'noopener' el open
+                // devuelve null siempre y no hay forma de saber si funcionó.
+                const a = document.createElement('a');
+                a.href = url;
+                if (tipoVisible) {
+                    a.target = '_blank';
+                    a.rel = 'noopener';
+                } else {
+                    a.download = nombre;
+                }
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                // Darle tiempo a la pestaña a cargar antes de soltar la memoria.
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
             } catch (e) {
                 console.error('No se pudo abrir el archivo:', e);
                 showToast('No se pudo abrir el archivo: ' + (e && e.message ? e.message : e));
