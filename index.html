@@ -1824,57 +1824,25 @@
         }
 
         // ----------------------------------------------------------
-        // LIMPIEZA DE PROYECTOS HUÉRFANOS
+        // (ELIMINADO) LIMPIEZA DE PROYECTOS HUÉRFANOS
         // ----------------------------------------------------------
-        // El navegador no puede "enterarse" al instante de que borraste una
-        // carpeta desde el explorador de archivos (no existe esa notificación
-        // para carpetas locales). Lo que sí podemos hacer es, cada vez que
-        // conectas o reconectas la Ruta Maestra, comparar los proyectos que
-        // hay en Supabase contra los que realmente existen en el disco, y
-        // si algún registro quedó "huérfano" (su carpeta ya no está),
-        // preguntarte si quieres borrar también esos datos.
-        const _orphanDismissed = new Set(JSON.parse(sessionStorage.getItem('orphanDismissed') || '[]'));
-        let _orphanCheckRunning = false;
-
-        async function limpiarProyectosHuerfanos() {
-            if (!supabaseClient || _orphanCheckRunning) return;
-            _orphanCheckRunning = true;
-            try {
-                const { data, error } = await supabaseClient.from('proyectos').select('codigo, nombre');
-                if (error || !data) return;
-                const idsEnDisco = new Set(projects.map(p => p.id));
-                const huerfanos = data.filter(row => row.codigo && !idsEnDisco.has(row.codigo) && !_orphanDismissed.has(row.codigo));
-                if (huerfanos.length === 0) return;
-
-                const listado = huerfanos.map(h => `- ${h.nombre || h.codigo}`).join('\n');
-                const confirmar = confirm(
-                    `Encontré ${huerfanos.length} proyecto(s) en la base de datos cuya carpeta ya no existe en el disco:\n\n${listado}\n\n¿Quieres borrar también esos datos de Supabase?`
-                );
-
-                if (!confirmar) {
-                    huerfanos.forEach(h => _orphanDismissed.add(h.codigo));
-                    sessionStorage.setItem('orphanDismissed', JSON.stringify([..._orphanDismissed]));
-                    return;
-                }
-
-                const { error: delError } = await supabaseClient
-                    .from('proyectos')
-                    .delete()
-                    .in('codigo', huerfanos.map(h => h.codigo));
-
-                if (delError) {
-                    console.error('Supabase delete orphans error:', delError);
-                    showToast('No se pudo borrar de Supabase: ' + delError.message);
-                } else {
-                    huerfanos.forEach(h => _projectDataCache.delete(h.codigo));
-                    showToast(`Se borraron ${huerfanos.length} proyecto(s) huérfano(s) de Supabase`);
-                }
-            } catch (e) {
-                console.error('Error revisando proyectos huérfanos:', e);
-            } finally {
-                _orphanCheckRunning = false;
-            }
-        }
+        // Aquí vivía una rutina que comparaba los proyectos de Supabase
+        // contra las carpetas del disco y ofrecía borrar los que no
+        // encontraba. Se eliminó el 21/09/2026 después de que borrara la
+        // tabla entera dos veces.
+        //
+        // El fallo de fondo: que UN equipo no vea una carpeta no prueba que
+        // la carpeta no exista. Drive a medio cargar, OneDrive sin
+        // sincronizar, un permiso no concedido o la Ruta Maestra mal
+        // elegida bastan para que ese equipo crea que los proyectos se
+        // esfumaron — y el borrado se lo llevaba todo PARA TODOS los
+        // equipos. El 21/09 un equipo vio 1 proyecto de 84 y borró los 83
+        // restantes.
+        //
+        // Si algún día sobra un registro, se borra a mano desde Supabase,
+        // que es una fila y una sola vez, y no un automatismo capaz de
+        // vaciar la base.
+        // ----------------------------------------------------------
 
         // ----------------------------------------------------------
         // CAMBIOS EN VIVO
@@ -5752,7 +5720,6 @@
                         document.getElementById('btnReactivate').classList.add('hidden');
                         renderSourceUI();
                         await scan();
-                        limpiarProyectosHuerfanos();
                     } else {
                         showToast('Permiso denegado para acceder a la carpeta.');
                     }
@@ -5770,7 +5737,7 @@
         function start() {
             document.getElementById('btnReactivate').classList.add('hidden');
             renderSourceUI();
-            scan().then(() => limpiarProyectosHuerfanos());
+            scan();
             escucharCambiosEnVivo();
             if (scanTimer) clearInterval(scanTimer);
             // Drive cobra cuota por petición y el refresco reconstruye el árbol
