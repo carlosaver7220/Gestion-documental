@@ -3380,11 +3380,14 @@
                 { id: "5.1.", label: "Acta de Declaracion de Construccion", tipo: 'generable' },
                 { id: "6.", label: "Cédula Catastral" }, { id: "7.", label: "Certificado Tradición" },
                 { id: "8.", label: "FT Inversor" },
-                // 8.1 solo aplica a sistemas con batería (Híbrido / Off-Grid), los mismos que
-                // piden los campos de batería en Datos del Proyecto. En un On-Grid no cuenta
-                // en el porcentaje (salvo que el archivo ya esté subido).
-                { id: "8.1.", label: "FT Batería", aplica: (info) => tieneBateria(info) },
-                { id: "8.2.", label: "Manual Usuario Inversor" },
+                // 8.1 y 8.2 se agregaron después de que los proyectos ya estaban armados, así que
+                // se pueden subir pero NO valen en el porcentaje (sinValor): si contaran,
+                // todos los proyectos viejos bajarían por un documento que antes no se pedía.
+                // Para que empiecen a valer basta con quitarles sinValor.
+                // 8.1 además solo se muestra en sistemas con batería (Híbrido / Off-Grid), los
+                // mismos que piden los campos de batería en Datos del Proyecto.
+                { id: "8.1.", label: "FT Batería", sinValor: true, aplica: (info) => tieneBateria(info) },
+                { id: "8.2.", label: "Manual Usuario Inversor", sinValor: true },
                 { id: "9.", label: "FT Panel" },
                 { id: "10.", label: "Dispositivo Transferencia" }, { id: "11.", label: "Cuadro de Cargas" },
                 { id: "12.", label: "Certificación Experiencia" }, { id: "13.", label: "Espacios de Trabajo" },
@@ -3576,8 +3579,11 @@
         function itemsIngVisibles(todos, info) {
             return todos.filter(i => i.found || !i.aplica || i.aplica(info));
         }
+        // Solo cuentan los incisos con valor: los marcados sinValor se muestran y se
+        // pueden subir, pero ni suman ni restan.
         function pctBoveda(items) {
-            return items.length ? Math.round((items.filter(i => i.found).length / items.length) * 100) : 0;
+            const valen = items.filter(i => !i.sinValor);
+            return valen.length ? Math.round((valen.filter(i => i.found).length / valen.length) * 100) : 0;
         }
 
         // El Informe General de Proyecto vive en "4. DOSSIER_<NOMBRE>", con plantilla propia
