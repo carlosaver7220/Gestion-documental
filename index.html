@@ -3379,7 +3379,13 @@
                 { id: "5.", label: "Acta de declaracion de Diseño", tipo: 'generable' },
                 { id: "5.1.", label: "Acta de Declaracion de Construccion", tipo: 'generable' },
                 { id: "6.", label: "Cédula Catastral" }, { id: "7.", label: "Certificado Tradición" },
-                { id: "8.", label: "FT Inversor" }, { id: "9.", label: "FT Panel" },
+                { id: "8.", label: "FT Inversor" },
+                // 8.1 solo aplica a sistemas con batería (Híbrido / Off-Grid), los mismos que
+                // piden los campos de batería en Datos del Proyecto. En un On-Grid no cuenta
+                // en el porcentaje (salvo que el archivo ya esté subido).
+                { id: "8.1.", label: "FT Batería", aplica: (info) => tieneBateria(info) },
+                { id: "8.2.", label: "Manual Usuario Inversor" },
+                { id: "9.", label: "FT Panel" },
                 { id: "10.", label: "Dispositivo Transferencia" }, { id: "11.", label: "Cuadro de Cargas" },
                 { id: "12.", label: "Certificación Experiencia" }, { id: "13.", label: "Espacios de Trabajo" },
                 { id: "14.", label: "Distancias Seguridad" }, { id: "15.", label: "Memoria de Cálculo" },
@@ -3399,6 +3405,180 @@
                 { id: "6.", label: "Acta de Instalacion de Medidor Bidireccional", tipo: 'simple' }
             ]
         };
+
+        // ==========================================================
+        // ARCHIVOS DE LA BÓVEDA: ÍNDICES, DETECCIÓN Y NOMBRES
+        // ----------------------------------------------------------
+        // Cada inciso se identifica por el índice con que empieza el archivo:
+        //   "1.MOTO GAP ..."        -> inciso 1
+        //   "2. CERTIFICADO ..."    -> inciso 2          (archivo principal)
+        //   "2.1 CERTIFICADO ..."   -> inciso 2, segundo archivo
+        //   "3-4.1 Declaracion ..." -> inciso 3-4, primer adicional
+        //   "8.1. FT Batería"       -> inciso propio 8.1 (no es un 2.º archivo del 8)
+        // Un mismo inciso puede tener varios archivos: el primero lleva el índice solo
+        // ("2.") y los siguientes "2.1", "2.2"... saltándose los números que ya son un
+        // inciso aparte (en el 8 los extras empezarían en 8.3, porque 8.1 y 8.2 existen).
+        // ==========================================================
+        function parseIndice(nombre) {
+            const m = String(nombre || '').trim().match(/^(\d+(?:-\d+)?)\.(\d+)?/);
+            if (!m) return null;
+            return { base: m[1], sub: m[2] === undefined ? null : parseInt(m[2], 10) };
+        }
+
+        // Subíndices de la base que ya son un inciso propio (8 -> [1, 2]; 5 -> [1]).
+        function subsReservados(base) {
+            return CONFIG.ing
+                .map(c => parseIndice(c.id))
+                .filter(i => i && i.base === base && i.sub !== null)
+                .map(i => i.sub);
+        }
+
+        // Los incisos con subíndice propio (8.1, 5.1) y los generables guardan un solo archivo.
+        function itemAdmiteVarios(item) {
+            const idx = parseIndice(item.id);
+            return !!idx && idx.sub === null && item.tipo !== 'generable';
+        }
+
+        // Archivos de la carpeta que pertenecen a este inciso, principal primero.
+        // Si una carpeta tiene el .docx de trabajo junto al .pdf (Memorias, Plan de
+        // mantenimiento), cuenta como un solo documento: se queda el .pdf.
+        function archivosDelItem(item, files) {
+            const idx = parseIndice(item.id);
+            if (!idx) return [];
+            const reservados = subsReservados(idx.base);
+            const propios = files
+                .map(f => ({ f, i: parseIndice(f.n) }))
+                .filter(({ i }) => {
+                    if (!i || i.base !== idx.base) return false;
+                    if (idx.sub !== null) return i.sub === idx.sub;
+                    return i.sub === null || !reservados.includes(i.sub);
+                });
+            const esPdf = (n) => /\.pdf$/i.test(n.trim());
+            const sinExt = (n) => n.trim().replace(/\.[^.]+$/, '').toLowerCase();
+            const conPdf = new Set(propios.filter(({ f }) => esPdf(f.n)).map(({ f }) => sinExt(f.n)));
+            return propios
+                .filter(({ f }) => esPdf(f.n) || !conPdf.has(sinExt(f.n)))
+                .sort((a, b) => ((a.i.sub ?? 0) - (b.i.sub ?? 0)) || a.f.n.localeCompare(b.f.n))
+                .map(({ f, i }) => ({ ...f, sub: i.sub }));
+        }
+
+        // ----------------------------------------------------------
+        // NOMBRE DE CADA ARCHIVO SUBIDO
+        // Sale de los datos del proyecto (Datos del Proyecto), siguiendo los nombres que
+        // ya lleva la carpeta de ingeniería. Para cambiar cómo se llama un inciso basta
+        // con tocar su línea en el switch.
+        // Devuelve el texto que va DESPUÉS del índice ("2." + " " + texto) y la lista de
+        // datos que hacían falta y estaban vacíos.
+        // ----------------------------------------------------------
+        function numeroLimpio(v) {
+            const s = String(v ?? '').trim().replace(',', '.');
+            if (!s) return '';
+            const n = Number(s);
+            return Number.isFinite(n) ? String(n) : s;
+        }
+
+        function limpiarNombreArchivo(s) {
+            return String(s)
+                .replace(/[\\/:*?"<>|]/g, '')
+                .replace(/\s+/g, ' ')
+                .replace(/[\s.]+$/, '')
+                .trim();
+        }
+
+        function nombreBoveda(id, info, proyecto) {
+            info = info || {};
+            const faltan = [];
+            const dato = (valor, etiqueta) => {
+                const v = String(valor ?? '').trim();
+                if (!v) faltan.push(etiqueta);
+                return v;
+            };
+            const unir = (...p) => p.filter(Boolean).join(' - ');
+            const juntar = (...p) => p.filter(Boolean).join(' ');
+
+            const marca = () => dato(info.marcaFabricante, 'Marca Inversor').toUpperCase();
+            const refInversor = () => dato(info.referenciaInversor, 'Referencia Inversor');
+            const dc = () => numeroLimpio(dato(info.potenciaDC, 'Potencia (DC)'));
+            const ac = () => numeroLimpio(dato(info.potenciaAC, 'Potencia (AC)'));
+            // "11.16kWp - 10kW" (unifilar) y "11.16 kWp - 10 kW" (el resto): así están
+            // escritos en la carpeta de cada proyecto.
+            const potencia = (esp) => {
+                const d = dc(), a = ac();
+                return unir(d && `${d}${esp}kWp`, a && `${a}${esp}kW`);
+            };
+
+            let texto;
+            switch (id) {
+                case '1.':   texto = juntar(proyecto, potencia(''), 'Diagrama Unifilar'); break;
+                case '2.':   texto = unir('CERTIFICADO DE INVERSOR', marca(), refInversor()); break;
+                case '3-4.': {
+                    const pot = numeroLimpio(dato(info.potenciaInversor, 'Potencia Inversor'));
+                    texto = unir('Declaracion Cumplimiento Acuerdo CNO 2233', juntar(marca(), refInversor(), pot && `${pot}kW`));
+                    break;
+                }
+                case '5.':
+                case '5.1.': texto = unir(CONFIG.ing.find(c => c.id === id).label, proyecto); break;
+                case '6.':   texto = juntar('CC', dato(info.dueno, 'Nombre Completo (cliente)').toUpperCase()); break;
+                case '7.':   texto = juntar('CTL', proyecto); break;
+                case '8.':   texto = unir('FICHA TÉCNICA INVERSOR', marca(), refInversor()); break;
+                case '8.1.': texto = unir('FICHA TÉCNICA BATERÍA', dato(info.referenciaBateria, 'Referencia Batería')); break;
+                case '8.2.': texto = unir('MANUAL DE USUARIO INVERSOR', marca(), refInversor()); break;
+                case '9.':   texto = 'FICHA TECNICA PANELES'; break;
+                case '10.':  texto = 'Disponibilidad transformador'; break;
+                case '11.':  texto = juntar('Cuadro de cargas', proyecto); break;
+                case '12.':  texto = 'CERTIFICADO CONSTRUCTOR'; break;
+                case '13.':  texto = juntar('Espacios de trabajo y operación', proyecto, potencia(' ')); break;
+                case '14.':  texto = juntar('Distancia de seguridad _SSFV', proyecto, potencia(' ')); break;
+                case '15.':  texto = juntar('Memorias de Calculo_SSFV', proyecto, potencia(' ')); break;
+                case '16.':  texto = juntar('Disposicion de paneles Proyecto', proyecto); break;
+                case '17.':  texto = juntar('PLAN DE MANTENIMIENTO', proyecto); break;
+                case '18.':  texto = juntar('Plano_SSFV', proyecto, potencia(' ')); break;
+                default: {
+                    const cfg = CONFIG.ing.find(c => c.id === id);
+                    texto = cfg ? cfg.label : id;
+                }
+            }
+            return { texto: limpiarNombreArchivo(texto), faltan: [...new Set(faltan)] };
+        }
+
+        // Nombres con que se guardan los archivos que se suben a un inciso. El primero
+        // lleva el índice solo ("2.") y cada extra el siguiente libre ("2.1", "2.2"...),
+        // sin pisar los ya usados ni los que son un inciso aparte (8.1, 8.2).
+        // `exts` trae la extensión de cada archivo elegido (".pdf").
+        function nombresParaSubida(item, texto, exts) {
+            const idx = parseIndice(item.id);
+            const existentes = item.files || [];
+            const usados = new Set(existentes.map(f => f.sub).filter(s => s !== null));
+            const reservados = subsReservados(idx.base);
+            let hayPrincipal = existentes.some(f => f.sub === null);
+            return exts.map(ext => {
+                let prefijo;
+                if (idx.sub !== null || !hayPrincipal) {
+                    prefijo = item.id;
+                    hayPrincipal = true;
+                } else {
+                    let n = 1;
+                    while (usados.has(n) || reservados.includes(n)) n++;
+                    usados.add(n);
+                    prefijo = `${idx.base}.${n}`;
+                }
+                return `${prefijo} ${texto}${ext}`;
+            });
+        }
+
+        function tieneBateria(info) {
+            const tipo = info && info.tipoProyecto;
+            return tipo === 'Híbrido' || tipo === 'Off-Grid';
+        }
+
+        // Qué incisos de la Bóveda cuentan para este proyecto: los que no le aplican
+        // (ej. FT Batería en un On-Grid) se ocultan, salvo que ya tengan archivo.
+        function itemsIngVisibles(todos, info) {
+            return todos.filter(i => i.found || !i.aplica || i.aplica(info));
+        }
+        function pctBoveda(items) {
+            return items.length ? Math.round((items.filter(i => i.found).length / items.length) * 100) : 0;
+        }
 
         // El Informe General de Proyecto vive en "4. DOSSIER_<NOMBRE>", con plantilla propia
         // (no es una acta más, tiene su modal y su detección de carpeta separada).
@@ -3625,6 +3805,13 @@
                 ? 'APROBADO'
                 : p.states.retie.status;
 
+            // Los incisos de la Bóveda que aplican dependen de Datos del Proyecto (ej. FT
+            // Batería solo en Híbrido/Off-Grid), así que también se recalculan aquí.
+            if (p.ingItemsTodos) {
+                p.ingItems = itemsIngVisibles(p.ingItemsTodos, p.info);
+                p.bovedaPct = pctBoveda(p.ingItems);
+            }
+
             p.orStatusDisplay = orStatusDisplay;
             p.retieStatusDisplay = retieStatusDisplay;
             // Los trámites que no le aplican al proyecto quedan en null (no aplica) y
@@ -3777,8 +3964,9 @@
                 const docxFile = matches.find(x => x.n.toLowerCase().endsWith('.docx'));
                 return { ...c, found: !!pdfFile, handle: pdfFile?.h, generated: !!docxFile, docxHandle: docxFile?.h };
             }
-            const f = files.find(x => x.n.trim().startsWith(c.id));
-            return {...c, found: !!f, handle: f?.h};
+            // Un inciso puede tener varios archivos (2., 2.1, 2.2...): ver archivosDelItem.
+            const archivos = archivosDelItem(c, files);
+            return { ...c, found: archivos.length > 0, handle: archivos[0]?.h, files: archivos };
             });
 
             const mapActItems = (cfg, files) => cfg.map(c => {
@@ -3794,7 +3982,7 @@
             };
             });
 
-            const ingItems = mapItems(CONFIG.ing, filesIng);
+            const ingTodos = mapItems(CONFIG.ing, filesIng);
             const actItems = mapActItems(CONFIG.act, filesAct);
 
             // Lectura heredada: antes la info del proyecto vivía en un _data/data.json
@@ -3837,13 +4025,13 @@
             const retieStatusDisplay = (states.retie.status === 'POR AGENDAR' && retieConformeDetectado) ? 'APROBADO' : states.retie.status;
 
             // Porcentaje de cada sección por separado
-            const bovedaPct = Math.round((ingItems.filter(i => i.found).length / ingItems.length) * 100);
-            const actasPct = Math.round((actItems.filter(i => i.found).length / actItems.length) * 100);
-            const informePct = informeFile ? 100 : 0;   // informativo: ya no pondera
-
             // La info del proyecto vive en Supabase; el _data/data.json local solo se
             // usa como respaldo para proyectos viejos que todavía no están allá.
             const infoProyecto = (orInfoSupabase && orInfoSupabase.project_info) || info;
+            const ingItems = itemsIngVisibles(ingTodos, infoProyecto);
+            const bovedaPct = pctBoveda(ingItems);
+            const actasPct = Math.round((actItems.filter(i => i.found).length / actItems.length) * 100);
+            const informePct = informeFile ? 100 : 0;   // informativo: ya no pondera
 
             // Qué trámites le aplican a ESTE proyecto y cómo queda el reparto del 100%.
             const req = requisitosProyecto(infoProyecto);
@@ -3855,7 +4043,7 @@
             return {
                 id: handle.name,
                 name: handle.name.replace(/^\d+\.\s*/, ''),
-                ingItems, actItems, ingFolder, actFolder, budgetFolder, preliminarFolder,
+                ingItems, ingItemsTodos: ingTodos, actItems, ingFolder, actFolder, budgetFolder, preliminarFolder,
                 orFolder, retieFolder, dossierFolder,
                 informeFile, informeFound: !!informeFile,
                 info: infoProyecto,
@@ -4567,9 +4755,16 @@
                     return botones;
                 }
                 // Ítems normales de Bóveda Técnica: solo se detectan/suben a mano, sin plantilla.
-                return item.found
-                    ? `<button onclick="openFile('${p.id}','${docId}','${type}')" class="btn-action btn-view">Abrir</button>`
-                    : `<button onclick="uploadFile('${p.id}','${docId}','${type}')" class="btn-action btn-upload">Subir</button>`;
+                // Si el inciso admite varios archivos (2., 2.1, 2.2...), "Subir" sigue
+                // disponible aunque ya haya uno, y cada archivo tiene su propio botón.
+                const archivosItem = item.files || [];
+                const subir = `<button onclick="uploadFile('${p.id}','${docId}','${type}')" class="btn-action btn-upload" title="${item.found ? 'Agregar otro archivo a este inciso' : ''}">Subir</button>`;
+                if (!item.found) return subir;
+                const baseIdx = parseIndice(item.id).base;
+                const abrir = archivosItem.length > 1
+                    ? archivosItem.map((f, k) => `<button onclick="openFile('${p.id}','${docId}','${type}',${k})" title="${escaparHtml(f.n)}" class="btn-action btn-view">Abrir ${f.sub === null ? baseIdx : baseIdx + '.' + f.sub}</button>`).join('')
+                    : `<button onclick="openFile('${p.id}','${docId}','${type}')" class="btn-action btn-view">Abrir</button>`;
+                return (itemAdmiteVarios(item) ? subir : '') + abrir;
             };
             const actActionBtn = (item, docId) => {
                 const actaConfig = CONFIG.act.find(a => a.id === docId);
@@ -5696,14 +5891,16 @@
             return datos.states || { or: { status: 'NO INSCRITO', date: '' }, retie: { status: 'POR AGENDAR', date: '' } };
         }
 
-        window.openFile = async (pId, dId, type) => {
+        // idx (opcional): cuál de los archivos del inciso abrir cuando hay varios.
+        window.openFile = async (pId, dId, type, idx) => {
             const p = projects.find(x => x.id === pId);
             if (type === 'informe') {
                 if (p.informeFile?.h) await abrirHandle(p.informeFile.h);
                 return;
             }
             const item = (type === 'ing' ? p.ingItems : p.actItems).find(i => i.id === dId);
-            if (item.handle) await abrirHandle(item.handle);
+            const handle = (idx !== undefined && item.files && item.files[idx]) ? item.files[idx].h : item.handle;
+            if (handle) await abrirHandle(handle);
         };
 
         window.openBudgetFile = async (fileName) => {
@@ -5731,21 +5928,22 @@
         };
 
         /**
-         * Pide un archivo al usuario. showOpenFilePicker solo existe en
+         * Pide uno o varios archivos al usuario. showOpenFilePicker solo existe en
          * Chrome/Edge de escritorio, así que en celular (y en Firefox/Safari)
          * se cae a un <input type="file"> de toda la vida.
-         * Devuelve un File, o null si el usuario cancela.
+         * Devuelve un arreglo de File (vacío si el usuario cancela).
          */
-        async function pedirArchivo(accept) {
+        async function pedirArchivos(accept, multiple) {
             accept = accept || 'application/pdf';
             if ('showOpenFilePicker' in window) {
                 try {
-                    const [h] = await window.showOpenFilePicker({
+                    const handles = await window.showOpenFilePicker({
+                        multiple: !!multiple,
                         types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }]
                     });
-                    return await h.getFile();
+                    return await Promise.all(handles.map(h => h.getFile()));
                 } catch (e) {
-                    if (e && e.name === 'AbortError') return null;
+                    if (e && e.name === 'AbortError') return [];
                     throw e;
                 }
             }
@@ -5753,12 +5951,13 @@
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = accept;
+                input.multiple = !!multiple;
                 input.style.display = 'none';
                 document.body.appendChild(input);
                 input.onchange = () => {
-                    const f = input.files && input.files[0] ? input.files[0] : null;
+                    const archivos = Array.from(input.files || []);
                     input.remove();
-                    resolve(f);
+                    resolve(archivos);
                 };
                 // Si el usuario cancela, algunos navegadores no disparan nada;
                 // el input queda huérfano en el DOM pero oculto e inofensivo.
@@ -5829,17 +6028,47 @@
             }
         };
 
+        // Escribe un archivo dentro de una carpeta (local o Drive).
+        async function guardarArchivo(folder, nombre, archivo) {
+            const dest = await folder.getFileHandle(nombre, { create: true });
+            const w = await dest.createWritable();
+            await w.write(archivo);
+            await w.close();
+        }
+
         window.uploadFile = async (pId, dId, type) => {
             try {
-                const archivo = await pedirArchivo();
-                if (!archivo) return;
                 const p = projects.find(x => x.id === pId);
-                const folder = type === 'ing' ? p.ingFolder : p.actFolder;
                 const item = (type === 'ing' ? p.ingItems : p.actItems).find(i => i.id === dId);
-                const dest = await folder.getFileHandle(`${item.id} ${item.label}.pdf`, {create: true});
-                const w = await dest.createWritable();
-                await w.write(archivo);
-                await w.close();
+                const folder = type === 'ing' ? p.ingFolder : p.actFolder;
+
+                // El selector va primero: el navegador solo lo abre mientras el clic
+                // del usuario sigue "fresco", antes de cualquier await.
+                const admiteVarios = type === 'ing' && itemAdmiteVarios(item);
+                const archivos = await pedirArchivos('application/pdf', admiteVarios);
+                if (!archivos.length) return;
+
+                if (type !== 'ing') {
+                    await guardarArchivo(folder, `${item.id} ${item.label}.pdf`, archivos[0]);
+                    await scan();
+                    return;
+                }
+
+                // Bóveda: el nombre sale de los datos del proyecto (nombreBoveda) y cada
+                // archivo extra del mismo inciso toma el siguiente índice: 2., 2.1, 2.2...
+                const info = (await getProjectInfo(pId)) || {};
+                const { texto, faltan } = nombreBoveda(item.id, info, limpiarNombreProyecto(p.name));
+                const exts = archivos.map(a => (a.name.match(/\.[^.]+$/) || ['.pdf'])[0].toLowerCase());
+                const subidos = nombresParaSubida(item, texto, exts);
+                for (let k = 0; k < archivos.length; k++) {
+                    await guardarArchivo(folder, subidos[k], archivos[k]);
+                }
+
+                showToast(subidos.length === 1 ? `Subido: ${subidos[0]}` : `${subidos.length} archivos subidos`);
+                if (faltan.length) {
+                    // No se bloquea la subida, pero el nombre quedó sin esos datos.
+                    setTimeout(() => showToast(`El nombre quedó sin: ${faltan.join(', ')}. Complétalo en Datos del Proyecto.`), 2500);
+                }
                 await scan();
             } catch(e){
                 console.error('Error al subir el archivo:', e);
