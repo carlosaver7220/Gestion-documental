@@ -1189,6 +1189,29 @@
                             </div>
                         </div>
 
+                        <!-- Qué trámites le aplican al proyecto. Lo que se desmarque aquí deja
+                             de ponderar: su peso se reparte entre las secciones que sí aplican,
+                             así que no le baja el porcentaje al proyecto. -->
+                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest pt-2 border-t border-slate-100">Trámites que Aplican</p>
+                        <p class="text-[10px] text-slate-400 leading-relaxed -mt-3">Lo que desmarques aquí deja de contar en el avance: su peso se reparte entre lo que sí aplica. La <span class="font-bold text-slate-500">Bóveda Técnica</span> siempre pesa el 70% y las <span class="font-bold text-slate-500">Actas</span> siempre aplican.</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-md">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input id="infoRequiereOr" type="checkbox" onchange="toggleInfoRequisitos()" class="w-4 h-4 accent-blue-600 cursor-pointer">
+                                    <span class="text-[11px] font-black text-slate-700 uppercase">Requiere trámite OR</span>
+                                </label>
+                                <p class="text-[9px] text-slate-400 leading-snug mt-2 pl-6">Inscripción y conformidad ante el Operador de Red. Los proyectos de autoconsumo que no hacen el trámite van sin marcar.</p>
+                            </div>
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-md">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input id="infoRequiereRetie" type="checkbox" onchange="marcarRetieManual(); toggleInfoRequisitos();" class="w-4 h-4 accent-blue-600 cursor-pointer">
+                                    <span class="text-[11px] font-black text-slate-700 uppercase">Requiere inspección RETIE</span>
+                                </label>
+                                <p id="infoRetieHint" class="text-[9px] text-slate-400 leading-snug mt-2 pl-6">Se marca sola según la potencia del inversor: solo aplica por encima de 10 kW (AC).</p>
+                            </div>
+                        </div>
+                        <div id="infoPesosPreview" class="text-[10px] font-bold text-slate-500 bg-blue-50 border border-blue-100 rounded-md px-3 py-2"></div>
+
                         <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest pt-2 border-t border-slate-100">Fechas Contractuales</p>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -3383,8 +3406,10 @@
         // informe-pdf.js, así que aquí solo queda su etiqueta.
         const INFORME_CONFIG = { label: 'Informe General de Proyecto' };
 
-        // El 100% general se reparte: la mitad es la Bóveda Técnica (ingeniería), y la
-        // otra mitad se divide en partes iguales entre Actas, Informe, OR y RETIE.
+        // El 100% general se reparte: la Bóveda Técnica (ingeniería) siempre pesa 70%, y
+        // el 30% restante se divide en partes iguales SOLO entre las secciones que el
+        // proyecto realmente necesita (ver PESO_BOVEDA / pesosProyecto). El Informe General
+        // ya no pondera: se sigue mostrando, pero no suma ni resta al avance.
         // Colores estándar para cualquier badge/indicador de porcentaje de la app:
         // rojo (<60%), naranja (60% a 90%) y verde (90% o más).
         function pctBadgeClasses(pct) {
@@ -3398,7 +3423,13 @@
             return 'text-emerald-600';
         }
 
-        const PESOS_PROGRESO = { boveda: 0.5, actas: 0.125, informe: 0.125, or: 0.125, retie: 0.125 };
+        // La Bóveda Técnica es el único peso fijo. El resto (30%) se reparte entre las
+        // secciones aplicables al proyecto.
+        const PESO_BOVEDA = 0.70;
+
+        // A partir de ahora el RETIE solo se exige por encima de esta potencia de inversor
+        // (AC, en kW). Antes se pedía en todos los proyectos sin importar el tamaño.
+        const RETIE_KW_MINIMO = 10;
 
         // Lectura de avance por estado: NO todos los estados valen igual. "CONFORME"/"APROBADO"
         // es el 100% de esa sección; los estados intermedios dan un avance parcial.
@@ -3406,6 +3437,86 @@
             or: { 'NO INSCRITO': 0, 'INSCRITO': 50, 'CONFORME': 100, 'DE BAJA': 0 },
             retie: { 'POR AGENDAR': 0, 'EN TRÁMITE': 25, 'AGENDADO': 50, 'OBSERVACIONES': 75, 'APROBADO': 100 }
         };
+
+        // ==========================================================
+        // QUÉ LE APLICA A CADA PROYECTO
+        // ----------------------------------------------------------
+        // No todos los proyectos llevan los mismos trámites: los de autoconsumo no hacen
+        // el trámite ante el Operador de Red, y el RETIE solo se exige por encima de
+        // RETIE_KW_MINIMO kW de inversor. Lo que NO aplica no pondera, así que tampoco
+        // le baja el porcentaje al proyecto.
+        //
+        // El OR va completo o no va: si el proyecto lo requiere, requiere inscripción
+        // y conformidad. Las casillas viven en project_info (se editan en "Datos del
+        // Proyecto"):
+        //   requiereOr / requiereRetie
+        // Cuando una casilla todavía no se ha guardado se usa un valor por defecto:
+        //   - OR: sí, porque todos los proyectos que ya existen tienen el trámite hecho;
+        //   - RETIE: según la potencia AC (o la DC si no hay AC).
+        // ==========================================================
+        function potenciaKw(info) {
+            const num = (v) => {
+                const n = parseFloat(String(v ?? '').replace(',', '.'));
+                return Number.isFinite(n) ? n : null;
+            };
+            return num(info?.potenciaAC) ?? num(info?.potenciaDC);
+        }
+
+        function requisitosProyecto(info) {
+            info = info || {};
+            const pot = potenciaKw(info);
+            const retiePorPotencia = pot !== null && pot > RETIE_KW_MINIMO;
+            const bool = (v, pordefecto) => (v === undefined || v === null || v === '') ? pordefecto : !!v;
+
+            const retieAuto = info.requiereRetie === undefined || info.requiereRetie === null || info.requiereRetie === '';
+            return {
+                // El OR va completo o no va: si el proyecto requiere el trámite,
+                // requiere inscripción y conformidad.
+                or: bool(info.requiereOr, true),
+                retie: retieAuto ? retiePorPotencia : !!info.requiereRetie,
+                retieAutomatico: retieAuto,
+                potencia: pot
+            };
+        }
+
+        /**
+         * Reparte el 100%: Bóveda fija en PESO_BOVEDA y el resto en partes iguales entre
+         * las secciones aplicables (Actas siempre lo es).
+         *   Actas + OR + RETIE -> 70 / 10 / 10 / 10
+         *   Actas + OR         -> 70 / 15 / 15
+         *   Actas + RETIE      -> 70 / 15 / 15
+         *   Solo Actas         -> 70 / 30
+         */
+        function pesosProyecto(req) {
+            const pesos = { boveda: PESO_BOVEDA, actas: 0, or: 0, retie: 0 };
+            const aplican = ['actas'];
+            if (req.or) aplican.push('or');
+            if (req.retie) aplican.push('retie');
+            const cada = (1 - PESO_BOVEDA) / aplican.length;
+            aplican.forEach(s => { pesos[s] = cada; });
+            return pesos;
+        }
+
+        /** Avance del trámite OR. Devuelve null cuando el trámite no le aplica al proyecto. */
+        function calcularOrPct(status, req) {
+            if (!req.or) return null;                 // no aplica
+            return ESTADO_PCT.or[status] ?? 0;
+        }
+
+        function calcularRetiePct(status, req) {
+            if (!req.retie) return null;              // no aplica
+            return ESTADO_PCT.retie[status] ?? 0;
+        }
+
+        /** Avance general con los pesos que le corresponden a ESTE proyecto. */
+        function calcularProgreso({ bovedaPct, actasPct, orPct, retiePct }, pesos) {
+            return Math.round(
+                bovedaPct * pesos.boveda +
+                actasPct * pesos.actas +
+                (orPct ?? 0) * pesos.or +
+                (retiePct ?? 0) * pesos.retie
+            );
+        }
 
         async function init() {
             db = await new Promise(res => {
@@ -3516,15 +3627,13 @@
 
             p.orStatusDisplay = orStatusDisplay;
             p.retieStatusDisplay = retieStatusDisplay;
-            p.orPct = ESTADO_PCT.or[orStatusDisplay] ?? 0;
-            p.retiePct = ESTADO_PCT.retie[retieStatusDisplay] ?? 0;
-            p.prog = Math.round(
-                p.bovedaPct * PESOS_PROGRESO.boveda +
-                p.actasPct * PESOS_PROGRESO.actas +
-                p.informePct * PESOS_PROGRESO.informe +
-                p.orPct * PESOS_PROGRESO.or +
-                p.retiePct * PESOS_PROGRESO.retie
-            );
+            // Los trámites que no le aplican al proyecto quedan en null (no aplica) y
+            // su peso se reparte entre los que sí, en lugar de contarse como 0%.
+            p.req = requisitosProyecto(p.info);
+            p.pesos = pesosProyecto(p.req);
+            p.orPct = calcularOrPct(orStatusDisplay, p.req);
+            p.retiePct = calcularRetiePct(retieStatusDisplay, p.req);
+            p.prog = calcularProgreso(p, p.pesos);
             return p;
         }
 
@@ -3585,7 +3694,8 @@
                 // redibuja solo si de verdad cambió algo.
                 const firma = JSON.stringify(projects.map(p => [
                     p.id, p.prog, p.bovedaPct, p.actasPct, p.informePct,
-                    p.orStatusDisplay, p.retieStatusDisplay
+                    p.orStatusDisplay, p.retieStatusDisplay,
+                    p.req.or, p.req.retie
                 ]));
                 const huboCambios = firma !== _firmaProyectos;
                 _firmaProyectos = firma;
@@ -3729,19 +3839,18 @@
             // Porcentaje de cada sección por separado
             const bovedaPct = Math.round((ingItems.filter(i => i.found).length / ingItems.length) * 100);
             const actasPct = Math.round((actItems.filter(i => i.found).length / actItems.length) * 100);
-            const informePct = informeFile ? 100 : 0;
-            const orPct = ESTADO_PCT.or[orStatusDisplay] ?? 0;
-            const retiePct = ESTADO_PCT.retie[retieStatusDisplay] ?? 0;
+            const informePct = informeFile ? 100 : 0;   // informativo: ya no pondera
 
-            // El general de "Información" es el promedio ponderado de las 5 secciones
-            // (Bóveda pesa 50%; Actas, Informe, OR y RETIE se reparten el otro 50%).
-            const prog = Math.round(
-                bovedaPct * PESOS_PROGRESO.boveda +
-                actasPct * PESOS_PROGRESO.actas +
-                informePct * PESOS_PROGRESO.informe +
-                orPct * PESOS_PROGRESO.or +
-                retiePct * PESOS_PROGRESO.retie
-            );
+            // La info del proyecto vive en Supabase; el _data/data.json local solo se
+            // usa como respaldo para proyectos viejos que todavía no están allá.
+            const infoProyecto = (orInfoSupabase && orInfoSupabase.project_info) || info;
+
+            // Qué trámites le aplican a ESTE proyecto y cómo queda el reparto del 100%.
+            const req = requisitosProyecto(infoProyecto);
+            const pesos = pesosProyecto(req);
+            const orPct = calcularOrPct(orStatusDisplay, req);
+            const retiePct = calcularRetiePct(retieStatusDisplay, req);
+            const prog = calcularProgreso({ bovedaPct, actasPct, orPct, retiePct }, pesos);
 
             return {
                 id: handle.name,
@@ -3749,7 +3858,8 @@
                 ingItems, actItems, ingFolder, actFolder, budgetFolder, preliminarFolder,
                 orFolder, retieFolder, dossierFolder,
                 informeFile, informeFound: !!informeFile,
-                info,
+                info: infoProyecto,
+                req, pesos,
                 // Conformidad detectada automáticamente por archivos presentes en las subcarpetas
                 retieConforme: retieConformeDetectado,
                 orConforme: orConformeDetectado,
@@ -3810,7 +3920,8 @@
             'AGENDADO':   'bg-amber-100 text-amber-700',
             'EN TRÁMITE': 'bg-blue-100 text-blue-700',
             'OBSERVACIONES': 'bg-orange-100 text-orange-700',
-            'DE BAJA':    'bg-red-100 text-red-700'
+            'DE BAJA':    'bg-red-100 text-red-700',
+            'NO APLICA':  'bg-slate-50 text-slate-400'
         };
 
         function pillEstado(estado) {
@@ -3848,8 +3959,10 @@
                     nombre: p.name,
                     nic: info.nicTrf || '',
                     radicado: info.radicado || '',
-                    or: p.orStatusDisplay || '',
-                    retie: p.retieStatusDisplay || '',
+                    // Un trámite que no le aplica al proyecto no es "pendiente": se
+                    // muestra como NO APLICA para no confundirlo con uno atrasado.
+                    or: p.orPct === null ? 'NO APLICA' : (p.orStatusDisplay || ''),
+                    retie: p.retiePct === null ? 'NO APLICA' : (p.retieStatusDisplay || ''),
                     medidor: info.referenciaMedidor || ''
                 });
             }
@@ -4504,24 +4617,34 @@
                 </div>
             `;
 
-            // Badges de porcentaje por sección (Bóveda 50% del total; Actas, Informe, OR y
-            // RETIE se reparten el otro 50% en partes iguales — ver PESOS_PROGRESO).
+            // Badges de porcentaje por sección. El peso que lleva cada una depende de lo
+            // que el proyecto necesite (ver pesosProyecto), así que se muestra al lado.
+            const pesoTxt = (peso) => peso > 0 ? ` · pondera ${Math.round(peso * 100)}% del general` : '';
             const bovedaPctBadge = document.getElementById('bovedaPctBadge');
             bovedaPctBadge.innerText = `${p.bovedaPct}%`;
             bovedaPctBadge.className = `px-2.5 py-1 text-[10px] text-white font-black rounded-full ${pctBadgeClasses(p.bovedaPct)}`;
+            bovedaPctBadge.title = `Bóveda Técnica: ${p.bovedaPct}%${pesoTxt(p.pesos.boveda)}`;
 
             const actasPctBadge = document.getElementById('actasPctBadge');
             actasPctBadge.innerText = `${p.actasPct}%`;
             actasPctBadge.className = `px-2.5 py-1 text-[10px] text-white font-black rounded-full ${pctBadgeClasses(p.actasPct)}`;
+            actasPctBadge.title = `Actas: ${p.actasPct}%${pesoTxt(p.pesos.actas)}`;
 
+            // El Informe ya no pondera: se sigue viendo para saber si está hecho, pero
+            // no suma ni resta al avance general.
             const informePctBadge = document.getElementById('informePctBadge');
             informePctBadge.innerText = `${p.informePct}%`;
             informePctBadge.className = `px-2.5 py-1 text-[10px] text-white font-black rounded-full ${pctBadgeClasses(p.informePct)}`;
+            informePctBadge.title = 'Informe General: no pondera en el avance general';
 
             // Trámites Estados (ya calculados en analyze(): p.orStatusDisplay / p.retieStatusDisplay
             // ya consideran la detección automática por archivos, igual que antes).
-            const orStatus = p.orStatusDisplay;
-            const retieStatus = p.retieStatusDisplay;
+            // Si el trámite no le aplica al proyecto, la pestaña se marca como "no aplica"
+            // en vez de mostrarla en rojo/gris como si estuviera pendiente.
+            const orAplica = p.orPct !== null;
+            const retieAplica = p.retiePct !== null;
+            const orStatus = orAplica ? p.orStatusDisplay : 'NO APLICA';
+            const retieStatus = retieAplica ? p.retieStatusDisplay : 'NO APLICA';
 
             const cardOr = document.getElementById('card-or');
             cardOr.classList.toggle('bg-emerald-50', orStatus === 'CONFORME');
@@ -4533,7 +4656,11 @@
             cardOr.classList.toggle('bg-slate-100', orStatus !== 'CONFORME' && orStatus !== 'INSCRITO');
             cardOr.classList.toggle('text-slate-700', orStatus !== 'CONFORME' && orStatus !== 'INSCRITO');
             cardOr.classList.toggle('border-slate-200', orStatus !== 'CONFORME' && orStatus !== 'INSCRITO');
-            cardOr.title = `Operador Red (OR): ${orStatus} (${p.orPct}%)`;
+            cardOr.classList.toggle('opacity-50', !orAplica);
+            cardOr.innerText = orAplica ? 'OR' : 'OR (N/A)';
+            cardOr.title = orAplica
+                ? `Operador Red (OR): ${orStatus} (${p.orPct}%${pesoTxt(p.pesos.or)})`
+                : 'Operador Red (OR): no aplica a este proyecto (se desmarcó en Datos del Proyecto)';
 
             const cardRetie = document.getElementById('card-retie');
             cardRetie.classList.toggle('bg-emerald-50', retieStatus === 'APROBADO');
@@ -4542,7 +4669,11 @@
             cardRetie.classList.toggle('bg-slate-100', retieStatus !== 'APROBADO');
             cardRetie.classList.toggle('text-slate-700', retieStatus !== 'APROBADO');
             cardRetie.classList.toggle('border-slate-200', retieStatus !== 'APROBADO');
-            cardRetie.title = `Inspección RETIE: ${retieStatus} (${p.retiePct}%)`;
+            cardRetie.classList.toggle('opacity-50', !retieAplica);
+            cardRetie.innerText = retieAplica ? 'RETIE' : 'RETIE (N/A)';
+            cardRetie.title = retieAplica
+                ? `Inspección RETIE: ${retieStatus} (${p.retiePct}%${pesoTxt(p.pesos.retie)})`
+                : `Inspección RETIE: no aplica a este proyecto (solo se exige por encima de ${RETIE_KW_MINIMO} kW de inversor)`;
 
             await renderInfoProyecto(p.id);
         }
@@ -4573,7 +4704,12 @@
                 console.warn('No se pudo escribir el respaldo local _data/data.json:', err);
             }
             const idx = projects.findIndex(x => x.id === id);
-            if (idx >= 0) projects[idx] = { ...projects[idx], info: data };
+            if (idx >= 0) {
+                projects[idx] = { ...projects[idx], info: data };
+                // Las casillas de "Trámites que Aplican" cambian el reparto del 100%,
+                // así que el avance se recalcula ya, sin esperar al siguiente escaneo.
+                recalcularEstado(projects[idx]);
+            }
         }
 
         // --- Resumen ejecutivo del proyecto (texto generado a partir de Datos del
@@ -4622,7 +4758,21 @@
             if (info.dueno) p2 += `${p2 ? ', y figura' : 'Figura'} como propietario ${info.dueno}${info.identificacion ? ` con la C.C. ${info.identificacion}` : ''}`;
             if (p2) partes.push(p2 + '.');
 
-            partes.push(`Actualmente ${textoEstadoOr(project.orStatusDisplay)}, y ${textoEstadoRetie(project.retieStatusDisplay)}.`);
+            // Solo se menciona el trámite que de verdad le aplica al proyecto: decir que
+            // un autoconsumo "no está inscrito ante el OR" sería engañoso.
+            const req = project.req || requisitosProyecto(info);
+            const tramites = [];
+            if (req.or) tramites.push(textoEstadoOr(project.orStatusDisplay));
+            if (req.retie) tramites.push(textoEstadoRetie(project.retieStatusDisplay));
+            if (tramites.length) {
+                partes.push(`Actualmente ${tramites.join(', y ')}.`);
+            }
+            const noAplican = [];
+            if (!req.or) noAplican.push('el trámite ante el Operador de Red (OR)');
+            if (!req.retie) noAplican.push(`la inspección RETIE${req.retieAutomatico ? ` (solo se exige por encima de ${RETIE_KW_MINIMO} kW)` : ''}`);
+            if (noAplican.length) {
+                partes.push(`No le aplica ${noAplican.join(' ni ')}, así que no cuenta en su avance documental.`);
+            }
 
             partes.push(`En documentación, el proyecto cuenta con el ${project.bovedaPct}% de los soportes técnicos exigidos en la bóveda técnica y el ${project.actasPct}% de sus actas de proyecto firmadas. ${project.informeFound ? 'Ya cuenta con el Informe General de Proyecto elaborado.' : 'Todavía no cuenta con el Informe General de Proyecto.'}`);
 
@@ -4655,6 +4805,16 @@
                     <p class="text-[8px] font-black text-slate-400 uppercase tracking-wide truncate">${label}</p>
                     <div class="mt-1 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-[11px] font-bold text-slate-700 truncate" title="${valor ? String(valor).replace(/"/g,'&quot;') : ''}">${valor || '—'}</div>
                 </div>`;
+
+            // Trámites que aplican + cómo queda el reparto del 100% con ellos.
+            const req = (project && project.req) || requisitosProyecto(info);
+            const pesos = (project && project.pesos) || pesosProyecto(req);
+            const pillRequisito = (etiqueta, aplica) => `
+                <span class="inline-block px-2 py-1 rounded text-[9px] font-black uppercase whitespace-nowrap ${aplica ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400 line-through'}">${etiqueta}</span>`;
+            const repartoTxt = ['Bóveda ' + Math.round(pesos.boveda * 100) + '%', 'Actas ' + Math.round(pesos.actas * 100) + '%']
+                .concat(pesos.or > 0 ? ['OR ' + Math.round(pesos.or * 100) + '%'] : [])
+                .concat(pesos.retie > 0 ? ['RETIE ' + Math.round(pesos.retie * 100) + '%'] : [])
+                .join(' · ');
 
             const tipoProyectoTxt = info.tipoProyecto === 'Otro' ? (info.tipoProyectoOtro || 'Otro') : info.tipoProyecto;
             const clasificacionTxt = info.clasificacionServicio === 'Otro' ? (info.clasificacionServicioOtro || 'Otro') : info.clasificacionServicio;
@@ -4699,9 +4859,16 @@
                     ${campo('Teléfono', info.telefono)}
                     ${campo('Gmail', info.correo)}
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-3 mb-6">
                     ${campo('Departamento / Ciudad', depMunTxt)}
                     ${campo('Dirección', info.direccion)}
+                </div>
+
+                <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-2">Trámites que Aplican</p>
+                <div class="flex flex-wrap items-center gap-1.5">
+                    ${pillRequisito('Trámite OR', req.or)}
+                    ${pillRequisito('RETIE', req.retie)}
+                    <span class="text-[9px] font-bold text-slate-400 ml-1">${escaparHtml(repartoTxt)}</span>
                 </div>
             `;
 
@@ -4786,6 +4953,48 @@
             document.getElementById('infoBateriaWrap').classList.toggle('hidden', !aplica);
         }
 
+        // --- Casillas de "Trámites que Aplican" ---
+        // La casilla de RETIE se marca sola a partir de la potencia mientras nadie la
+        // toque. En cuanto el usuario la mueve a mano, deja de moverse automáticamente
+        // (y se guarda ese valor explícito en project_info).
+        let retieMarcadoAMano = false;
+
+        window.marcarRetieManual = () => { retieMarcadoAMano = true; };
+
+        // Sincroniza la casilla de RETIE con la potencia AC/DC que se esté escribiendo,
+        // salvo que ya se haya decidido a mano.
+        window.sincronizarRetiePorPotencia = () => {
+            if (retieMarcadoAMano) { toggleInfoRequisitos(); return; }
+            const pot = potenciaKw({
+                potenciaAC: document.getElementById('infoPotenciaAC').value,
+                potenciaDC: document.getElementById('infoPotenciaDC').value
+            });
+            document.getElementById('infoRequiereRetie').checked = pot !== null && pot > RETIE_KW_MINIMO;
+            toggleInfoRequisitos();
+        };
+
+        // Habilita/deshabilita los pasos del OR y muestra cómo queda el reparto del 100%
+        // con lo que hay marcado en ese momento.
+        window.toggleInfoRequisitos = () => {
+            const hint = document.getElementById('infoRetieHint');
+            hint.innerText = retieMarcadoAMano
+                ? `Marcado a mano. Por potencia, el RETIE solo aplica por encima de ${RETIE_KW_MINIMO} kW (AC).`
+                : `Se marca sola según la potencia del inversor: solo aplica por encima de ${RETIE_KW_MINIMO} kW (AC).`;
+
+            const req = requisitosProyecto({
+                requiereOr: document.getElementById('infoRequiereOr').checked,
+                requiereRetie: document.getElementById('infoRequiereRetie').checked
+            });
+            const pesos = pesosProyecto(req);
+            const partes = [`Bóveda Técnica ${Math.round(pesos.boveda * 100)}%`, `Actas ${Math.round(pesos.actas * 100)}%`];
+            if (pesos.or > 0) partes.push(`OR ${Math.round(pesos.or * 100)}%`);
+            if (pesos.retie > 0) partes.push(`RETIE ${Math.round(pesos.retie * 100)}%`);
+            document.getElementById('infoPesosPreview').innerText = `Reparto del avance: ${partes.join(' · ')}`;
+        };
+
+        document.getElementById('infoPotenciaAC').addEventListener('input', sincronizarRetiePorPotencia);
+        document.getElementById('infoPotenciaDC').addEventListener('input', sincronizarRetiePorPotencia);
+
         let modalMode = 'create';
 
         window.abrirModalNuevoProyecto = () => {
@@ -4801,6 +5010,11 @@
             setChipValue('infoClasificacionServicio', 'infoClasificacionServicioChips', 'infoClasificacionServicioOtroWrap', '');
             setChipValue('infoDisenador', 'infoDisenadorChips', 'infoDisenadorOtroWrap', '');
             toggleInfoBateriaFields();
+            // Proyecto nuevo: OR por defecto y RETIE según la potencia que se escriba.
+            retieMarcadoAMano = false;
+            document.getElementById('infoRequiereOr').checked = true;
+            document.getElementById('infoRequiereRetie').checked = false;
+            toggleInfoRequisitos();
             document.getElementById('proyectoInfoModal').classList.remove('hidden');
         };
 
@@ -4845,6 +5059,16 @@
             document.getElementById('infoTelefono').value = info.telefono || '';
             document.getElementById('infoCorreo').value = info.correo || '';
             document.getElementById('infoDireccion').value = info.direccion || '';
+
+            // Trámites que aplican. Si el proyecto nunca se editó desde que existen estas
+            // casillas, requisitosProyecto() da los valores por defecto: OR sí (todos los
+            // proyectos que ya existían llevan el trámite) y RETIE por potencia.
+            const req = requisitosProyecto(info);
+            retieMarcadoAMano = !req.retieAutomatico;
+            document.getElementById('infoRequiereOr').checked = req.or;
+            document.getElementById('infoRequiereRetie').checked = req.retie;
+            toggleInfoRequisitos();
+
             document.getElementById('proyectoInfoModal').classList.remove('hidden');
         };
 
@@ -4872,6 +5096,9 @@
                 odir: document.getElementById('infoOdir').value.trim(),
                 fechaInicioContractual: document.getElementById('infoFechaInicioContractual').value,
                 fechaFinContractual: document.getElementById('infoFechaFinContractual').value,
+                // Trámites que aplican: lo que quede desmarcado no pondera en el avance.
+                requiereOr: document.getElementById('infoRequiereOr').checked,
+                requiereRetie: document.getElementById('infoRequiereRetie').checked,
                 tipoProyecto: document.getElementById('infoTipoProyecto').value.trim(),
                 tipoProyectoOtro: document.getElementById('infoTipoProyectoOtro').value.trim(),
                 clasificacionServicio: document.getElementById('infoClasificacionServicio').value.trim(),
@@ -4904,7 +5131,12 @@
             } else {
                 const infoActual = (await getProjectInfo(selectedProjectId)) || {};
                 await saveProjectInfo(selectedProjectId, { ...infoActual, ...data });
-                await renderInfoProyecto(selectedProjectId);
+                // El reparto del 100% pudo cambiar: hay que repintar badges y sidebar,
+                // no solo la ficha de datos.
+                const proyecto = projects.find(x => x.id === selectedProjectId);
+                if (proyecto) await renderDocModule(proyecto);
+                else await renderInfoProyecto(selectedProjectId);
+                renderSidebar();
                 document.getElementById('proyectoInfoModal').classList.add('hidden');
                 showToast('Datos guardados');
             }
