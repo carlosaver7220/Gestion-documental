@@ -23,7 +23,7 @@
 
 // Subir esta versión al cambiar la lista de archivos: al cambiar el nombre de
 // la caché, la vieja se borra en la activación.
-const CACHE = 'gestion-doc-v1';
+const CACHE = 'gestion-doc-v2';
 
 // El esqueleto de la app: lo mínimo para que abra sin conexión.
 const SHELL = [
@@ -36,6 +36,8 @@ const SHELL = [
     './libs/pizzip.min.js',
     './libs/docxtemplater.min.js',
     './libs/imagemodulo.js',
+    './libs/xlsx.full.min.js',
+    './libs/chart.umd.min.js',
     './img/logo.png',
     './img/logo2.png',
     './img/icon-192.png',
