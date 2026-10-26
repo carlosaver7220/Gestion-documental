@@ -713,29 +713,15 @@
                                 <div id="presKpis" class="grid grid-cols-2 lg:grid-cols-3 gap-3"></div>
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                                     <div class="glass-card p-5">
-                                        <h4 class="text-[11px] font-black text-slate-900 uppercase tracking-widest">De dónde sale la plata</h4>
-                                        <p class="text-[10px] text-slate-400 mb-3">Valor vendido, costo y utilidad: presupuestado vs. real.</p>
-                                        <div class="relative h-72"><canvas id="presChartResumen"></canvas></div>
+                                        <h4 class="text-[11px] font-black text-slate-900 uppercase tracking-widest">Presupuestado vs. gastado</h4>
+                                        <p class="text-[10px] text-slate-400 mb-3"><span class="inline-block w-2.5 h-2.5 rounded-sm align-middle" style="background:#7fb069"></span> Presupuestado &nbsp; <span class="inline-block w-2.5 h-2.5 rounded-sm align-middle" style="background:#f4b73e"></span> Gastado &nbsp; <span class="inline-block w-2.5 h-2.5 rounded-sm align-middle" style="background:#e11d48"></span> Se pasó</p>
+                                        <div class="relative h-[26rem]"><canvas id="presChartConceptos"></canvas></div>
                                     </div>
                                     <div class="glass-card p-5">
                                         <h4 class="text-[11px] font-black text-slate-900 uppercase tracking-widest">En qué se ha gastado</h4>
                                         <p class="text-[10px] text-slate-400 mb-3">Participación de cada concepto en el gasto real.</p>
-                                        <div class="relative h-72"><canvas id="presChartDona"></canvas></div>
+                                        <div class="relative h-[26rem]"><canvas id="presChartDona"></canvas></div>
                                     </div>
-                                </div>
-                                <div class="glass-card p-5">
-                                    <h4 class="text-[11px] font-black text-slate-900 uppercase tracking-widest">Presupuestado vs. gastado por concepto</h4>
-                                    <p class="text-[10px] text-slate-400 mb-3"><span class="inline-block w-2.5 h-2.5 rounded-sm align-middle" style="background:#7fb069"></span> Presupuestado &nbsp; <span class="inline-block w-2.5 h-2.5 rounded-sm align-middle" style="background:#f4b73e"></span> Gastado &nbsp; <span class="inline-block w-2.5 h-2.5 rounded-sm align-middle" style="background:#e11d48"></span> Se pasó</p>
-                                    <div id="presChartConceptosWrap" class="relative"><canvas id="presChartConceptos"></canvas></div>
-                                </div>
-                                <div class="glass-card p-5">
-                                    <h4 class="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-1">Avance de ejecución por concepto</h4>
-                                    <p class="text-[10px] text-slate-400 mb-4">Qué porcentaje de lo presupuestado ya se gastó. Rojo = se pasó del presupuesto.</p>
-                                    <div id="presEjecucion" class="space-y-3"></div>
-                                </div>
-                                <div class="glass-card p-5">
-                                    <h4 class="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-3">Detalle</h4>
-                                    <div class="overflow-x-auto -mx-2 px-2"><table id="presTabla" class="w-full text-left border-collapse"></table></div>
                                 </div>
                             </div>
                         </div>
@@ -3909,14 +3895,28 @@
         function presParsear(wb) {
             for (const nombreHoja of wb.SheetNames) {
                 const filas = XLSX.utils.sheet_to_json(wb.Sheets[nombreHoja], { header: 1, raw: true, defval: null });
-                let hr = -1, cols = [];
-                for (let r = 0; r < Math.min(filas.length, 40) && hr < 0; r++) {
-                    const c = [];
-                    (filas[r] || []).forEach((v, i) => { if (presNorm(v) === 'concepto') c.push(i); });
-                    if (c.length) { hr = r; cols = c; }
+                // Cada bloque se ubica por su propio encabezado "Concepto" (puede estar en otra
+                // fila o columna que el del otro bloque, según cómo se armó la hoja).
+                const encabezados = [];
+                for (let r = 0; r < Math.min(filas.length, 60); r++) {
+                    (filas[r] || []).forEach((v, c) => {
+                        if (presNorm(v).startsWith('concepto') && !encabezados.some(h => Math.abs(h.c - c) <= 1)) encabezados.push({ r, c });
+                    });
                 }
-                if (hr < 0) continue;
-                const bloques = cols.map(c => presLeerBloque(filas, hr, c));
+                // Respaldo: si solo apareció un bloque, el otro se busca por su título
+                // ("GASTOS DEL PROYECTO") y se asume el mismo formato (Item, Concepto, ...).
+                if (encabezados.length === 1) {
+                    const h0 = encabezados[0];
+                    for (let r = 0; r < Math.min(filas.length, 60); r++) {
+                        (filas[r] || []).forEach((v, c) => {
+                            if (/gastos/.test(presNorm(v)) && c > h0.c + 3 && !encabezados.some(h => Math.abs(h.c - (c + 1)) <= 3)) encabezados.push({ r: h0.r, c: c + 1 });
+                        });
+                    }
+                }
+                if (!encabezados.length) continue;
+                encabezados.sort((a, b) => a.c - b.c);
+                const hr = encabezados[0].r;
+                const bloques = encabezados.map(h => presLeerBloque(filas, h.r, h.c));
                 const pre = bloques[0];
                 const gas = bloques[1] || { lineas: [], subtotal: null, utilidad: null, costoDirecto: null, valorVendido: null };
 
@@ -4039,7 +4039,7 @@
             txt += `Con un valor vendido de ${presFmt(d.vendido)}, la utilidad con los gastos actuales es <b>${presFmt(d.utilReal)}</b> (${presPct(margenReal)}), frente a <b>${presFmt(d.utilPre)}</b> (${presPct(margenPre)}) presupuestada.`;
             const pasados = d.lineas.filter(l => l.gasto > l.presupuesto && l.gasto > 0);
             if (pasados.length) txt += ` <span class="text-rose-600 font-bold">Atención: ${pasados.map(l => presEsc(l.concepto)).join(', ')} ${pasados.length > 1 ? 'superan' : 'supera'} lo presupuestado.</span>`;
-            if (d.sinGastos) txt += ' <span class="text-amber-600 font-bold">El Excel no trae el bloque de gastos.</span>';
+            if (d.sinGastos) txt += ' <span class="text-amber-600 font-bold">No se encontró el bloque de gastos en el Excel (hoja "' + presEsc(d.hoja) + '").</span>';
             document.getElementById('presLectura').innerHTML = txt;
 
             const kpi = (titulo, valor, sub, color) => `
@@ -4056,51 +4056,12 @@
                 kpi('Utilidad presupuestada', presFmt(d.utilPre), presPct(margenPre) + ' del valor vendido') +
                 kpi('Utilidad real', presFmt(d.utilReal), presPct(margenReal) + ' del valor vendido', d.utilReal >= d.utilPre ? 'text-emerald-600' : 'text-amber-600');
 
-            // Tabla y barras de ejecución
             const activas = d.lineas.filter(l => l.presupuesto || l.gasto);
-            const filaTabla = (l) => {
-                const dif = l.presupuesto - l.gasto;
-                const pct = l.presupuesto ? l.gasto / l.presupuesto : null;
-                return `<tr class="border-b border-slate-100">
-                    <td class="py-2 pr-3 text-xs font-bold text-slate-700">${presEsc(l.concepto)} <span class="text-[9px] text-slate-400 font-bold uppercase">${presEsc(l.seccion)}</span></td>
-                    <td class="py-2 px-3 text-xs text-right tabular-nums">${presFmt(l.presupuesto)}</td>
-                    <td class="py-2 px-3 text-xs text-right tabular-nums">${presFmt(l.gasto)}</td>
-                    <td class="py-2 px-3 text-xs text-right tabular-nums font-bold ${dif < 0 ? 'text-rose-600' : 'text-emerald-600'}">${presFmt(dif)}</td>
-                    <td class="py-2 pl-3 text-xs text-right tabular-nums">${pct == null ? '—' : presPct(pct)}</td></tr>`;
-            };
-            const th = 'py-2 px-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right';
-            const totalFila = (t, a, b) => `<tr class="bg-slate-50"><td class="py-2 pr-3 text-xs font-black text-slate-900 uppercase">${t}</td><td class="py-2 px-3 text-xs font-black text-right tabular-nums">${presFmt(a)}</td><td class="py-2 px-3 text-xs font-black text-right tabular-nums">${presFmt(b)}</td><td class="py-2 px-3 text-xs font-black text-right tabular-nums ${a - b < 0 ? 'text-rose-600' : 'text-emerald-600'}">${presFmt(a - b)}</td><td class="py-2 pl-3 text-xs font-black text-right tabular-nums">${a ? presPct(b / a) : '—'}</td></tr>`;
-            document.getElementById('presTabla').innerHTML =
-                `<thead><tr><th class="py-2 pr-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Concepto</th><th class="${th}">Presupuestado</th><th class="${th}">Gastado</th><th class="${th}">Diferencia</th><th class="${th}">Ejecución</th></tr></thead><tbody>` +
-                activas.map(filaTabla).join('') +
-                totalFila('Costo directo del proyecto', d.costoPre, d.costoReal) + '</tbody>';
-
-            document.getElementById('presEjecucion').innerHTML = activas.filter(l => l.presupuesto > 0).map(l => {
-                const pct = l.gasto / l.presupuesto;
-                const color = pct > 1 ? '#e11d48' : pct >= 0.85 ? '#f59e0b' : '#16a34a';
-                return `<div>
-                    <div class="flex justify-between text-[11px] font-bold text-slate-600 mb-1"><span>${presEsc(l.concepto)}</span><span class="tabular-nums" style="color:${color}">${presPct(pct)} · ${presCorto(l.gasto)} de ${presCorto(l.presupuesto)}</span></div>
-                    <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full rounded-full" style="width:${Math.min(pct, 1) * 100}%;background:${color}"></div></div>
-                </div>`;
-            }).join('') || '<p class="text-xs text-slate-400">Sin conceptos presupuestados.</p>';
 
             if (!window.Chart) return;
             const VERDE = '#7fb069', AMBAR = '#f4b73e', ROJO = '#e11d48', GRIS = '#64748b';
             const ejeMoneda = { ticks: { callback: v => presCorto(v), font: { size: 10 } }, grid: { color: '#eef2f6' } };
             const tip = { callbacks: { label: c => ` ${c.dataset.label ? c.dataset.label + ': ' : ''}${presFmt(c.chart.options.indexAxis === 'y' ? c.parsed.x : c.parsed.y)}` } };
-
-            // 1) Resumen: vendido → costo → utilidad, presupuestado vs real
-            _presCharts.push(new Chart(document.getElementById('presChartResumen'), {
-                type: 'bar',
-                data: {
-                    labels: ['Valor vendido', 'Costo', 'Utilidad'],
-                    datasets: [
-                        { label: 'Presupuestado', data: [d.vendido, d.costoPre, d.utilPre], backgroundColor: VERDE, borderRadius: 4 },
-                        { label: 'Real', data: [d.vendido, d.costoReal, d.utilReal], backgroundColor: AMBAR, borderRadius: 4 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: ejeMoneda, x: { grid: { display: false } } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } }, tooltip: tip } }
-            }));
 
             // 2) Dona: en qué se ha gastado
             const gastos = d.lineas.filter(l => l.gasto > 0).sort((a, b) => b.gasto - a.gasto);
@@ -4119,9 +4080,7 @@
                 }));
             }
 
-            // 3) Por concepto: barras horizontales agrupadas (la altura crece con la cantidad)
-            const wrap = document.getElementById('presChartConceptosWrap');
-            wrap.style.height = Math.max(240, activas.length * 46 + 60) + 'px';
+            // Presupuestado vs. gastado por concepto (barras verticales)
             _presCharts.push(new Chart(document.getElementById('presChartConceptos'), {
                 type: 'bar',
                 data: {
@@ -4131,7 +4090,7 @@
                         { label: 'Gastado', data: activas.map(l => l.gasto), backgroundColor: activas.map(l => l.gasto > l.presupuesto ? ROJO : AMBAR), borderRadius: 3 }
                     ]
                 },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: ejeMoneda, y: { grid: { display: false }, ticks: { font: { size: 11 } } } }, plugins: { legend: { display: false }, tooltip: tip } }
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: ejeMoneda, x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 60 } } }, plugins: { legend: { display: false }, tooltip: tip } }
             }));
         }
 
