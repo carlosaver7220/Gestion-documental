@@ -3893,6 +3893,9 @@
         }
 
         function presParsear(wb) {
+            // Un libro puede traer varias hojas (cotizador, proyección, control de costo...).
+            // Se revisan todas y gana la que tenga más bloques (presupuestado + gastado).
+            const candidatas = [];
             for (const nombreHoja of wb.SheetNames) {
                 const filas = XLSX.utils.sheet_to_json(wb.Sheets[nombreHoja], { header: 1, raw: true, defval: null });
                 // Cada bloque se ubica por su propio encabezado "Concepto" (puede estar en otra
@@ -3941,15 +3944,17 @@
                     else lineas.push({ seccion: l.seccion, concepto: l.concepto, presupuesto: 0, gasto: l.valor });
                 });
 
-                return {
+                candidatas.push({
+                    bloques: bloques.length, control: /control/.test(presNorm(nombreHoja)) ? 1 : 0,
                     hoja: nombreHoja, lineas, vendido,
                     costoPre: rp.costo, costoReal: rg.costo,
                     subPre: rp.subtotal, subReal: rg.subtotal,
                     utilPre, utilReal,
                     sinGastos: !bloques[1]
-                };
+                });
             }
-            return null;
+            candidatas.sort((a, b) => b.bloques - a.bloques || b.control - a.control);
+            return candidatas[0] || null;
         }
 
         // Busca en la carpeta "3. ..." el Excel de control de costo (el más reciente si hay varios).
