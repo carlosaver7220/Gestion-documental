@@ -3438,7 +3438,8 @@
             //       'fotos' -> pide fotos (aún no implementado) (botón "Crear")
             act: [
                 { id: "1.", label: "Acta de Visita Tecnica", tipo: 'fotos' },
-                { id: "1.2.", label: "Acta de Vecindad", tipo: 'fotos' },
+                // Vecindad se puede crear y subir, pero NO cuenta en el porcentaje de actas (sinValor).
+                { id: "1.2.", label: "Acta de Vecindad", tipo: 'fotos', sinValor: true },
                 { id: "2.", label: "Acta de Entrega de Equipos", tipo: 'materiales', combinarListas: true },
                 { id: "3.", label: "Acta de Inicio", tipo: 'simple' },
                 { id: "4.", label: "Acta de Entrega de Proyectos", tipo: 'materiales' },
@@ -3446,6 +3447,69 @@
                 { id: "6.", label: "Acta de Instalacion de Medidor Bidireccional", tipo: 'simple' }
             ]
         };
+
+        // ==========================================================
+        // PROYECTOS ANTERIORES A 2026 (2024 y 2025)
+        // ----------------------------------------------------------
+        // Antes no se usaban estos nombres: los archivos se numeraban distinto
+        // (el acta firmada llevaba "2.1" y el borrador "2.", la entrega final
+        // pasó de ser la 3 a la 4, etc.) y los incisos de ingeniería tenían
+        // variantes ("DECLARACIÓN RETIE - DISEÑADOR", "DISPOSICIÓN DE PANELES",
+        // "PLANO ELÉCTRICO"...). En esos años, además de la regla normal
+        // (índice al inicio del nombre) se reconoce el documento por lo que dice
+        // su nombre. Los proyectos de 2026 en adelante siguen solo la regla
+        // normal: ahí sí se exige la numeración nueva.
+        // ==========================================================
+        const ANIO_ULTIMO_LEGACY = 2025;
+        const esAnioLegacy = (year) => { const n = parseInt(year, 10); return Number.isFinite(n) && n <= ANIO_ULTIMO_LEGACY; };
+        const sinAcentos = (n) => String(n || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const esPdfNombre = (n) => /\.pdf$/i.test(String(n).trim());
+        // El orden importa: la primera regla que coincida decide de qué acta se trata.
+        const LEGACY_ACT = [
+            ['6.', /medidor|bidireccion/],
+            ['5.', /capacit/],
+            ['3.', /inicio/],
+            ['1.2.', /vecindad/],
+            ['1.', /visita/],
+            ['2.', /equipo/],
+            ['4.', /entrega.*(final|proyecto|constructiv)|recibo final/]
+        ];
+        function legacyActaId(nombre) {
+            const n = sinAcentos(nombre);
+            if (!/acta|visita|entrega|recibo/.test(n)) return null;
+            const r = LEGACY_ACT.find(([, re]) => re.test(n));
+            return r ? r[0] : null;
+        }
+        const LEGACY_ING = {
+            '1.': /unifilar/,
+            '2.': /certificad\w*.*inversor/,
+            '3-4.': /parametri[sz]aci|\bcno\b|cno\s?\d|anti.?isla|voltaje.{0,3}frecuencia/,
+            '5.': /declaraci\w*.*(dise[nñ]|retie)/,
+            '5.1.': /declaraci\w*.*(constru|retie)|acta.*declaraci\w*/,
+            '6.': /c[eé]dula|^6-7|\bcc\b/,
+            '7.': /tradici|\bctl\b|libertad/,
+            '8.': /ficha.*inversor|\bft\b.*inversor/,
+            '9.': /ficha.*(panel|modulo)|\bft\b.*(panel|modulo)/,
+            '10.': /disponibilidad/,
+            '11.': /cuadro de carga/,
+            '12.': /experiencia|certificado.*constructor/,
+            '13.': /espacios? de trabajo/,
+            '14.': /distancia/,
+            '15.': /memoria/,
+            '16.': /(disposicion|conexion).*panel/,
+            '17.': /plan de mantenimiento/,
+            '18.': /plano/
+        };
+        // Archivo "de trabajo" que no cuenta como soporte (Excel, comprimidos, etc.).
+        const esSoporteValido = (n) => !/\.(xlsx?|xlsm|rar|zip|ini|mpp|tmp|db|lnk)$/i.test(String(n).trim());
+        function legacyIngCumple(item, nombre) {
+            const re = LEGACY_ING[item.id];
+            if (!re || !esSoporteValido(nombre)) return false;
+            if (item.tipo === 'generable' && !esPdfNombre(nombre)) return false;
+            // Se quita el índice del inicio ("10. ", "3-4.1 ") salvo el "6-7" que sirve para cédula y tradición.
+            const n = sinAcentos(nombre).trim();
+            return re.test(n.startsWith('6-7') ? n : n.replace(/^\d+(-\d+)?\.?\d*\.?\s*/, ''));
+        }
 
         // ==========================================================
         // ARCHIVOS DE LA BÓVEDA: ÍNDICES, DETECCIÓN Y NOMBRES
@@ -4180,7 +4244,7 @@
                 for (let i = 0; i < pendientes.length; i += LOTE) {
                     const tanda = await Promise.all(
                         pendientes.slice(i, i + LOTE).map(async ({ proj, year }) => {
-                            const analizado = await analyze(proj);
+                            const analizado = await analyze(proj, year);
                             analizado.year = year;
                             return analizado;
                         })
@@ -4230,14 +4294,15 @@
             }
         }
 
-        async function analyze(handle) {
+        async function analyze(handle, year) {
+            const legacy = esAnioLegacy(year);
             const states = await getStates(handle.name);
             let ingFolder, actFolder, budgetFolder, preliminarFolder, estadosFolder, retieFolder, orFolder, dossierFolder;
             try {
                 for await (const e of handle.values()) {
                     if (e.name.startsWith('1.') && e.name.includes('Preeliminar')) preliminarFolder = e;
                     if (e.name.startsWith('1.') && !e.name.includes('Preeliminar')) ingFolder = e;
-                    if (e.name.startsWith('2.') && e.name.includes('ESTADOS')) estadosFolder = e;
+                    if (e.name.startsWith('2.') && /ESTADO/i.test(e.name)) estadosFolder = e;
                     if (e.name.startsWith('3.')) budgetFolder = e;
                     if (e.name.startsWith('4.')) dossierFolder = e;
                     if (e.name.startsWith('5.')) {
@@ -4260,7 +4325,15 @@
                 return r;
             };
 
-            const filesIng = await getFiles(ingFolder);
+            let filesIng = await getFiles(ingFolder);
+            // 2024: en varios proyectos la ingeniería quedó dentro de una subcarpeta "DISEÑO".
+            if (legacy && ingFolder) {
+                try {
+                    for await (const sub of ingFolder.values()) {
+                        if (sub.kind === 'directory' && /^dise[nñ]o$/i.test(sub.name.trim())) filesIng = filesIng.concat(await getFiles(sub));
+                    }
+                } catch (e) { }
+            }
             const filesAct = await getFiles(actFolder);
             const filesRetieConf = await getFiles(retieFolder);
             const filesOrConf = await getFiles(orFolder);
@@ -4275,19 +4348,25 @@
             // un .docx es un borrador generado sin firmar todavía (permite "Regenerar").
             if (c.tipo === 'generable') {
                 const matches = files.filter(x => x.n.trim().startsWith(c.id + ' '));
-                const pdfFile = matches.find(x => x.n.toLowerCase().endsWith('.pdf'));
+                let pdfFile = matches.find(x => x.n.toLowerCase().endsWith('.pdf'));
                 const docxFile = matches.find(x => x.n.toLowerCase().endsWith('.docx'));
+                if (!pdfFile && legacy) pdfFile = files.find(x => legacyIngCumple(c, x.n));
                 return { ...c, found: !!pdfFile, handle: pdfFile?.h, generated: !!docxFile, docxHandle: docxFile?.h };
             }
             // Un inciso puede tener varios archivos (2., 2.1, 2.2...): ver archivosDelItem.
-            const archivos = archivosDelItem(c, files);
+            let archivos = archivosDelItem(c, files);
+            if (!archivos.length && legacy) {
+                archivos = files.filter(x => legacyIngCumple(c, x.n)).map(x => ({ ...x, sub: null }));
+            }
             return { ...c, found: archivos.length > 0, handle: archivos[0]?.h, files: archivos };
             });
 
             const mapActItems = (cfg, files) => cfg.map(c => {
             const matches = files.filter(x => x.n.trim().startsWith(c.id + ' '));
-            const pdfFile = matches.find(x => x.n.toLowerCase().endsWith('.pdf'));
+            let pdfFile = matches.find(x => x.n.toLowerCase().endsWith('.pdf'));
             const docxFile = matches.find(x => x.n.toLowerCase().endsWith('.docx'));
+            // 2024-2025: el acta firmada puede llevar otro número ("2.1 ...") u otro nombre.
+            if (!pdfFile && legacy) pdfFile = files.find(x => esPdfNombre(x.n) && legacyActaId(x.n) === c.id);
             return {
                 ...c,
                 found: !!pdfFile,
@@ -4327,7 +4406,9 @@
             let orInfoSupabase = null;
             try { orInfoSupabase = await getProjectData(handle.name); } catch (e) {}
             const orRadicadoEnInfo = !!(orInfoSupabase && orInfoSupabase.project_info && String(orInfoSupabase.project_info.radicado || '').trim());
-            const orConformeDetectado = orFilesSinRadicado.length >= 1;
+            // En 2024-2025 no siempre se recibía carta de conformidad (a veces solo se avisaba
+            // por correo): cualquier archivo en la carpeta OR ya cuenta como conforme.
+            const orConformeDetectado = legacy ? filesOrConf.length >= 1 : orFilesSinRadicado.length >= 1;
             const orInscritoDetectado = !orConformeDetectado && (orTieneSoloRadicado || (filesOrConf.length === 0 && orRadicadoEnInfo));
             const retieConformeDetectado = filesRetieConf.length >= 2;
 
@@ -4345,7 +4426,8 @@
             const infoProyecto = (orInfoSupabase && orInfoSupabase.project_info) || info;
             const ingItems = itemsIngVisibles(ingTodos, infoProyecto);
             const bovedaPct = pctBoveda(ingItems);
-            const actasPct = Math.round((actItems.filter(i => i.found).length / actItems.length) * 100);
+            const actasValen = actItems.filter(i => !i.sinValor);
+            const actasPct = actasValen.length ? Math.round((actasValen.filter(i => i.found).length / actasValen.length) * 100) : 0;
             const informePct = informeFile ? 100 : 0;   // informativo: ya no pondera
 
             // Qué trámites le aplican a ESTE proyecto y cómo queda el reparto del 100%.
