@@ -220,6 +220,33 @@
         await page.render({ canvasContext: g, viewport: vp }).promise;
         return recortarBlanco(c).toDataURL('image/png');
     }
+    // Páginas de un PDF como imágenes JPEG (para las fichas técnicas dentro de la memoria).
+    async function pdfPaginas(file, cuantas) {
+        if (!window.pdfjsLib) {
+            await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+        const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+        const out = [];
+        for (let n = 1; n <= Math.min(cuantas, pdf.numPages); n++) {
+            const page = await pdf.getPage(n);
+            const vp = page.getViewport({ scale: 1.7 });
+            const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+            const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+            await page.render({ canvasContext: g, viewport: vp }).promise;
+            out.push(c.toDataURL('image/jpeg', 0.82));
+        }
+        return out;
+    }
+    // Ficha técnica que el proyecto ya tiene en Ingeniería (incisos 8 y 9): la memoria la usa como imagen.
+    async function fichaDelProyecto(p, inciso, paginas) {
+        const item = (p.ingItemsTodos || p.ingItems || []).find(i => i.id === inciso);
+        const pdf = item && (item.files || []).find(f => /\.pdf$/i.test(f.n)) || (item && item.handle ? { h: item.handle } : null);
+        if (!pdf || !pdf.h) return [];
+        try { return await pdfPaginas(await pdf.h.getFile(), paginas); }
+        catch (e) { console.warn('No se pudo leer la ficha del inciso ' + inciso + ':', e); return []; }
+    }
+
     // Quita el margen blanco alrededor del contenido.
     function recortarBlanco(c) {
         const g = c.getContext('2d'); const { width: w, height: h } = c;
@@ -468,6 +495,11 @@
                 tempProm: f.tempProm, tempRango: f.tempRango, tempMax: parseFloat((f.tempRango.match(/\d+/) || [33])[0]), altura: f.altura, tmin: parseFloat(f.tmin) || 15,
                 cablePV: +f.cable, estructuraMarca: f.estructura, panel: P, inversor: I, inversores: est.config, responsable: RESPONSABLE, cuadroFuente: est.cuadro
             };
+            // Las fichas técnicas salen de los PDF del propio proyecto (incisos 9 y 8).
+            btn.textContent = 'Leyendo fichas técnicas...';
+            D.fichaPanel = await fichaDelProyecto(p, '9.', 1);
+            D.fichaInv = await fichaDelProyecto(p, '8.', 2);
+            btn.textContent = 'Generando...';
             const r = await window.MemoriaPDF.generar(D);
 
             const info = (await getProjectInfo(est.projectId)) || {};

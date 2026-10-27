@@ -13,7 +13,10 @@
     const PW = 215.9, PH = 279.4;                 // Carta
     const ML = 30, MR = 29, MT = 41, MB = 25;     // márgenes (mm)
     const CW = PW - ML - MR;
-    const AZUL = [37, 99, 201], AZUL_CLARO = [214, 227, 247], GRIS = [90, 90, 90];
+    const PALE = [217, 226, 243], BORDE = [180, 198, 231], GRIS = [90, 90, 90];   // azul muy pálido como las memorias en Word
+    const FUENTE = 'Caladea';                      // métricamente igual a Cambria (la letra de las memorias)
+    const FONTS = { normal: 'Caladea-Regular.ttf', bold: 'Caladea-Bold.ttf', italic: 'Caladea-Italic.ttf', bolditalic: 'Caladea-BoldItalic.ttf' };
+    let _fuentesB64 = null;
     const ASSETS = 'img/memoria/';
 
     // ------------------------------------------------------------
@@ -107,7 +110,7 @@
     function construir(doc, D, C, A, toc) {
         const registro = [];
         let y = MT;
-        const lh = (size) => size * 0.3528 * 1.32;       // alto de línea en mm
+        const lh = (size) => size * 0.3528 * 1.24;       // alto de línea en mm
 
         const nuevaPagina = () => { doc.addPage(); y = MT; };
         const resto = () => PH - MB - y;
@@ -115,14 +118,14 @@
         const pagina = () => doc.getNumberOfPages();
 
         function fuente(size, estilo, color) {
-            doc.setFont('times', estilo || 'normal'); doc.setFontSize(size);
+            doc.setFont(FUENTE, estilo || 'normal'); doc.setFontSize(size);
             const c = color || [0, 0, 0]; doc.setTextColor(c[0], c[1], c[2]);
         }
 
         // Párrafo justificado (se parte entre páginas por líneas)
         function p(texto, o) {
             o = o || {};
-            const size = o.size || 10.5, estilo = o.estilo || 'normal';
+            const size = o.size || 11, estilo = o.estilo || 'normal';
             fuente(size, estilo, o.color);
             const x = ML + (o.sangria || 0), w = CW - (o.sangria || 0);
             const lineas = doc.splitTextToSize(String(texto), w);
@@ -146,17 +149,17 @@
         function vineta(texto, o) { p('•  ' + texto, Object.assign({ sangria: 5, izq: false, despues: 1.2 }, o || {})); }
 
         function titulo(texto, nivel, noTOC) {
-            const size = nivel === 1 ? 12.5 : nivel === 2 ? 11.5 : 10.5;
-            fuente(size, 'bold', nivel === 1 ? [20, 20, 20] : [30, 30, 30]);
+            const size = nivel === 1 ? 13 : nivel === 2 ? 12 : 11;
+            fuente(size, 'bold', [0, 0, 0]);
             const lineas = doc.splitTextToSize(texto, CW);
-            asegurar(lh(size) * lineas.length + (nivel === 3 ? 30 : 16));
+            asegurar(lh(size) * lineas.length + (nivel === 3 ? 22 : 14));
             y += nivel === 1 ? 4 : 3;
             if (!noTOC) registro.push({ tipo: 'h', texto, pagina: pagina() });
             lineas.forEach(ln => { doc.text(ln, ML, y + lh(size) * 0.75); y += lh(size); });
             y += 2;
         }
         function etiqueta(tipo, texto) {   // pie de tabla/figura (se lista en los índices)
-            fuente(8.5, 'italic', [60, 100, 160]);
+            fuente(9, 'italic', [0, 0, 0]);
             asegurar(6);
             registro.push({ tipo, texto, pagina: pagina() });
             doc.text(texto, ML + CW / 2, y + 3, { align: 'center' });
@@ -169,7 +172,7 @@
             const anchos = cols.map(c => c / tot * (o.ancho || CW));
             const size = o.size || 8.5, pad = 1.4, alto = lh(size) * 0.92;
             const x0 = ML + (CW - (o.ancho || CW)) / 2;
-            const dibujarFila = (celdas, estilo) => {
+            const dibujarFila = (celdas, estilo, seco) => {
                 // celdas: array de string | {t, span, fill, bold, align}
                 fuente(size, estilo.bold ? 'bold' : 'normal', estilo.color);
                 const items = []; let ci = 0;
@@ -177,19 +180,20 @@
                     const cel = typeof c === 'object' && c !== null ? c : { t: c };
                     const span = cel.span || 1;
                     const w = anchos.slice(ci, ci + span).reduce((a, b) => a + b, 0);
-                    doc.setFont('times', (cel.bold || estilo.bold) ? 'bold' : 'normal');
+                    doc.setFont(FUENTE, (cel.bold || estilo.bold) ? 'bold' : 'normal');
                     const lineas = doc.splitTextToSize(String(cel.t == null ? '' : cel.t), w - pad * 2);
                     items.push({ cel, w, ci, lineas, h: lineas.length * alto + pad * 2 });
                     ci += span;
                 });
                 const h = Math.max(...items.map(i => i.h), 6);
+                if (seco) return h;
                 if (resto() < h) nuevaPagina();
                 let x = x0;
                 items.forEach(it => {
                     const fill = it.cel.fill || estilo.fill;
                     if (fill) { doc.setFillColor(fill[0], fill[1], fill[2]); doc.rect(x, y, it.w, h, 'F'); }
-                    doc.setDrawColor(150, 150, 150); doc.setLineWidth(0.15); doc.rect(x, y, it.w, h);
-                    doc.setFont('times', (it.cel.bold || estilo.bold) ? 'bold' : 'normal'); doc.setFontSize(size);
+                    doc.setDrawColor(BORDE[0], BORDE[1], BORDE[2]); doc.setLineWidth(0.2); doc.rect(x, y, it.w, h);
+                    doc.setFont(FUENTE, (it.cel.bold || estilo.bold) ? 'bold' : 'normal'); doc.setFontSize(size);
                     const col = it.cel.color || estilo.color || [0, 0, 0]; doc.setTextColor(col[0], col[1], col[2]);
                     const al = it.cel.align || estilo.align || o.align || 'left';
                     const ty = y + pad + alto * 0.75 + (h - it.h) / 2;
@@ -201,8 +205,14 @@
                 });
                 y += h;
             };
-            if (o.titulo) dibujarFila([{ t: o.titulo, span: cols.length }], { bold: true, fill: AZUL, color: [255, 255, 255], align: 'center' });
-            if (o.head) dibujarFila(o.head, { bold: true, fill: o.headFill || AZUL_CLARO, align: 'center' });
+            // Una tabla que cabe en una página no se parte: si no entra en lo que queda, pasa entera a la siguiente.
+            let total = 0;
+            if (o.titulo) total += dibujarFila([{ t: o.titulo, span: cols.length }], { bold: true }, true);
+            if (o.head) total += dibujarFila(o.head, { bold: true }, true);
+            o.rows.forEach(r => { total += r && r.__estilo ? dibujarFila(r.celdas, r.__estilo, true) : dibujarFila(r, { align: o.align || 'left' }, true); });
+            if (total <= PH - MT - MB && total > resto()) nuevaPagina();
+            if (o.titulo) dibujarFila([{ t: o.titulo, span: cols.length }], { bold: true, fill: PALE, align: 'center' });
+            if (o.head) dibujarFila(o.head, { bold: true, fill: o.headFill || PALE, align: 'center' });
             o.rows.forEach(r => {
                 if (r && r.__estilo) dibujarFila(r.celdas, r.__estilo);
                 else dibujarFila(r, { align: o.align || 'left' });
@@ -217,7 +227,10 @@
             let w = Math.min(anchoMax || CW, CW), h = w * im.h / im.w;
             const maxH = PH - MT - MB - 12;
             if (h > maxH) { h = maxH; w = h * im.w / im.h; }
-            asegurar(h + 2);
+            if (resto() < h + 2) {
+                const libre = resto() - 3;
+                if (libre >= h * 0.45 && !o.entera) { h = libre; w = h * im.w / im.h; } else nuevaPagina();
+            }
             doc.addImage(im.data, im.fmt, ML + (CW - w) / 2, y, w, h);
             y += h + 2;
         }
@@ -252,8 +265,8 @@
             asegurar(hFirma + 20);
             const w1 = 52, w2 = CW - w1;
             [[`Responsable por ${rol}`, D.responsable.nombre], ['Matrícula profesional', D.responsable.matricula]].forEach(f => {
-                doc.setFillColor(AZUL_CLARO[0], AZUL_CLARO[1], AZUL_CLARO[2]);
-                doc.rect(ML, y, w1, 7, 'F'); doc.setDrawColor(150); doc.rect(ML, y, w1, 7); doc.rect(ML + w1, y, w2, 7);
+                doc.setFillColor(PALE[0], PALE[1], PALE[2]);
+                doc.rect(ML, y, w1, 7, 'F'); doc.setDrawColor(BORDE[0], BORDE[1], BORDE[2]); doc.rect(ML, y, w1, 7); doc.rect(ML + w1, y, w2, 7);
                 fuente(9, 'bold'); doc.text(f[0], ML + 2, y + 4.8); fuente(9, 'normal'); doc.text(f[1], ML + w1 + 2, y + 4.8);
                 y += 7;
             });
@@ -299,7 +312,7 @@
             rows: RETIE_TABLA.map((r, i) => [{ t: String(i + 1), align: 'center' }, r[0], { t: r[1], align: 'center', bold: true }, r[2]]) });
 
         // ===================== TABLAS 1 - 4 =====================
-        nuevaPagina();
+        y += 4;
         tabla({ cols: [70, 70], size: 9, titulo: 'ESPECIFICACIONES DEL SISTEMA FOTOVOLTAICO', head: ['ITEM', 'DESCRIPCIÓN'], ancho: 140, rows: [
             ['CANTIDAD DE MÓDULOS FOTOVOLTAICOS (FV)', String(C.totalModulos)],
             ['REFERENCIA DEL MÓDULO FV', P.fabricante],
@@ -333,7 +346,6 @@
         etiqueta('tab', `Tabla 4. Especificación de inversor${plural ? 'es' : ''}.`);
 
         // ===================== 1. INTRODUCCIÓN =====================
-        nuevaPagina();
         titulo('1. Introducción', 2);
         p('En un contexto mundial en el que el 81% del total de la energía consumida proviene de fuentes fósiles y tan solo un 19% de fuentes renovables, durante los últimos 30 y 40 años se ha venido desarrollando una etapa de transición hacia el aprovechamiento de estas últimas con el fin de reducir la dependencia en la importación de energéticos fósiles de precios ampliamente volátiles, disminuir las emisiones de efecto invernadero producidas por el sector energético y contribuir así a la mitigación del cambio climático.');
         p('Colombia es un país que goza de una matriz energética relativamente rica tanto en combustibles fósiles como en recursos renovables, sin embargo, debe tenerse en cuenta que la demanda energética está prevista para ser cubierta por la oferta doméstica tan solo por el orden de 7 años más para el caso del petróleo y 15 años más para el caso del gas natural.');
@@ -357,12 +369,12 @@
 
         titulo('3.1 Características generales de los equipos de generación y acondicionamiento de la energía.', 2);
         p(`Se seleccionaron ${C.totalModulos} módulos solares marca ${P.fabricante} con las siguientes características:`);
-        if (P.bullets && P.bullets.length) { listaConImagen(A.panel, P.bullets, 52); etiqueta('tab', 'Tabla 6. Características Equipo de Generación Fotovoltaica.'); }
+        if ((P.bullets && P.bullets.length) || (A.fichaPanel && A.fichaPanel[0])) { listaConImagen(A.fichaPanel && A.fichaPanel[0], P.bullets, 62); etiqueta('tab', 'Tabla 6. Características Equipo de Generación Fotovoltaica.'); }
         p(`Los ${C.totalModulos} módulos se proponen distribuir según las strings establecidas en la tabla 5. En el unifilar adjunto se puede observar la conexión del sistema solar fotovoltaico propuesto para el proyecto ${'SSFV ' + D.nombre}`);
         p('Las especificaciones técnicas del módulo se muestran en las fichas técnicas, anexas a este informe, para la codificación de los planos se utiliza la mostrada en la figura 1. En la codificación usada, el primer dígito indica el número del inversor, el segundo el número de entrada MPPT en el que será conectada (en caso de que tenga más de una), el tercer dígito indica el número de la cadena y el cuarto dígito el número del módulo dentro de la cadena.');
         imagen(A.nomenclatura, 95);
         etiqueta('fig', 'Fig 1.  Nomenclatura de Strings');
-        if (I.bullets && I.bullets.length) { listaConImagen(A.inversorImg, I.bullets, 52); etiqueta('tab', 'Tabla 7. Características Equipo de Conversión de energía DC/AC'); }
+        if ((I.bullets && I.bullets.length) || (A.fichaInv && A.fichaInv[0])) { listaConImagen(A.fichaInv && A.fichaInv[0], I.bullets, 62); etiqueta('tab', 'Tabla 7. Características Equipo de Conversión de energía DC/AC'); }
         p('Estos equipos fueron distribuidos desde las salidas de los inversores al punto de conexión por medio de bandeja tipo escalera y cable AC los cuales se mencionan más adelante en cumplimiento a Reglamento Técnico de Instalaciones Eléctricas (RETIE) resolución No. 9 0708 de agosto del 2013 numeral 10.1 Diseño detallado.');
 
         // ===================== MEMORIA DE CÁLCULO ELÉCTRICA =====================
@@ -406,7 +418,7 @@
         ecuacion('R = Isc / IL'); etiqueta('tab', 'Ecuación 5. Referencia de Distorsión Armónica');
         p('Donde: Isc = corriente de cortocircuito; IL = corriente de carga.');
         p(`Tomando la hoja de datos técnicos del inversor se observa la distorsión armónica producida bajo su operación (THD máxima menor o igual a 3 %).`);
-        (A.datasheet || []).forEach(im => imagen(im, CW * 0.8));
+        (A.fichaInv || []).slice(1).forEach(im => imagen(im, CW * 0.9));
 
         p('Los conductores en DC se dividirán en dos tramos:');
         p('Tramo 1: del arreglo fotovoltaico a la string box, denominado circuito fotovoltaico fuente.', { sangria: 5, despues: 1 });
@@ -461,7 +473,7 @@
         titulo('D. Análisis de nivel de riesgo por rayos y medidas de protección contra rayos', 3);
         p('No aplica debido a que la instalación eléctrica ya ha sido construida y certificada, lo que indica que ha pasado por un proceso de evaluación y verificación previa para asegurar su cumplimiento con las normas y regulaciones vigentes para instalaciones colombianas. Esto implica que se han tenido en cuenta las medidas de protección necesarias, incluyendo aquellas relacionadas con el riesgo de rayos, por ende, el constructor o responsable de la instalación eléctrica tenía la obligación de cumplir con los requisitos de seguridad establecidos en el RETIE antes de su construcción y certificación.');
         titulo('E. Análisis de Riesgos de Origen Eléctrico y Medidas para Mitigarlos', 3);
-        [A.riesgo1, A.riesgo2, A.riesgo3, A.riesgo4, A.riesgo5].forEach(im => imagen(im, CW));
+        [A.riesgo1, A.riesgo2, A.riesgo3, A.riesgo4, A.riesgo5].forEach(im => imagen(im, CW * 0.8, { entera: true }));
         tabla({ cols: [34, 50, 73], size: 7.6, titulo: 'ANALISIS DE RIESGOS OPERACIONALES', head: ['TAREA', 'RIESGOS POTENCIALES', 'MEDIDAS DE CONTROL'], rows: RIESGOS_OPERACIONALES });
 
         titulo('F. Análisis del Nivel de Tensión', 3);
@@ -538,21 +550,21 @@
 
         // ---------- helpers que usan el estado de arriba ----------
         function ecuacion(txt) {
-            fuente(10.5, 'italic'); asegurar(9);
-            doc.setFillColor(245, 247, 252); doc.rect(ML + 10, y, CW - 20, 7.5, 'F');
+            fuente(11, 'italic'); asegurar(9);
             doc.text(txt, ML + CW / 2, y + 5, { align: 'center' });
-            y += 9.5;
+            y += 9;
         }
         function listaConImagen(im, bullets, anchoImg) {
             if (!im) anchoImg = 0;
             const textoW = CW - anchoImg - 6;
             fuente(9, 'normal');
             const items = (bullets || []).map((b, i) => doc.splitTextToSize(`${i + 1}. ${b}`, textoW));
+            if (!items.length) { if (im) { const w = Math.min(CW * 0.5, 95), h = w * im.h / im.w; asegurar(h + 2); doc.addImage(im.data, im.fmt, ML + (CW - w) / 2, y, w, h); y += h + 2; } return; }
             const altoTexto = items.reduce((a, l) => a + l.length * lh(9) + 1.6, 0);
             const altoImg = im ? anchoImg * im.h / im.w : 0;
             const alto = Math.max(altoTexto, altoImg) + 2;
             asegurar(alto);
-            doc.setDrawColor(150); doc.setLineWidth(0.15); doc.rect(ML, y, CW, alto);
+            doc.setDrawColor(BORDE[0], BORDE[1], BORDE[2]); doc.setLineWidth(0.2); doc.rect(ML, y, CW, alto);
             if (im) doc.addImage(im.data, im.fmt, ML + 2, y + 1, anchoImg, altoImg);
             let ty = y + 1.5;
             items.forEach(lines => { lines.forEach(ln => { doc.text(ln, ML + (anchoImg ? anchoImg + 5 : 3), ty + lh(9) * 0.75); ty += lh(9); }); ty += 1.6; });
@@ -577,14 +589,14 @@
             doc.setPage(i);
             if (A.logo) doc.addImage(A.logo.data, A.logo.fmt, ML - 2, 9, 26, 14.5);
             doc.setTextColor(0);
-            doc.setFont('times', 'normal'); doc.setFontSize(9);
+            doc.setFont(FUENTE, 'normal'); doc.setFontSize(9);
             doc.text(`Sistema Solar Fotovoltaico Conectada a Red ${D.operadorRed}`, PW - MR, 14, { align: 'right' });
-            doc.setFont('times', 'bold'); doc.setFontSize(9.5);
+            doc.setFont(FUENTE, 'bold'); doc.setFontSize(9.5);
             doc.text(`SSFV ${D.nombre} ${kwp3(D.potDC)} kWp - ${D.potAC} kW`, PW - MR, 19, { align: 'right' });
             doc.text('Memorias de cálculo', PW - MR, 24, { align: 'right' });
             doc.setDrawColor(90); doc.setLineWidth(0.4); doc.line(ML - 2, 30, PW - MR + 2, 30);
             doc.line(ML - 2, PH - 18, PW - MR + 2, PH - 18);
-            doc.setFont('times', 'bold'); doc.setFontSize(8.5);
+            doc.setFont(FUENTE, 'bold'); doc.setFontSize(8.5);
             doc.text(`Página ${i} de ${n}`, PW - MR, PH - 13, { align: 'right' });
         }
     }
@@ -600,18 +612,40 @@
         };
         const fuentes = Object.assign({ panel: D.panel.img, inversorImg: D.inversor.img, cuadro: D.cuadroFuente }, extra || {});
         for (const k of Object.keys(fuentes)) A[k] = fuentes[k] ? await cargarImagen(fuentes[k], { maxW: k === 'cuadro' ? 1600 : 800 }) : null;
-        A.datasheet = [];
-        for (const f of (D.inversor.datasheet || [])) { const im = await cargarImagen(f, { maxW: 1100 }); if (im) A.datasheet.push(im); }
+        A.fichaPanel = []; A.fichaInv = [];
+        for (const f of (D.fichaPanel || [])) { const im = await cargarImagen(f, { maxW: 1000 }); if (im) A.fichaPanel.push(im); }
+        for (const f of (D.fichaInv || [])) { const im = await cargarImagen(f, { maxW: 1100 }); if (im) A.fichaInv.push(im); }
         return A;
+    }
+
+    function aBase64(buf) {
+        const b = new Uint8Array(buf); let s = '';
+        for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+        return btoa(s);
+    }
+    async function cargarFuentes() {
+        if (_fuentesB64) return _fuentesB64;
+        const out = {};
+        for (const k of Object.keys(FONTS)) {
+            const r = await fetch('fonts/' + FONTS[k]);
+            if (!r.ok) throw new Error('No se encontró la letra ' + FONTS[k]);
+            out[k] = aBase64(await r.arrayBuffer());
+        }
+        return (_fuentesB64 = out);
+    }
+    function registrarFuentes(doc, b64) {
+        Object.keys(FONTS).forEach(k => { doc.addFileToVFS(FONTS[k], b64[k]); doc.addFont(FONTS[k], FUENTE, k, undefined, 'Identity-H'); });
     }
 
     async function generar(D, extraAssets) {
         const { jsPDF } = window.jspdf;
         const C = window.MemoriaCalc.calcular({ panel: D.panel, inversor: D.inversor, inversores: D.inversores, tmin: D.tmin, cablePV: D.cablePV });
         const A = await cargarAssets(D, extraAssets);
+        const fuentes = await cargarFuentes();
         let toc = [], doc;
         for (let pase = 0; pase < 3; pase++) {
             doc = new jsPDF({ unit: 'mm', format: 'letter' });
+            registrarFuentes(doc, fuentes);
             const reg = construir(doc, D, C, A, toc);
             const igual = JSON.stringify(reg) === JSON.stringify(toc);
             toc = reg;

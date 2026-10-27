@@ -35,6 +35,7 @@ const SHELL = [
     './memoria-equipos.js',
     './memoria-pdf.js',
     './memoria-ui.js',
+    './documentos-equipos.js',
     './drive-fs.js',
     './drive-ui.js',
     './libs/pizzip.min.js',

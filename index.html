@@ -41,6 +41,7 @@
     <script src="memoria-equipos.js"></script>
     <script src="memoria-pdf.js"></script>
     <script src="memoria-ui.js"></script>
+    <script src="documentos-equipos.js"></script>
     <!-- Control de Presupuesto: lee el Excel "Control de costo" (SheetJS) y lo grafica (Chart.js). -->
     <script src="libs/xlsx.full.min.js"></script>
     <script src="libs/chart.umd.min.js"></script>
@@ -732,6 +733,7 @@
                                     <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Ingeniería de Detalle</h3>
                                     <div class="flex items-center gap-2">
                                         <span id="bovedaPctBadge" class="px-2.5 py-1 bg-slate-900 text-[10px] text-white font-black rounded-full">0%</span>
+                                        <button onclick="sincronizarDocumentosEquipo(selectedProjectId, { avisar: true })" class="px-3 py-1 bg-slate-100 text-[10px] text-slate-600 font-bold rounded-full hover:bg-blue-600 hover:text-white transition-colors" title="Copia desde la biblioteca las fichas técnicas, certificados y CNO de los equipos de este proyecto y genera las declaraciones">TRAER DOCUMENTOS DE EQUIPOS</button>
                                         <span class="px-3 py-1 bg-blue-600 text-[10px] text-white font-bold rounded-full">PDF OBLIGATORIOS</span>
                                     </div>
                                 </div>
@@ -2617,8 +2619,10 @@
                 await writable.write(buf);
                 await writable.close();
 
-                await scan();
-                showToast('Acta generada correctamente');
+                if (!opts.sinEscaneo) {
+                    await scan();
+                    showToast('Acta generada correctamente');
+                }
                 return true;
             } catch (e) {
                 console.error('ERROR COMPLETO:', e);
@@ -5304,6 +5308,11 @@
                 // Las casillas de "Trámites que Aplican" cambian el reparto del 100%,
                 // así que el avance se recalcula ya, sin esperar al siguiente escaneo.
                 recalcularEstado(projects[idx]);
+            }
+            // Con los equipos ya definidos, se traen de la biblioteca sus fichas, certificados y
+            // CNO a Ingeniería y se generan las declaraciones de diseño y construcción.
+            if (window.sincronizarDocumentosEquipo) {
+                sincronizarDocumentosEquipo(id).catch(e => console.warn('No se pudieron traer los documentos de equipos:', e));
             }
         }
 
