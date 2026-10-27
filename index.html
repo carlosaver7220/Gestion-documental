@@ -4296,6 +4296,9 @@
 
         async function analyze(handle, year) {
             const legacy = esAnioLegacy(year);
+            // Documentos y actas se reconocen por su nombre en TODOS los años (sin importar
+            // mayúsculas, tildes ni el número del inicio): no todos los suben desde la app.
+            const porNombre = true;
             const states = await getStates(handle.name);
             let ingFolder, actFolder, budgetFolder, preliminarFolder, estadosFolder, retieFolder, orFolder, dossierFolder;
             try {
@@ -4327,7 +4330,7 @@
 
             let filesIng = await getFiles(ingFolder);
             // 2024: en varios proyectos la ingeniería quedó dentro de una subcarpeta "DISEÑO".
-            if (legacy && ingFolder) {
+            if (porNombre && ingFolder) {
                 try {
                     for await (const sub of ingFolder.values()) {
                         if (sub.kind === 'directory' && /^dise[nñ]o$/i.test(sub.name.trim())) filesIng = filesIng.concat(await getFiles(sub));
@@ -4350,12 +4353,12 @@
                 const matches = files.filter(x => x.n.trim().startsWith(c.id + ' '));
                 let pdfFile = matches.find(x => x.n.toLowerCase().endsWith('.pdf'));
                 const docxFile = matches.find(x => x.n.toLowerCase().endsWith('.docx'));
-                if (!pdfFile && legacy) pdfFile = files.find(x => legacyIngCumple(c, x.n));
+                if (!pdfFile && porNombre) pdfFile = files.find(x => legacyIngCumple(c, x.n));
                 return { ...c, found: !!pdfFile, handle: pdfFile?.h, generated: !!docxFile, docxHandle: docxFile?.h };
             }
             // Un inciso puede tener varios archivos (2., 2.1, 2.2...): ver archivosDelItem.
             let archivos = archivosDelItem(c, files);
-            if (!archivos.length && legacy) {
+            if (!archivos.length && porNombre) {
                 archivos = files.filter(x => legacyIngCumple(c, x.n)).map(x => ({ ...x, sub: null }));
             }
             return { ...c, found: archivos.length > 0, handle: archivos[0]?.h, files: archivos };
@@ -4365,8 +4368,8 @@
             const matches = files.filter(x => x.n.trim().startsWith(c.id + ' '));
             let pdfFile = matches.find(x => x.n.toLowerCase().endsWith('.pdf'));
             const docxFile = matches.find(x => x.n.toLowerCase().endsWith('.docx'));
-            // 2024-2025: el acta firmada puede llevar otro número ("2.1 ...") u otro nombre.
-            if (!pdfFile && legacy) pdfFile = files.find(x => esPdfNombre(x.n) && legacyActaId(x.n) === c.id);
+            // El acta firmada puede llevar otro número ("2.1 ...") o no llevarlo.
+            if (!pdfFile && porNombre) pdfFile = files.find(x => esPdfNombre(x.n) && legacyActaId(x.n) === c.id);
             return {
                 ...c,
                 found: !!pdfFile,
