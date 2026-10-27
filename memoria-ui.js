@@ -301,7 +301,7 @@
         try {
             const P = panelSel(), I = inversorSel();
             const av = $('memAvisoEquipo');
-            if (I && I.tipoSistema === 'hibrido') { av.textContent = 'Este inversor es híbrido: la memoria de sistemas híbridos (con baterías) todavía no está disponible.'; av.classList.remove('hidden'); }
+            if (I && I.tipoSistema === 'hibrido') { av.textContent = 'Inversor híbrido: la memoria sale igual que las anteriores de SEING (el cálculo es el del lado solar, sin sección de baterías).'; av.classList.remove('hidden'); }
             else av.classList.add('hidden');
             if (!P || !I || !est.config.length) { box.textContent = 'Elige los equipos y el número de módulos.'; return; }
             const C = window.MemoriaCalc.calcular({ panel: P, inversor: I, inversores: est.config, tmin: num($('memTmin').value) ?? 15, cablePV: +$('memCable').value });
@@ -458,7 +458,6 @@
             ['municipio', 'departamento', 'direccion', 'altura', 'lat', 'lng'].forEach(k => { if (!f[k]) faltan.push(k); });
             if (!f.numMod) faltan.push('n.º de módulos');
             if (faltan.length) return alert('Faltan datos: ' + faltan.join(', '));
-            if (I.tipoSistema === 'hibrido') return alert('La memoria de sistemas híbridos todavía no está disponible.');
             if (!est.config.length) return alert('Configura los strings (botón Auto-distribuir).');
 
             btn.disabled = true; btn.textContent = 'Generando...';
