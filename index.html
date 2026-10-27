@@ -36,6 +36,11 @@
          El motor es informe-pdf.js, compartido con plantilla-de-proyecto.html. -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="informe-pdf.js"></script>
+    <!-- Memoria de Cálculo (inciso 15): cálculos, base de equipos, PDF y formulario. -->
+    <script src="memoria-calc.js"></script>
+    <script src="memoria-equipos.js"></script>
+    <script src="memoria-pdf.js"></script>
+    <script src="memoria-ui.js"></script>
     <!-- Control de Presupuesto: lee el Excel "Control de costo" (SheetJS) y lo grafica (Chart.js). -->
     <script src="libs/xlsx.full.min.js"></script>
     <script src="libs/chart.umd.min.js"></script>
@@ -5146,17 +5151,20 @@
                     if (item.found) botones += `<button onclick="openFile('${p.id}','${docId}','${type}')" class="btn-action btn-view">Abrir</button>`;
                     return botones;
                 }
+                // Memoria de Cálculo (inciso 15): se puede generar en PDF desde el formulario.
+                const generarMem = item.id === '15.'
+                    ? `<button onclick="abrirMemoriaCalculo('${p.id}')" class="btn-action btn-upload" title="Genera la memoria con los datos del proyecto">Generar</button>` : '';
                 // Ítems normales de Bóveda Técnica: solo se detectan/suben a mano, sin plantilla.
                 // Si el inciso admite varios archivos (2., 2.1, 2.2...), "Subir" sigue
                 // disponible aunque ya haya uno, y cada archivo tiene su propio botón.
                 const archivosItem = item.files || [];
                 const subir = `<button onclick="uploadFile('${p.id}','${docId}','${type}')" class="btn-action btn-upload" title="${item.found ? 'Agregar otro archivo a este inciso' : ''}">Subir</button>`;
-                if (!item.found) return subir;
+                if (!item.found) return generarMem + subir;
                 const baseIdx = parseIndice(item.id).base;
                 const abrir = archivosItem.length > 1
                     ? archivosItem.map((f, k) => `<button onclick="openFile('${p.id}','${docId}','${type}',${k})" title="${escaparHtml(f.n)}" class="btn-action btn-view">Abrir ${f.sub === null ? baseIdx : baseIdx + '.' + f.sub}</button>`).join('')
                     : `<button onclick="openFile('${p.id}','${docId}','${type}')" class="btn-action btn-view">Abrir</button>`;
-                return (itemAdmiteVarios(item) ? subir : '') + abrir;
+                return generarMem + (itemAdmiteVarios(item) ? subir : '') + abrir;
             };
             const actActionBtn = (item, docId) => {
                 const actaConfig = CONFIG.act.find(a => a.id === docId);

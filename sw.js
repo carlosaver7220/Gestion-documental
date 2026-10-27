@@ -23,7 +23,7 @@
 
 // Subir esta versión al cambiar la lista de archivos: al cambiar el nombre de
 // la caché, la vieja se borra en la activación.
-const CACHE = 'gestion-doc-v2';
+const CACHE = 'gestion-doc-v3';
 
 // El esqueleto de la app: lo mínimo para que abra sin conexión.
 const SHELL = [
@@ -31,6 +31,10 @@ const SHELL = [
     './index.html',
     './manifest.json',
     './informe-pdf.js',
+    './memoria-calc.js',
+    './memoria-equipos.js',
+    './memoria-pdf.js',
+    './memoria-ui.js',
     './drive-fs.js',
     './drive-ui.js',
     './libs/pizzip.min.js',
