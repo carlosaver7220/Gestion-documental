@@ -700,29 +700,23 @@
                              (lado verde = presupuestado, lado amarillo = gastado) y lo muestra
                              con indicadores y gráficas. No escribe nada: solo lee. -->
                         <div id="docTab-presupuesto" class="doc-tab-panel hidden">
-                            <div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
-                                <div class="min-w-0">
-                                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Control de Presupuesto</h3>
-                                    <p id="presArchivo" class="text-[10px] text-slate-400 font-bold uppercase tracking-wide mt-0.5 truncate">—</p>
-                                </div>
-                                <button onclick="renderPresupuesto(true)" class="btn-action btn-upload">Recargar Excel</button>
-                            </div>
                             <div id="presEstado" class="glass-card p-8 text-center text-xs font-bold text-slate-400 hidden"></div>
                             <div id="presContenido" class="space-y-5 hidden">
-                                <div id="presLectura" class="glass-card p-5 text-sm text-slate-700 leading-relaxed"></div>
-                                <div id="presKpis" class="grid grid-cols-2 lg:grid-cols-3 gap-3"></div>
+                                <div id="presLectura" class="glass-card px-5 py-3 text-xs text-slate-700 leading-relaxed"></div>
+                                <div id="presKpis" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2"></div>
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                                     <div class="glass-card p-5">
                                         <h4 class="text-[11px] font-black text-slate-900 uppercase tracking-widest">Presupuestado vs. gastado</h4>
                                         <p class="text-[10px] text-slate-400 mb-3"><span class="inline-block w-2.5 h-2.5 rounded-sm align-middle" style="background:#7fb069"></span> Presupuestado &nbsp; <span class="inline-block w-2.5 h-2.5 rounded-sm align-middle" style="background:#f4b73e"></span> Gastado &nbsp; <span class="inline-block w-2.5 h-2.5 rounded-sm align-middle" style="background:#e11d48"></span> Se pasó</p>
-                                        <div class="relative h-[26rem]"><canvas id="presChartConceptos"></canvas></div>
+                                        <div class="relative h-80"><canvas id="presChartConceptos"></canvas></div>
                                     </div>
                                     <div class="glass-card p-5">
                                         <h4 class="text-[11px] font-black text-slate-900 uppercase tracking-widest">En qué se ha gastado</h4>
                                         <p class="text-[10px] text-slate-400 mb-3">Participación de cada concepto en el gasto real.</p>
-                                        <div class="relative h-[26rem]"><canvas id="presChartDona"></canvas></div>
+                                        <div class="relative h-80"><canvas id="presChartDona"></canvas></div>
                                     </div>
                                 </div>
+                                <div class="flex justify-end"><button onclick="renderPresupuesto(true)" class="btn-action btn-upload">Recargar Excel</button></div>
                             </div>
                         </div>
 
@@ -4071,7 +4065,6 @@
             let entrada = _presCache[proyectoId];
             if (!entrada) {
                 presEstado('Leyendo el Excel de control de costo...');
-                document.getElementById('presArchivo').textContent = '—';
                 const r = await presBuscarExcel(p);
                 if (selectedProjectId !== proyectoId) return;
                 if (r.error) return presEstado(r.error);
@@ -4091,7 +4084,6 @@
         }
 
         function presPintar({ nombre, datos: d }) {
-            document.getElementById('presArchivo').textContent = nombre + ' · hoja "' + d.hoja + '"';
             document.getElementById('presEstado').classList.add('hidden');
             document.getElementById('presContenido').classList.remove('hidden');
 
@@ -4112,10 +4104,10 @@
             document.getElementById('presLectura').innerHTML = txt;
 
             const kpi = (titulo, valor, sub, color) => `
-                <div class="glass-card p-4">
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">${titulo}</p>
-                    <p class="text-lg font-black ${color || 'text-slate-900'} mt-1 break-words">${valor}</p>
-                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">${sub}</p>
+                <div class="glass-card p-3">
+                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-wider leading-tight">${titulo}</p>
+                    <p class="text-sm font-black ${color || 'text-slate-900'} mt-1 break-words">${valor}</p>
+                    <p class="text-[9px] text-slate-400 font-bold mt-0.5 leading-tight">${sub}</p>
                 </div>`;
             document.getElementById('presKpis').innerHTML =
                 kpi('Valor vendido', presFmt(d.vendido), 'Ingreso del proyecto') +
