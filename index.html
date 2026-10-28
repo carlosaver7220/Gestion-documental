@@ -42,6 +42,9 @@
     <script src="memoria-pdf.js"></script>
     <script src="memoria-ui.js"></script>
     <script src="documentos-equipos.js"></script>
+    <script src="plan-mantenimiento-texto.js"></script>
+    <script src="plan-mantenimiento.js"></script>
+    <script src="plan-mantenimiento-ui.js"></script>
     <!-- Control de Presupuesto: lee el Excel "Control de costo" (SheetJS) y lo grafica (Chart.js). -->
     <script src="libs/xlsx.full.min.js"></script>
     <script src="libs/chart.umd.min.js"></script>
@@ -5157,7 +5160,9 @@
                 }
                 // Memoria de Cálculo (inciso 15): se puede generar en PDF desde el formulario.
                 const generarMem = item.id === '15.'
-                    ? `<button onclick="abrirMemoriaCalculo('${p.id}')" class="btn-action btn-upload" title="Genera la memoria con los datos del proyecto">Generar</button>` : '';
+                    ? `<button onclick="abrirMemoriaCalculo('${p.id}')" class="btn-action btn-upload" title="Genera la memoria con los datos del proyecto">Generar</button>`
+                    : item.id === '17.'
+                        ? `<button onclick="abrirPlanMantenimiento('${p.id}')" class="btn-action btn-upload" title="Genera el plan de mantenimiento con los datos del proyecto">Generar</button>` : '';
                 // Ítems normales de Bóveda Técnica: solo se detectan/suben a mano, sin plantilla.
                 // Si el inciso admite varios archivos (2., 2.1, 2.2...), "Subir" sigue
                 // disponible aunque ya haya uno, y cada archivo tiene su propio botón.
