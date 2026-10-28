@@ -738,7 +738,7 @@
                                     <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Ingeniería de Detalle</h3>
                                     <div class="flex items-center gap-2">
                                         <span id="bovedaPctBadge" class="px-2.5 py-1 bg-slate-900 text-[10px] text-white font-black rounded-full">0%</span>
-                                        <button onclick="abrirGenerarIngenieria(selectedProjectId)" class="px-4 py-1.5 bg-blue-600 text-[10px] text-white font-black rounded-full hover:bg-blue-700 transition-colors shadow shadow-blue-200" title="Trae los documentos de los equipos y de la carpeta contractual, genera las declaraciones y abre el formulario para la memoria de cálculo y el plan de mantenimiento">GENERAR INGENIERÍA</button>
+                                        <button id="btnGenerarIng" onclick="abrirGenerarIngenieria(selectedProjectId)" class="px-4 py-1.5 bg-blue-600 text-[10px] text-white font-black rounded-full hover:bg-blue-700 transition-colors shadow shadow-blue-200" title="Trae los documentos de los equipos y de la carpeta contractual, genera las declaraciones y abre el formulario para la memoria de cálculo y el plan de mantenimiento">GENERAR INGENIERÍA</button>
                                         <span class="px-3 py-1 bg-blue-600 text-[10px] text-white font-bold rounded-full">PDF OBLIGATORIOS</span>
                                     </div>
                                 </div>
@@ -5167,10 +5167,9 @@
                     return botones;
                 }
                 // Memoria de Cálculo (inciso 15): se puede generar en PDF desde el formulario.
-                const generarMem = item.id === '15.'
-                    ? `<button onclick="abrirGenerarIngenieria('${p.id}')" class="btn-action btn-upload" title="Abre Generar ingeniería (memoria de cálculo y demás)">Generar</button>`
-                    : item.id === '17.'
-                        ? `<button onclick="abrirGenerarIngenieria('${p.id}')" class="btn-action btn-upload" title="Abre Generar ingeniería (plan de mantenimiento y demás)">Generar</button>` : '';
+                const SOLO = { '1.': ['unifilar', 'el diagrama unifilar'], '15.': ['memoria', 'la memoria de cálculo'], '17.': ['plan', 'el plan de mantenimiento'] };
+                const generarMem = SOLO[item.id]
+                    ? `<button onclick="abrirRegenerar('${p.id}','${SOLO[item.id][0]}')" class="btn-action btn-upload" title="${item.found ? 'Vuelve a generar solo ' : 'Genera solo '}${SOLO[item.id][1]}">${item.found ? 'Regenerar' : 'Generar'}</button>` : '';
                 // Ítems normales de Bóveda Técnica: solo se detectan/suben a mano, sin plantilla.
                 // Si el inciso admite varios archivos (2., 2.1, 2.2...), "Subir" sigue
                 // disponible aunque ya haya uno, y cada archivo tiene su propio botón.
@@ -5236,6 +5235,12 @@
             bovedaPctBadge.innerText = `${p.bovedaPct}%`;
             bovedaPctBadge.className = `px-2.5 py-1 text-[10px] text-white font-black rounded-full ${pctBadgeClasses(p.bovedaPct)}`;
             bovedaPctBadge.title = `Bóveda Técnica: ${p.bovedaPct}%${pesoTxt(p.pesos.boveda)}`;
+            // "Generar ingeniería" es solo para proyectos sin unifilar, memoria ni plano; después cada archivo se regenera por separado
+            const btnGenIng = document.getElementById('btnGenerarIng');
+            if (btnGenIng) {
+                const yaTiene = (p.ingItemsTodos || p.ingItems || []).some(i => ['1.', '15.', '18.'].includes(i.id) && i.found);
+                btnGenIng.classList.toggle('hidden', yaTiene);
+            }
 
             const actasPctBadge = document.getElementById('actasPctBadge');
             actasPctBadge.innerText = `${p.actasPct}%`;

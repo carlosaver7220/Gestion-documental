@@ -404,7 +404,7 @@
         inyectarHtml();
         const p = projects.find(x => x.id === projectId);
         if (!p) return;
-        est = { projectId, p, config: [], cuadro: null, cuadroOrigen: null, hayInciso11: false };
+        est = { projectId, p, config: [], cuadro: null, cuadroOrigen: null, hayInciso11: false, solo: '' };
         await cargarEquipos(true);
         const datos = (await getProjectData(projectId)) || {};
         const info = datos.project_info || {};
@@ -471,6 +471,7 @@
         const item11 = (p.ingItemsTodos || p.ingItems || []).find(i => i.id === '11.');
         est.hayInciso11 = !!(item11 && item11.found);
         pintarCuadro();
+        { const gb = $('memGenerar'); gb.dataset.texto = ''; gb.textContent = 'Generar ingeniería'; }
         $('memoriaModal').classList.remove('hidden');
         if (est.hayInciso11 && item11.handle) {
             try { const f = await item11.handle.getFile(); await tomarArchivoCuadro(f, 'inciso11'); } catch (e) { console.warn('No se pudo leer el inciso 11:', e); }
@@ -502,6 +503,16 @@
               <div>${items.map(fila).join('')}</div>
             </div>`;
     }
+
+    // Regenerar un solo archivo (unifilar, memoria de cálculo o plan de mantenimiento) de un proyecto que ya tiene ingeniería.
+    const NOMBRE_SOLO = { unifilar: 'el unifilar', memoria: 'la memoria de cálculo', plan: 'el plan de mantenimiento' };
+    window.abrirRegenerar = async (projectId, que) => {
+        await window.abrirMemoriaCalculo(projectId);
+        est.solo = que;
+        const b = $('memGenerar');
+        b.textContent = `Regenerar ${NOMBRE_SOLO[que] || 'archivo'}`;
+        b.dataset.texto = b.textContent;
+    };
 
     // Botón único: primero trae los documentos (equipos, contractual, declaraciones) y luego abre el formulario.
     window.abrirGenerarIngenieria = async (projectId) => {
@@ -605,46 +616,53 @@
                 tempProm: f.tempProm, tempRango: f.tempRango, tempMax: parseFloat((f.tempRango.match(/\d+/) || [33])[0]), altura: f.altura, tmin: parseFloat(f.tmin) || 15,
                 cablePV: +f.cable, estructuraMarca: f.estructura, panel: P, inversor: I, inversores: est.config, responsable: RESPONSABLE, cuadroFuente: est.cuadro
             };
-            // Las fichas técnicas salen de los PDF del propio proyecto (incisos 9 y 8).
-            btn.textContent = 'Leyendo fichas técnicas...';
-            D.fichaPanel = await fichaDelProyecto(p, '9.', 1);
-            D.fichaInv = await fichaDelProyecto(p, '8.', 2);
-            btn.textContent = 'Generando...';
-            const r = await window.MemoriaPDF.generar(D);
-
             const info = (await getProjectInfo(est.projectId)) || {};
-            const { texto } = nombreBoveda('15.', info, limpiarNombreProyecto(p.name));
-            const nombre = `15. ${texto}.pdf`;
-            let folder = p.ingFolder;
+            const folder = p.ingFolder;
             if (!folder) throw new Error('No se encontró la carpeta de Ingeniería de Detalle del proyecto.');
-            await guardarArchivo(folder, nombre, new Uint8Array(await r.blob.arrayBuffer()));
+            const solo = est.solo || '';   // '' = todo; 'memoria' | 'plan' | 'unifilar' = solo ese archivo
 
-            // El cuadro de cargas pegado se guarda también como inciso 11 si todavía no existe.
-            if (est.cuadro && est.cuadroOrigen === 'nuevo' && !est.hayInciso11 && $('memCuadroGuardar').checked) {
-                const blob = await (await fetch(est.cuadro)).blob();
-                const n11 = nombreBoveda('11.', info, limpiarNombreProyecto(p.name)).texto;
-                await guardarArchivo(folder, `11. ${n11}.png`, new Uint8Array(await blob.arrayBuffer()));
+            if (!solo || solo === 'memoria') {
+                // Las fichas técnicas salen de los PDF del propio proyecto (incisos 9 y 8).
+                btn.textContent = 'Leyendo fichas técnicas...';
+                D.fichaPanel = await fichaDelProyecto(p, '9.', 1);
+                D.fichaInv = await fichaDelProyecto(p, '8.', 2);
+                btn.textContent = 'Generando...';
+                const r = await window.MemoriaPDF.generar(D);
+
+                const { texto } = nombreBoveda('15.', info, limpiarNombreProyecto(p.name));
+                const nombre = `15. ${texto}.pdf`;
+                await guardarArchivo(folder, nombre, new Uint8Array(await r.blob.arrayBuffer()));
+
+                // El cuadro de cargas pegado se guarda también como inciso 11 si todavía no existe.
+                if (est.cuadro && est.cuadroOrigen === 'nuevo' && !est.hayInciso11 && $('memCuadroGuardar').checked) {
+                    const blob = await (await fetch(est.cuadro)).blob();
+                    const n11 = nombreBoveda('11.', info, limpiarNombreProyecto(p.name)).texto;
+                    await guardarArchivo(folder, `11. ${n11}.png`, new Uint8Array(await blob.arrayBuffer()));
+                }
+
+                hechos.push(`Memoria de cálculo (${r.paginas} págs.)`);
+                if (est.cuadro && est.cuadroOrigen === 'nuevo' && !est.hayInciso11) hechos.push('Cuadro de cargas');
             }
 
-            hechos.push(`Memoria de cálculo (${r.paginas} págs.)`);
-            if (est.cuadro && est.cuadroOrigen === 'nuevo' && !est.hayInciso11) hechos.push('Cuadro de cargas');
-
-            // Plan de mantenimiento (inciso 17) con lo que se confirmó aquí
-            btn.textContent = 'Plan de mantenimiento...';
-            const pmd = await window.__pmApi.datosDe(est.projectId);
-            const [fases, acometida] = $('memPmAcom').value.split('|');
-            Object.assign(pmd, {
-                nombre: `${D.nombre} ${f.potDC} kWp - ${f.potAC}kW`.replace(/\s+/g, ' '), fases, acometida, usuario: $('memPmUsuario').value,
-                nivelTension: $('memPmNivel').value.trim(), seleccion: $('memPmSel').value.trim(), inversores: f.numInv, paneles: f.numMod
-            });
-            const nombrePlan = await window.__pmApi.guardarPdf(p, info, window.PlanMantenimiento.generar(pmd));
-            hechos.push('Plan de mantenimiento');
+            if (!solo || solo === 'plan') {
+                // Plan de mantenimiento (inciso 17) con lo que se confirmó aquí
+                btn.textContent = 'Plan de mantenimiento...';
+                const pmd = await window.__pmApi.datosDe(est.projectId);
+                const [fases, acometida] = $('memPmAcom').value.split('|');
+                Object.assign(pmd, {
+                    nombre: `${D.nombre} ${f.potDC} kWp - ${f.potAC}kW`.replace(/\s+/g, ' '), fases, acometida, usuario: $('memPmUsuario').value,
+                    nivelTension: $('memPmNivel').value.trim(), seleccion: $('memPmSel').value.trim(), inversores: f.numInv, paneles: f.numMod
+                });
+                const nombrePlan = await window.__pmApi.guardarPdf(p, info, window.PlanMantenimiento.generar(pmd));
+                hechos.push('Plan de mantenimiento');
+            }
 
             // Diagrama unifilar (PDF + DXF): on-grid (hoja grande) o híbrido (A3)
             const u = leerUnifilar();
             const noHechos = [];
             const faltaTrafo = [['nic', 'cuenta'], ['kva', 'kVA'], ['tensionPrim', 'tensión primaria'], ['tensionSec', 'tensión secundaria'], ['codigo', 'código'], ['matricula', 'matrícula']].filter(([k]) => !u[k]).map(x => x[1]);
-            if (!window.Unifilar) noHechos.push('Unifilar (no se cargó el motor)');
+            if (solo && solo !== 'unifilar') { /* solo se regenera otro archivo */ }
+            else if (!window.Unifilar) noHechos.push('Unifilar (no se cargó el motor)');
             else if (I.tipoSistema === 'hibrido' && est.config.length !== 1) noHechos.push('Unifilar (el híbrido con más de un inversor aún no está disponible)');
             else if (I.tipoSistema === 'hibrido' && !equipoSel('baterias', u.bateria)) noHechos.push('Unifilar (elige la batería)');
             else if (faltaTrafo.length) noHechos.push(`Unifilar (faltan datos del transformador: ${faltaTrafo.join(', ')})`);
@@ -697,7 +715,7 @@
             console.error('Error generando la memoria:', e);
             alert('No se pudo generar la memoria: ' + e.message);
         } finally {
-            btn.disabled = false; btn.textContent = 'Generar ingeniería';
+            btn.disabled = false; btn.textContent = btn.dataset.texto || 'Generar ingeniería';
         }
     };
 })();
