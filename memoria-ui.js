@@ -164,6 +164,28 @@
                   <label class="meml">Selección (V)<input id="memPmSel" class="memi" placeholder="240"></label>
                 </div>
               </section>
+
+              <section>
+                <h4 class="memh">Diagrama unifilar</h4>
+                <p class="text-[10px] text-slate-400 mb-2">Los datos de la red y del transformador salen de la plataforma del operador de red: no tienen valor por defecto. La tensión del sistema es la "Selección" de arriba.</p>
+                <div class="grid grid-cols-4 gap-3">
+                  <label class="meml">Cuenta (NIC)<input id="unNic" class="memi"></label>
+                  <label class="meml">Trafo (kVA)<input id="unKva" type="number" class="memi"></label>
+                  <label class="meml">Tensión nominal primaria<input id="unTensionPrim" class="memi" placeholder="13.2kV"></label>
+                  <label class="meml">Fases del trafo<select id="unFasesTrafo" class="memi"><option value="2">2 fases</option><option value="3">3 fases</option></select></label>
+                  <label class="meml">Tensión secundaria<input id="unTensionSec" class="memi" placeholder="120/240V"></label>
+                  <label class="meml">Código del trafo<input id="unCodigo" class="memi"></label>
+                  <label class="meml">Matrícula del trafo<input id="unMatricula" class="memi"></label>
+                  <label class="meml">Acometida existente (AWG)<input id="unAwgAco" type="number" class="memi" value="8"></label>
+                  <label class="meml">Canalización AC<select id="unAcTipo" class="memi"><option>EMT</option><option>IMC</option><option>Bandeja</option></select></label>
+                  <label class="meml">Diámetro AC<input id="unAcDim" class="memi" value='1"'></label>
+                  <label class="meml">Canalización DC<select id="unDcTipo" class="memi"><option>IMC</option><option>EMT</option><option>Bandeja</option></select></label>
+                  <label class="meml">Diámetro DC<input id="unDcDim" class="memi" value='1"'></label>
+                  <label class="meml">Caja de paso → inversor (m)<input id="unDistCaja" type="number" step="0.1" class="memi" value="1.7"></label>
+                  <label class="meml">Inversor → tablero AC (m)<input id="unDistInv" type="number" step="0.1" class="memi" value="1.5"></label>
+                  <label class="meml">Cable RS485 (m)<input id="unDistRs" type="number" step="0.1" class="memi" value="1.5"></label>
+                </div>
+              </section>
             </div>
             <div class="p-5 border-t border-slate-100 flex items-center justify-between gap-3">
               <p class="text-[10px] text-slate-400">Los PDF se guardan en 1. INGENIERIA DE DETALLE con el nombre y el inciso de la Bóveda.</p>
@@ -416,6 +438,13 @@
             $('memPmNivel').value = pm.nivel || pmd.nivelTension;
             $('memPmSel').value = pm.seleccion || pmd.seleccion;
         } catch (e) { console.warn('Plan de mantenimiento:', e); }
+        // Unifilar: lo guardado la última vez; el NIC sale de Datos del Proyecto
+        const un = guardado.unifilar || {};
+        const setU = (id, k, def) => { $(id).value = (un[k] !== undefined && un[k] !== '') ? un[k] : (def !== undefined ? def : ''); };
+        setU('unNic', 'nic', info.nicTrf || ''); setU('unKva', 'kva'); setU('unTensionPrim', 'tensionPrim'); setU('unFasesTrafo', 'fases', '2');
+        setU('unTensionSec', 'tensionSec'); setU('unCodigo', 'codigo'); setU('unMatricula', 'matricula'); setU('unAwgAco', 'awgAco', 8);
+        setU('unAcTipo', 'acTipo', 'EMT'); setU('unAcDim', 'acDim', '1"'); setU('unDcTipo', 'dcTipo', 'IMC'); setU('unDcDim', 'dcDim', '1"');
+        setU('unDistCaja', 'distCaja', 1.7); setU('unDistInv', 'distInv', 1.5); setU('unDistRs', 'distRs', 1.5);
         pintarChecklist(p);
 
         $('memResumen').innerHTML = [['Cliente', info.dueno], ['Proyecto', limpiarNombreProyecto(p.name)], ['Panel', `${info.marcaPaneles || ''} ${info.referenciaPanel || ''}`.trim()], ['Inversor', `${info.marcaFabricante || ''} ${info.referenciaInversor || ''}`.trim()]]
@@ -440,7 +469,7 @@
     // ------------------------------------------------------------
     // Estos incisos dependen del sitio (techo, fotos, planos): se agregan a mano.
     const MANUALES = { '10.': 1, '13.': 1, '14.': 1, '16.': 1 };
-    const PROXIMOS = { '1.': 1, '18.': 1 };
+    const PROXIMOS = { '18.': 1 };
     function pintarChecklist(p, banner) {
         const items = (p.ingItems || []).filter(i => !i.sinValor);
         const ok = items.filter(i => i.found).length;
@@ -528,6 +557,16 @@
         };
     }
 
+    function leerUnifilar() {
+        const g = (id) => $(id).value.trim();
+        return {
+            nic: g('unNic'), kva: g('unKva'), tensionPrim: g('unTensionPrim'), fases: parseInt(g('unFasesTrafo'), 10) || 2, tensionSec: g('unTensionSec'),
+            codigo: g('unCodigo'), matricula: g('unMatricula'), awgAco: parseInt(g('unAwgAco'), 10) || 8,
+            acTipo: g('unAcTipo'), acDim: g('unAcDim'), dcTipo: g('unDcTipo'), dcDim: g('unDcDim'),
+            distCaja: parseFloat(g('unDistCaja')) || 1.7, distInv: parseFloat(g('unDistInv')) || 1.5, distRs: parseFloat(g('unDistRs')) || 1.5
+        };
+    }
+
     window.generarMemoria = async () => {
         const btn = $('memGenerar');
         try {
@@ -585,12 +624,36 @@
             const nombrePlan = await window.__pmApi.guardarPdf(p, info, window.PlanMantenimiento.generar(pmd));
             hechos.push('Plan de mantenimiento');
 
-            const guardar = Object.assign({}, f, { cuadro: undefined, plan: { acom: $('memPmAcom').value, usuario: $('memPmUsuario').value, nivel: $('memPmNivel').value.trim(), seleccion: $('memPmSel').value.trim() } });
+            // Diagrama unifilar (PDF + DXF) — solo sistemas on-grid por ahora
+            const u = leerUnifilar();
+            const noHechos = [];
+            const faltaTrafo = [['nic', 'cuenta'], ['kva', 'kVA'], ['tensionPrim', 'tensión primaria'], ['tensionSec', 'tensión secundaria'], ['codigo', 'código'], ['matricula', 'matrícula']].filter(([k]) => !u[k]).map(x => x[1]);
+            if (!window.Unifilar) noHechos.push('Unifilar (no se cargó el motor)');
+            else if (I.tipoSistema === 'hibrido') noHechos.push('Unifilar (el de sistemas híbridos aún no está disponible)');
+            else if (faltaTrafo.length) noHechos.push(`Unifilar (faltan datos del transformador: ${faltaTrafo.join(', ')})`);
+            else {
+                btn.textContent = 'Unifilar...';
+                const Cc = window.MemoriaCalc.calcular({ panel: P, inversor: I, inversores: est.config, tmin: D.tmin, cablePV: D.cablePV });
+                const U = window.Unifilar.generar({
+                    nombre: D.nombre, potDC: f.potDC, potAC: f.potAC, operador: f.operador, nic: u.nic,
+                    trafo: { tensionPrim: u.tensionPrim, kva: u.kva, fases: u.fases, tensionSec: u.tensionSec, codigo: u.codigo, matricula: u.matricula },
+                    panel: P, inversor: I, inversores: est.config, calc: Cc,
+                    canal: { acTipo: u.acTipo, acDim: u.acDim, acBandeja: /bandeja/i.test(u.acTipo), dcTipo: u.dcTipo, dcDim: u.dcDim, dcBandeja: /bandeja/i.test(u.dcTipo) },
+                    dist: { cajaInversor: u.distCaja, invTablero: u.distInv, rs485: u.distRs, tableroGeneral: est.config[0].longitudAC },
+                    acometida: { awg: u.awgAco }, vSistema: parseInt($('memPmSel').value, 10) || I.vNom
+                });
+                const nU = nombreBoveda('1.', info, limpiarNombreProyecto(p.name)).texto;
+                await guardarArchivo(folder, `1. ${nU}.pdf`, new Uint8Array(await U.pdf.arrayBuffer()));
+                await guardarArchivo(folder, `1. ${nU}.dxf`, new TextEncoder().encode(U.dxf));
+                hechos.push('Diagrama unifilar (PDF y DXF)');
+            }
+
+            const guardar = Object.assign({}, f, { cuadro: undefined, unifilar: u, plan: { acom: $('memPmAcom').value, usuario: $('memPmUsuario').value, nivel: $('memPmNivel').value.trim(), seleccion: $('memPmSel').value.trim() } });
             await saveProjectField(est.projectId, 'memoria', guardar);
             await scan();
             const pf = projects.find(x => x.id === est.projectId) || p;
             const pendientes = (pf.ingItems || []).filter(i => !i.found && !i.sinValor).map(i => i.id + ' ' + i.label);
-            pintarChecklist(pf, `Generado: ${hechos.join(', ')}.${pendientes.length ? ' Falta: ' + pendientes.join(', ') + '.' : ' Ingeniería completa.'}`);
+            pintarChecklist(pf, `Generado: ${hechos.join(', ')}.${noHechos.length ? ' No se pudo: ' + noHechos.join('; ') + '.' : ''}${pendientes.length ? ' Falta: ' + pendientes.join(', ') + '.' : ' Ingeniería completa.'}`);
             $('memChecklist').scrollIntoView({ behavior: 'smooth', block: 'start' });
             showToast(`Ingeniería generada: ${hechos.length} documentos`);
         } catch (e) {
