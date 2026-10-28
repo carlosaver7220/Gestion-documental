@@ -23,7 +23,7 @@
 
     // Código de color de AutoCAD (ACI) más cercano, para el DXF
     const ACI = (c) => {
-        const t = [[[0, 0, 0], 7], [[255, 0, 0], 1], [[0, 0, 255], 5], [[0, 170, 0], 3], [[217, 140, 50], 30], [[90, 90, 90], 8], [[140, 60, 190], 6], [[0, 150, 160], 4]];
+        const t = [[[0, 0, 0], 7], [[255, 0, 0], 1], [[0, 0, 255], 5], [[0, 170, 0], 3], [[217, 140, 50], 30], [[0, 0, 100], 176], [[150, 150, 205], 171], [[90, 90, 90], 8], [[140, 60, 190], 6], [[0, 150, 160], 4]];
         let best = 7, d = 1e9;
         t.forEach(([rgb, n]) => { const dd = (rgb[0] - c[0]) ** 2 + (rgb[1] - c[1]) ** 2 + (rgb[2] - c[2]) ** 2; if (dd < d) { d = dd; best = n; } });
         return best;
@@ -73,6 +73,28 @@
             }
             if (neutro && vertical && n >= 2) d.circle(x + 3.4, y + 2.7 + 0.3, 0.6, { fill: NEGRO });
         },
+        // marcas de conductores como en el cuadro de convenciones: fases (rayas), neutro (raya con círculo), tierra (raya con barra)
+        cond(d, x, y, vertical, o) {
+            const n = [];
+            for (let k = 0; k < (o.f || 0); k++) n.push('f');
+            if (o.n) n.push('n');
+            if (o.t) n.push('t');
+            n.forEach((tipo, k) => {
+                const p = k * 2.7;
+                let a, b;
+                if (vertical) { a = [x - 2.6, y + p + 1.4]; b = [x + 2.6, y + p - 1.4]; } else { a = [x + p - 1.4, y + 2.6]; b = [x + p + 1.4, y - 2.6]; }
+                d.line(a[0], a[1], b[0], b[1], { w: 0.3 });
+                if (tipo === 'n') d.circle(b[0] + (vertical ? 0.2 : 0.5), b[1] - (vertical ? 0.8 : 0.6), 0.7, { w: 0.25 });
+                if (tipo === 't') d.line(b[0] - (vertical ? 0.2 : 1.2), b[1], b[0] + (vertical ? 1.8 : 1.2), b[1], { w: 0.3 });
+            });
+        },
+        // dos cables de un string: raya roja con "+" y raya gris con "|"
+        polar(d, x, y) {
+            d.line(x - 1.5, y - 2.4, x + 1.5, y + 2.4, { color: ROJO, w: 0.3 });
+            d.line(x - 2.4, y - 4.6, x - 0.6, y - 4.6, { color: ROJO, w: 0.25 }); d.line(x - 1.5, y - 5.5, x - 1.5, y - 3.7, { color: ROJO, w: 0.25 });
+            d.line(x + 2.0, y - 2.4, x + 5.0, y + 2.4, { color: GRIS, w: 0.3 });
+            d.line(x + 2.6, y - 5.4, x + 2.6, y - 3.6, { color: GRIS, w: 0.25 });
+        },
         // interruptor termomagnético vertical: terminal superior en (x,y); ocupa 11 mm
         breaker(d, x, y) {
             d.line(x, y, x, y + 2.4);
@@ -97,7 +119,7 @@
             d.line(x - 1.2, y - 0.4, x + 1.2, y - 0.4, { w: 0.35 }); d.line(x - 0.8, y + 0.5, x + 0.8, y + 0.5, { w: 0.35 }); d.line(x - 0.4, y + 1.3, x + 0.4, y + 1.3, { w: 0.35 });
         },
         flecha(d, x, y) {      // triángulo apuntando hacia arriba (marca de conducto)
-            d.poly([[x - 2.2, y + 3.6], [x + 2.2, y + 3.6], [x, y]], { closed: true, w: 0.5 });
+            d.poly([[x - 2.6, y + 4.2], [x + 2.6, y + 4.2], [x, y]], { closed: true, w: 0.2, fill: [150, 150, 205], color: [150, 150, 205] });
         }
     };
 
@@ -414,7 +436,7 @@
             doc.setLineWidth(o.w || 0.5); doc.setLineCap(o.dash ? 0 : 2); doc.setLineJoin(0);
             doc.setLineDashPattern(o.dash ? [2.2, 1.4] : [], 0);
             if (i.t === 'l') doc.line(i.x1, i.y1, i.x2, i.y2);
-            else if (i.t === 'r') doc.rect(i.x, i.y, i.w, i.h, o.fill ? 'F' : 'S');
+            else if (i.t === 'r') doc.rect(i.x, i.y, i.w, i.h, o.fill ? 'FD' : 'S');
             else if (i.t === 'c') doc.circle(i.x, i.y, i.r, o.fill ? 'F' : 'S');
             else if (i.t === 'p') {
                 const p = i.pts;
@@ -491,7 +513,7 @@
             }
             if (i.t === 'l') { ent('LINE', i, 'CONDUCTORES', 'AcDbLine'); g(10, X(i.x1)); g(20, Y(i.y1)); g(30, 0); g(11, X(i.x2)); g(21, Y(i.y2)); g(31, 0); }
             else if (i.t === 'r') {
-                if (i.o.fill) solido(i, [[i.x, i.y], [i.x + i.w, i.y], [i.x, i.y + i.h], [i.x + i.w, i.y + i.h]]);
+                if (i.o.fill && !(Array.isArray(i.o.fill) && i.o.fill[0] > 240)) solido(i, [[i.x, i.y], [i.x + i.w, i.y], [i.x, i.y + i.h], [i.x + i.w, i.y + i.h]]);
                 else poli([[i.x, i.y], [i.x + i.w, i.y], [i.x + i.w, i.y + i.h], [i.x, i.y + i.h]], true, i);
             }
             else if (i.t === 'c') {
@@ -500,6 +522,7 @@
             }
             else if (i.t === 'p') {
                 if (i.o.fill && i.pts.length === 3) solido(i, [i.pts[0], i.pts[1], i.pts[2], i.pts[2]]);
+                else if (i.o.fill && i.pts.length > 3) { for (let k = 1; k < i.pts.length - 1; k++) solido(i, [i.pts[0], i.pts[k], i.pts[k + 1], i.pts[k + 1]]); }
                 else poli(i.pts, !!i.o.closed, i);
             }
             else if (i.t === 't') {
@@ -539,7 +562,9 @@
         const acCanal = canal.acBandeja ? 'Bandeja portacable' : `${canal.acTipo} ${canal.acDim}`;
         const dcCanal = canal.dcBandeja ? 'Bandeja portacable' : `${canal.dcTipo} ${canal.dcDim}`;
         const brk = C.regAC[0].proteccion;
-        const SP = 59.8;
+        const MOD_H = 8.4;
+        const maxSer = Math.max.apply(null, D.inversores[0].strings.map(s => s.series));
+        const SP = Math.max(59.8, Math.ceil(maxSer / 2) * (MOD_H + 0.6) + 8 + 7 * 4.1 + 6);
 
         // ---------- strings, caja de paso e inversor ----------
         const rows = [];
@@ -551,19 +576,19 @@
             d.text(31.8, y - 8, `STRING ${k + 1} - ${r.series} MODULOS ${P.pmax}W`, { size: 4.2, color: col });
             const hMod = moduloFV(d, 31.9, y - 7.4, r.series);
             lineas(d, 31.8, y - 7.4 + hMod + 4.2, [`I1M${r.mppt}S${k + 1}`, 'STC: 1000W/m2 25°C, AM1.5', `Voc: ${(r.series * P.voc).toFixed(2)}V`, `Isc: ${P.isc}A`, `Vmp: ${(r.series * P.vmpp).toFixed(2)}V`, `Imp: ${P.imp}A`, `Distancia:${r.largo}m`], { size: 3.4, gap: 4.1 });
-            d.line(62.7, y, 170.9, y);
-            lineas(d, 65, y + 4.6, ['Cable Fotovoltaico', `2x#${C.cablePV.match(/(\d+)mm/)[1]}mm²/XLPE`], { size: 3.3, gap: 3.9 });
+            d.line(62.7, y, 170.9, y); S.polar(d, 78, y);
+            lineas(d, 65, y + 9, ['Cable Fotovoltaico', `2x#${C.cablePV.match(/(\d+)mm/)[1]}mm²/XLPE`], { size: 3.3, gap: 3.9 });
             S.cuadrado(d, 170.9, y, 3); S.cuadrado(d, 206.5, y, 3);
             d.rect(176.6, y - 7.9, 21.4, 16.6, { w: 0.4 }); S.fusible(d, 180, y - 3.2, 14.6, 6.4);
             d.text(175.9, y + 12.6, '2XFUSIBLE 20A', { size: 3.3 });
-            d.line(206.5, y, 312.5, y);
+            d.line(206.5, y, 312.5, y); S.polar(d, 238, y);
             lineas(d, 247.7, y + 4.6, [`2x#${C.cablePV.match(/(\d+)mm/)[1]}mm²/XLPE`, `Imax: ${P.isc * 1.0}A`, `Conducto: ${dcCanal}`, `Distancia: ${dist.cajaInversor}m`], { size: 3.3, gap: 3.9 });
             S.cuadrado(d, 312.5, y, 3);
         });
         [[102.4, 87.5], [221.5, 206.6]].forEach(([xr, xl]) => {
             d.rect(xr, yFirst - 3.5, 4.4, yLast - yFirst + 33.9, { w: 0.6 });
             S.flecha(d, xr + 2.2, yLast + 31.2);
-            d.text(xl, yLast + 39.2, `Tubería metálica ${dcCanal}`, { size: 3.3 });
+            d.text(xl, yLast + 39.2, canal.dcBandeja ? 'Bandeja portacable' : `Tubería metálica ${canal.dcTipo} de ${canal.dcDim}`, { size: 3.6 });
         });
         const cTop = yFirst - 22.2, cBot = yLast + 27.7;
         d.rect(170.9, cTop, 35.6, cBot - cTop, { w: 0.9 });
@@ -592,57 +617,69 @@
         // puertos del inversor híbrido
         [['BATTERY', 345, 30], ['COM', 375, 22], ['COM', 397, 22]].forEach(([t, x, w]) => { d.rect(x, bTop, w, 6, { w: 0.5 }); d.text(x + w / 2, bTop + 4.2, t, { size: 3.1, align: 'center' }); });
         const yGrid = bTop + 16.5, yLoad = bTop + 30;
-        [['GRID', yGrid], ['LOAD', yLoad]].forEach(([t, y]) => { d.rect(418.5, y - 6, 7.5, 12, { w: 0.4 }); d.text(423.4, y + 3.2, t, { size: 3, rot: 90 }); });
+        [['GRID', yGrid], ['LOAD', yLoad]].forEach(([t, y]) => { d.rect(413.9, y - 6.75, 8.5, 13.5, { w: 0.4 }); d.text(419.3, y + 3.4, t, { size: 3, rot: 90 }); });
         const refTxt = /srne/i.test(I.fabricante) ? I.modelo : `${I.fabricante}/${I.modelo}`;
         lineas(d, 350, bTop + 15.5, [`REF:${refTxt}`, `Potencia Max: ${I.pAC}W`, `Imax:${I.iSalida}A`, `Conexión: ${nF}L+PE`, `Vac:${vac}V`], { size: 4.2, gap: 4.7 });
         // cables AC del inversor (LOAD y GRID)
-        const etAc = (x, y) => lineas(d, x, y, [`${nF}XNo.${awgAc} AWG 60° Cu. THHN/THWN-2 (F)`, `1XNo.${awgAc} AWG 60° Cu. THHN/THWN-2 (N)`, `Imax: ${I.iSalida}A`, `Vac: ${vac}V`, `Conducto: ${acCanal}`, `Distancia: ${dist.invTablero}m`], { size: 3.1, gap: 3.5 });
-        etAc(431, yGrid - 24); etAc(431, yLoad + 6);
-        S.marcas(d, 470, yGrid - 3.1, 2, false); S.marcas(d, 470, yLoad - 3.1, 2, false);
-        // tierra del inversor
-        d.circle(326, yLast + 56, 1.2, { fill: NEGRO }); S.tierraCirculo(d, 326, yLast + 59.6);
-        const yG = yLast + 61.2;
-        d.line(326, yLast + 59.6 + 1.9, 326, yG, { color: VERDE, layer: 'TIERRA' });
-        d.line(170.9, cTop + 4.5, 27.5, cTop + 4.5, { color: VERDE, layer: 'TIERRA', dash: true });
-        d.line(27.5, cTop + 4.5, 27.5, yG, { color: VERDE, layer: 'TIERRA', dash: true });
-        d.line(27.5, yG, 530, yG, { color: VERDE, layer: 'TIERRA', dash: true });
+        const awgTAc = (C.regAC[0].tierraCond.match(/^(\d+)/) || [0, 10])[1];
+        const etAc = (x, y, conTierra) => lineas(d, x, y, [`${nF}XNo.${awgAc} AWG 60° Cu. THHN/THWN-2 (F)`, `1XNo.${awgAc} AWG 60° Cu. THHN/THWN-2 (N)`].concat(conTierra ? [`1XNo.${awgTAc} AWG 60° Cu. THHN/THWN-2 (T)`] : [], [`Imax: ${I.iSalida}A`, `Vac: ${vac}V`, `Conducto: ${acCanal}`, `Distancia: ${dist.invTablero}m`]), { size: 3.1, gap: 3.5 });
+        etAc(439, yGrid - 24, false); etAc(439, yLoad + 6, true);
+        S.cond(d, 484, yGrid, false, { f: nF, n: true }); S.cond(d, 484, yLoad, false, { f: nF, n: true, t: true });
+        if (!canal.acBandeja) {
+            d.rect(428, yGrid - 28, 5, yLoad + 36 - (yGrid - 28), { w: 0.4 }); S.flecha(d, 430.5, yLoad + 36);
+            d.text(428, yLoad + 47, `Tubería metálica ${canal.acTipo} de ${canal.acDim}`, { size: 3.6 });
+        }
+        // tierra del inversor: punto, círculo con el símbolo de tierra y línea verde continua
+        const yE = yLast + 56, yG = yLast + 88;
+        d.circle(326, yE, 1.2, { fill: NEGRO }); d.line(326, yE, 328.6, yE);
+        d.circle(334.4, yE, 5.8);
+        d.line(334.4, yE - 3.6, 334.4, yE - 0.4, { w: 0.4 }); d.line(331.4, yE - 0.4, 337.4, yE - 0.4, { w: 0.4 }); d.line(332.4, yE + 1.2, 336.4, yE + 1.2, { w: 0.4 }); d.line(333.4, yE + 2.8, 335.4, yE + 2.8, { w: 0.4 });
+        d.line(326, yE, 326, yG, { color: VERDE, layer: 'TIERRA' });
+        d.line(170.9, cTop + 4.5, 27.5, cTop + 4.5, { color: VERDE, layer: 'TIERRA' });
+        d.line(27.5, cTop + 4.5, 27.5, yG, { color: VERDE, layer: 'TIERRA' });
+        d.line(27.5, yG, 530, yG, { color: VERDE, layer: 'TIERRA' });
         d.text(121.8, cTop + 10.6, '1XNo. 10AWG (T)', { size: 3.3 }); d.text(126.4, yG + 4, '1XNo. 10AWG (T)', { size: 3.3 }); d.text(430, yG + 4, '1XNo. 10AWG (T)', { size: 3.3 });
+        S.cond(d, 410, yG, false, { t: true });
 
         // ---------- batería ----------
-        const bx0 = 322, bx1 = 420, by0 = 262, by1 = 322;
-        d.rect(bx0, by0, bx1 - bx0, by1 - by0, { w: 0.8 });
+        const bx0 = 322, bx1 = 420, by0 = 240, by1 = 292, bm = (bx0 + bx1) / 2;
+        d.rect(bx0, by0, bx1 - bx0, by1 - by0, { w: 0.6 });
         const nBat = B.cantidad > 1 ? `${B.cantidad} x ` : '';
-        d.text((bx0 + bx1) / 2, by0 + 6.5, `BATERIA ${String(B.marca || '').toUpperCase()}`.trim(), { size: 4.2, align: 'center' });
-        d.text((bx0 + bx1) / 2, by0 + 11.7, `${nBat}${B.kwh ? B.kwh + 'KWH - ' : ''}${B.ah ? B.ah + 'AH - ' : ''}${String(B.modelo || '').toUpperCase()}`.replace(/ - $/, ''), { size: 4.2, align: 'center' });
-        const yb = (by0 + by1) / 2 + 6;   // símbolo de batería
-        d.line(bx0 + 14, yb, 366, yb, { w: 0.8 }); d.line(366, yb - 9, 366, yb + 9, { w: 0.9 }); d.line(371, yb - 5.5, 371, yb + 5.5, { w: 1.5 }); d.line(371, yb, bx1 - 14, yb, { w: 0.8 });
-        d.text(bx0 + 8, yb - 2, '+', { size: 5.5 }); d.text(bx1 - 11, yb - 2, '-', { size: 5.5 });
-        d.line(360, by1, 360, bTop, { w: 1.2 });
-        d.line(386, by1, 386, bTop, { color: AZUL, w: 0.75, layer: 'COMUNICACION' });
-        lineas(d, 270, by1 + 9, [`Cable rojo ${B.cableMm2 || 50} mm² (+),`, `Cable negro ${B.cableMm2 || 50} mm² (-)`, `Distancia: ${B.distancia || 0.8}m`, `Imax: ${B.imax || 160}A`], { size: 3.5, gap: 4.1 });
-        d.text(392, by1 + 12, 'Comunicación', { size: 3.4 }); d.line(391, by1 + 13.4, 421, by1 + 13.4, { color: [56, 80, 158], w: 0.5 });
-        d.text(396, by1 + 24, '1XNo. 10AWG (T)', { size: 3.1 });
+        d.text(bm, by0 - 9.5, `BATERIA ${String(B.marca || '').toUpperCase()}`.trim(), { size: 4.6, align: 'center' });
+        d.text(bm, by0 - 4, `${nBat}${B.kwh ? B.kwh + 'KWH - ' : ''}${B.ah ? B.ah + 'AH - ' : ''}${String(B.modelo || '').toUpperCase()}`.replace(/ - $/, ''), { size: 4.6, align: 'center' });
+        const yb = by0 + 34;   // símbolo de batería
+        d.line(bx0 + 14, yb, 366, yb, { w: 0.6 }); d.line(366, yb - 9, 366, yb + 9, { w: 0.6 }); d.line(371, yb - 5.5, 371, yb + 5.5, { w: 1.2 }); d.line(371, yb, bx1 - 14, yb, { w: 0.6 });
+        d.line(bx0 + 7, by0 + 11, bx0 + 14, by0 + 11, { w: 0.5 }); d.line(bx0 + 10.5, by0 + 7.5, bx0 + 10.5, by0 + 14.5, { w: 0.5 });
+        d.line(bx1 - 14, by0 + 11, bx1 - 7, by0 + 11, { w: 0.5 });
+        d.line(360, by1, 360, bTop, { w: 0.6 });                                        // potencia (+ y -)
+        d.line(386, by1, 386, bTop, { color: AZUL, w: 0.5, layer: 'COMUNICACION' });    // comunicación
+        d.line(408, by1, 408, bTop, { color: VERDE, w: 0.5, layer: 'TIERRA' });         // tierra
+        const yM = by1 + 14;
+        d.line(356.8, yM + 1.6, 363.2, yM - 1.6, { color: ROJO, w: 0.3 }); d.line(356.8, yM + 5.2, 363.2, yM + 2, { w: 0.3 });
+        lineas(d, 354, yM - 1.5, [`Cable rojo ${B.cableMm2 || 50} mm² (+),`, `Cable negro ${B.cableMm2 || 50} mm² (-)`, `Distancia: ${B.distancia || 0.8}m`, `Imax: ${B.imax || 160}A`], { size: 3.4, gap: 4, align: 'right' });
+        d.text(373, yM + 24, 'Comunicación', { size: 3.4, align: 'center' });
+        S.cond(d, 408, yM + 2, true, { t: true }); d.text(414, yM + 4, '1XNo. 10AWG (T)', { size: 3.1 });
 
         // ---------- red (arriba a la derecha): compacta para que el diagrama llene la hoja ----------
         const xR = 642.8;
         (function (d) {
             d.text(xR, 14, 'Red Eléctrica del', { size: 4.2, align: 'center' }); d.text(xR, 18.6, `Operador de Red ${D.operador || ''}`.trim(), { size: 4.2, align: 'center' });
             d.poly([[xR - 6.6, 22], [xR + 6.7, 22], [xR + 0.1, 32]], { closed: true, w: 0.6 });
-            for (let k = -5; k <= 5; k += 2.4) d.line(xR + k * 0.9, 22.2, xR + k * 0.45, 29, { w: 0.25 });
+            for (let k = -6; k <= 6.1; k += 1.2) d.line(xR + k, 22.2, xR + 0.1 + k * 0.05, 31.8, { w: 0.2, color: GRIS });
             d.line(xR, 32, xR, 44.8);
             d.circle(xR + 0.2, 53, 8.2); d.circle(xR + 0.2, 62.6, 8.2);
-            const t1 = [`Transformador ${tf.fases == 3 ? 'Trifásico' : 'Monofásico'}`, `Relación: ${tf.tensionPrim || ''}/${tf.tensionSec || ''}`, `Potencia: ${tf.kva || ''}kVA`, `Código: ${tf.codigo || ''}`, tf.matricula ? `Matrícula: ${tf.matricula}` : '', D.nic ? `Cuenta: ${D.nic}` : ''].filter(Boolean);
+            const t1 = [`Transformador ${tf.fases == 3 ? 'Trifásico' : 'Bifásico'}`, `Relación: ${tf.tensionPrim || ''}/${tf.tensionSec || ''}`, `Potencia: ${tf.kva || ''}kVA`, `Código: ${tf.codigo || ''}`, tf.matricula ? `Matrícula: ${tf.matricula}` : '', D.nic ? `Cuenta: ${D.nic}` : ''].filter(Boolean);
             t1.forEach((t, k) => d.text(xR - 12, 50 + k * 4.7, t, { size: 4.2, align: 'right' }));
-            d.line(xR + 8.6, 57, xR + 30.6, 57, { color: VERDE, layer: 'TIERRA', dash: true });
-            S.tierra(d, xR + 30.6, 57, { w: 0.6 }); d.text(xR + 36, 60.5, 'Puesta a tierra poste', { size: 3.7 }); d.text(xR + 36, 64.9, 'y transformador', { size: 3.7 });
+            d.line(xR + 8.4, 57.8, xR + 30.6, 57.8, { color: VERDE, layer: 'TIERRA' }); d.line(xR + 30.6, 57.8, xR + 30.6, 64, { color: VERDE, layer: 'TIERRA' });
+            S.tierra(d, xR + 30.6, 64, { w: 0.6 }); d.text(xR + 38, 63, 'Puesta a tierra poste', { size: 3.7 }); d.text(xR + 38, 67.4, 'y transformador', { size: 3.7 });
             d.line(xR, 70.8, xR, 84);
-            S.marcas(d, xR - 2.8, 74.6, 2, false);
+            S.cond(d, xR, 73.4, true, { f: 2, n: true });
             lineas(d, xR + 8.6, 76.2, [`2XNo.${awgAco} AWG Cu. THHN/THWN-2 (F)`, `1XNo.${awgAco} AWG Cu. THHN/THWN-2 (N)`], { size: 3.3, gap: 3.8 });
             d.rect(xR - 11.4, 84, 22.7, 20, { w: 0.75 }); d.rect(xR - 6.4, 86.5, 12.8, 4, { w: 0.4 }); d.text(xR, 99, 'kW/h', { size: 4.6, align: 'center' });
             d.rect(xR - 105.5, 80, 82.4, 42.7, { w: 0.6, color: NARANJA });
             lineas(d, xR - 104.2, 87.4, ['EQUIPO DE MEDIDA DIRECTA', 'SE REEMPLAZA POR MEDIDOR', 'BIDIRECCIONAL CALIBRADO Y', 'HOMOLOGADO POR OPERADOR DE', 'RED Y COMERCIALIZADOR DE', 'ENERGIA'], { size: 4.9, gap: 6.7 });
             d.line(xR, 104, xR, 142);
-            S.marcas(d, xR - 2.8, 112.4, 2, false);
+            S.cond(d, xR, 111.2, true, { f: 2, n: true });
             lineas(d, xR + 8.6, 114, [`2XNo.${awgAco} AWG Cu. THHN/THWN-2 (F)`, `1XNo.${awgAco} AWG Cu. THHN/THWN-2 (N)`], { size: 3.3, gap: 3.8 });
         })(r);
 
@@ -656,18 +693,18 @@
         d.text(528, yBus - 3, `BARRAJE 160A - ${vac}V`, { size: 4 }); d.text(528, yBus - 7.2, `${nF}F - 4H`, { size: 4 });
         // red SSFV (GRID del inversor)
         d.line(xB1, yBus, xB1, yBus + 4); S.breaker(d, xB1, yBus + 4); d.line(xB1, yBus + 15, xB1, yGrid);
-        d.line(xB1, yGrid, 425.5, yGrid);
+        d.line(xB1, yGrid, 422.4, yGrid);
         lineas(d, xB1 - 28, yBus + 12, ['Interruptor', 'termomagnético', 'red SSFV', `${nF}X${brk}A - 10kA`], { size: 3.1, gap: 3.5 });
         // load SSFV (LOAD del inversor)
-        d.line(425.5, yLoad, xB3, yLoad); d.line(xB3, yLoad, xB3, yLoad + 3); S.breaker(d, xB3, yLoad + 3); d.line(xB3, yLoad + 14, xB3, 395);
+        d.line(422.4, yLoad, xB3, yLoad); d.line(xB3, yLoad, xB3, yLoad + 3); S.breaker(d, xB3, yLoad + 3); d.line(xB3, yLoad + 14, xB3, 395);
         lineas(d, xB3 + 3.5, yLoad + 6, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brk}A - 10kA`], { size: 3.1, gap: 3.5 });
         // red directa al selector
         d.line(xB2, yBus, xB2, 395);
         // selector de transferencia de 3 posiciones
         d.rect(540, 395, 58, 30, { w: 0.4 });
         S.cuadrado(d, xB3, 395, 2.4); S.cuadrado(d, xB2, 395, 2.4); S.cuadrado(d, 566, 425, 2.4);
-        d.text(xB3 - 2.8, 402, 'Estado 2', { size: 3, align: 'right' }); d.text(xB3 - 2.8, 405.5, 'Solar', { size: 3, align: 'right' });
-        d.text(xB2 + 2.8, 402, 'Estado 1', { size: 3 }); d.text(xB2 + 2.8, 405.5, 'Red', { size: 3 });
+        d.text(xB3 - 2.8, 409.5, 'Estado 2', { size: 3, align: 'right' }); d.text(xB3 - 2.8, 413, 'Solar', { size: 3, align: 'right' });
+        d.text(xB2 + 2.8, 409.5, 'Estado 1', { size: 3 }); d.text(xB2 + 2.8, 413, 'Red', { size: 3 });
         d.text(563, 431, 'Estado 3', { size: 3, align: 'right' }); d.text(563, 434.4, 'Común', { size: 3, align: 'right' });
         d.line(xB3, 395, xB3, 407); d.line(xB2, 395, xB2, 410);
         d.line(566, 425, 566, 416); d.line(566, 416, xB3 + 0.6, 408.4);
@@ -681,13 +718,15 @@
         // barraje de tierra y electrodo
         const yPE = 458;
         d.line(528, yPE, 600, yPE, { w: 1.6, color: NARANJA }); d.text(530, yPE - 2, 'Barraje de Tierra', { size: 2.8 }); d.text(580, yPE - 2, 'Icc >= 6kA', { size: 2.8 });
-        d.line(530, yG, 530, yPE, { color: VERDE, layer: 'TIERRA', dash: true });
-        d.line(565, yPE, 565, 490, { color: VERDE, layer: 'TIERRA', dash: true }); S.tierra(d, 565, 490, { w: 1.6 });
-        d.text(574, 476, '1XNo. 8 AWG (T)', { size: 3.1 }); d.text(578, 494, 'ELECTRODO DE PUESTA A TIERRA,', { size: 4 }); d.text(578, 499, 'VARILLA COPPERWELD 3/8 - 2.4m', { size: 4 });
+        d.line(530, yG, 530, yPE, { color: VERDE, layer: 'TIERRA' });
+        S.tierra(d, 606, yPE + 1.2, { w: 0.6, color: [0, 110, 0] });
+        d.line(565, yPE, 565, 490, { color: VERDE, layer: 'TIERRA' }); S.tierra(d, 565, 490, { w: 1.6 }); S.cond(d, 565, 474, true, { t: true });
+        d.text(574, 478, '1XNo. 8 AWG (T)', { size: 3.1 }); d.text(578, 494, 'ELECTRODO DE PUESTA A TIERRA,', { size: 4 }); d.text(578, 499, 'VARILLA COPPERWELD 3/8 - 2.4m', { size: 4 });
         d.text(640, 466, 'TABLERO AC SSFV', { size: 4.2 }); d.text(640, 470.5, `BARRAJE ${nF}F`, { size: 4.2 });
         desplazar(d, -150);
         r.it.forEach(i => d.it.push(i));
         d.it.forEach(i => {
+            i.o.dash = false;
             if (i.t === 't') i.o.helv = true;
             else if (i.t !== 'i') { const w = i.o.w || 0.5; i.o.w = w >= 1.5 ? w * 0.75 : Math.max(0.22, w * 0.5); }
         });
@@ -704,14 +743,17 @@
 
     // módulos fotovoltaicos dibujados como cuadrícula azul (2 columnas)
     function moduloFV(d, x, y, n) {
-        const cw = 9.6, ch = 5.2, cols = 3, rowsN = Math.ceil(n / cols);
+        const mw = 14.8, mh = 8.4, cols = 2, rowsN = Math.ceil(n / cols), NAVY = [0, 0, 100];
+        const cc = 8, cr = 4, pad = 0.7, cw = (mw - 2 * pad) / cc, ch = (mh - 2 * pad) / cr, cf = 0.22;
         for (let k = 0; k < n; k++) {
-            const cx = x + (k % cols) * (cw + 0.6), cy = y + Math.floor(k / cols) * (ch + 0.6);
-            d.rect(cx, cy, cw, ch, { fill: [20, 30, 120], w: 0.2 });
-            d.line(cx + cw / 2, cy, cx + cw / 2, cy + ch, { color: [150, 160, 220], w: 0.2 });
-            d.line(cx, cy + ch / 2, cx + cw, cy + ch / 2, { color: [150, 160, 220], w: 0.2 });
+            const mx = x + (k % cols) * (mw + 0.8), my = y + Math.floor(k / cols) * (mh + 0.6);
+            d.rect(mx, my, mw, mh, { w: 0.2, color: [150, 150, 150], fill: [255, 255, 255] });
+            for (let r = 0; r < cr; r++) for (let c = 0; c < cc; c++) {
+                const px = mx + pad + c * cw + 0.1, py = my + pad + r * ch + 0.1, w = cw - 0.2, h = ch - 0.2;
+                d.poly([[px + cf, py], [px + w - cf, py], [px + w, py + cf], [px + w, py + h - cf], [px + w - cf, py + h], [px + cf, py + h], [px, py + h - cf], [px, py + cf]], { closed: true, fill: NAVY, color: NAVY, w: 0.05 });
+            }
         }
-        return rowsN * (ch + 0.6);
+        return rowsN * (mh + 0.6);
     }
 
     // ------------------------------------------------------------
