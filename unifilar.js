@@ -33,12 +33,13 @@
     // Dibujo: lista de primitivas en mm (origen arriba a la izquierda, y hacia abajo)
     // ------------------------------------------------------------
     class Dib {
-        constructor() { this.it = []; }
+        constructor() { this.it = []; this.hoja = { w: HOJA.w, h: HOJA.h }; }
         line(x1, y1, x2, y2, o) { this.it.push({ t: 'l', x1, y1, x2, y2, o: o || {} }); return this; }
         poly(pts, o) { this.it.push({ t: 'p', pts, o: o || {} }); return this; }
         rect(x, y, w, h, o) { this.it.push({ t: 'r', x, y, w, h, o: o || {} }); return this; }
         circle(x, y, r, o) { this.it.push({ t: 'c', x, y, r, o: o || {} }); return this; }
         text(x, y, s, o) { this.it.push({ t: 't', x, y, s: String(s), o: o || {} }); return this; }
+        img(x, y, w, h, data, fmt, nombre) { this.it.push({ t: 'i', x, y, w, h, data, fmt, nombre, o: {} }); return this; }
         // Bordes del contenido (sin el marco ni el título) para escalar
         bbox() {
             let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
@@ -47,7 +48,7 @@
                 if (i.o.marco) return;
                 if (i.t === 'l') { add(i.x1, i.y1); add(i.x2, i.y2); }
                 else if (i.t === 'p') i.pts.forEach(p => add(p[0], p[1]));
-                else if (i.t === 'r') { add(i.x, i.y); add(i.x + i.w, i.y + i.h); }
+                else if (i.t === 'r' || i.t === 'i') { add(i.x, i.y); add(i.x + i.w, i.y + i.h); }
                 else if (i.t === 'c') { add(i.x - i.r, i.y - i.r); add(i.x + i.r, i.y + i.r); }
                 else if (i.t === 't') {
                     const sz = i.o.size || 3.7, w = i.s.length * sz * 0.6;
@@ -392,6 +393,7 @@
             if (i.t === 'l') { const a = f(i.x1, i.y1), b = f(i.x2, i.y2); o.it.push({ t: 'l', x1: a[0], y1: a[1], x2: b[0], y2: b[1], o: oo }); }
             else if (i.t === 'p') o.it.push({ t: 'p', pts: i.pts.map(p => f(p[0], p[1])), o: oo });
             else if (i.t === 'r') { const a = f(i.x, i.y); o.it.push({ t: 'r', x: a[0], y: a[1], w: i.w * T.s, h: i.h * T.s, o: oo }); }
+            else if (i.t === 'i') { const a = f(i.x, i.y); o.it.push(Object.assign({}, i, { x: a[0], y: a[1], w: i.w * T.s, h: i.h * T.s })); }
             else if (i.t === 'c') { const a = f(i.x, i.y); o.it.push({ t: 'c', x: a[0], y: a[1], r: i.r * T.s, o: oo }); }
             else if (i.t === 't') { const a = f(i.x, i.y); oo.size = (oo.size || 3.7) * T.s; o.it.push({ t: 't', x: a[0], y: a[1], s: i.s, o: oo }); }
         });
@@ -403,8 +405,9 @@
     // ------------------------------------------------------------
     function toPDF(d) {
         const { jsPDF } = root.jspdf;
-        const doc = new jsPDF({ unit: 'mm', format: [HOJA.w, HOJA.h], orientation: 'landscape' });
+        const doc = new jsPDF({ unit: 'mm', format: [d.hoja.w, d.hoja.h], orientation: 'landscape' });
         d.it.forEach(i => {
+            if (i.t === 'i') { try { doc.addImage(i.data, i.fmt || 'PNG', i.x, i.y, i.w, i.h); } catch (e) { } return; }
             const o = i.o, col = o.color || NEGRO;
             const fc = Array.isArray(o.fill) ? o.fill : col;
             doc.setDrawColor(col[0], col[1], col[2]); doc.setFillColor(fc[0], fc[1], fc[2]);
@@ -419,7 +422,7 @@
                 else { doc.lines(p.slice(1).map((q, k) => [q[0] - p[k][0], q[1] - p[k][1]]), p[0][0], p[0][1], [1, 1], 'S', !!o.closed); }
             } else if (i.t === 't') {
                 const sz = o.size || 3.7;
-                doc.setFont('courier', o.bold ? 'bold' : 'normal'); doc.setFontSize(sz / 0.3528);
+                doc.setFont(o.helv ? 'helvetica' : 'courier', o.bold ? 'bold' : 'normal'); doc.setFontSize(sz / 0.3528);
                 doc.setTextColor(col[0], col[1], col[2]);
                 if (o.rot) doc.text(i.s, i.x, i.y, { angle: o.rot });
                 else doc.text(i.s, i.x, i.y, { align: o.align || 'left' });
@@ -436,7 +439,7 @@
     function toDXF(d) {
         const out = [];
         const g = (c, v) => { out.push(String(c)); out.push(String(v)); };
-        const Y = (y) => (HOJA.h - y).toFixed(3);
+        const Y = (y) => (d.hoja.h - y).toFixed(3);
         const X = (x) => x.toFixed(3);
         let hnd = 0x100;
         const H = () => (hnd++).toString(16).toUpperCase();
@@ -479,6 +482,11 @@
         };
         const solido = (i, pts) => { ent('SOLID', i, 'SIMBOLOS', 'AcDbTrace'); pts.forEach((p, k) => { g(10 + k, X(p[0])); g(20 + k, Y(p[1])); g(30 + k, 0); }); };
         d.it.forEach(i => {
+            if (i.t === 'i') {   // las imágenes no viajan en el DXF: queda un recuadro con su nombre
+                poli([[i.x, i.y], [i.x + i.w, i.y], [i.x + i.w, i.y + i.h], [i.x, i.y + i.h]], true, { o: { layer: 'MARCO', w: 0.2 } });
+                ent('TEXT', { o: { layer: 'TEXTO' } }, 'TEXTO', 'AcDbText'); g(10, X(i.x + 1)); g(20, Y(i.y + i.h / 2)); g(30, 0); g(40, '1.800'); g(1, i.nombre || 'IMAGEN'); g(7, 'STANDARD'); g(100, 'AcDbText'); g(73, 0);
+                return;
+            }
             if (i.t === 'l') { ent('LINE', i, 'CONDUCTORES', 'AcDbLine'); g(10, X(i.x1)); g(20, Y(i.y1)); g(30, 0); g(11, X(i.x2)); g(21, Y(i.y2)); g(31, 0); }
             else if (i.t === 'r') {
                 if (i.o.fill) solido(i, [[i.x, i.y], [i.x + i.w, i.y], [i.x, i.y + i.h], [i.x + i.w, i.y + i.h]]);
@@ -507,10 +515,269 @@
         return out.join('\r\n');
     }
 
+    // ============================================================
+    // SISTEMAS HÍBRIDOS (inversor con batería)
+    // Igual que el on-grid del lado de los strings, pero el inversor trae los puertos
+    // BATTERY / COM (arriba) y LOAD / GRID (a la derecha); hay un bloque de batería y el
+    // tablero AC lleva barraje, breakers "red SSFV" y "load SSFV" y un selector de
+    // transferencia de 3 posiciones hacia el tablero de distribución de cargas.
+    // D.bateria = { marca, modelo, kwh, ah, cantidad, cableMm2, distancia, imax }
+    // ============================================================
+    function construirHibrido(D) {
+        const d = new Dib(), r = new Dib();
+        const P = D.panel, I = D.inversor, C = D.calc;
+        if (D.inversores.length !== 1) throw new Error('El unifilar híbrido por ahora es de un solo inversor.');
+        const inv = D.inversores[0];
+        const dist = Object.assign({ cajaInversor: 1.7, invTablero: 23, tableroGeneral: 11 }, D.dist || {});
+        const canal = Object.assign({ dcTipo: 'IMC', dcDim: '1"', acTipo: 'EMT', acDim: '1 1/4"' }, D.canal || {});
+        const awgAc = (C.regAC[0].conductor.match(/^(\d+)/) || [0, 8])[1];
+        const awgAco = (D.acometida && D.acometida.awg) || 8;
+        const tf = D.trafo || {}, B = D.bateria || {};
+        const vac = D.vSistema || I.vNom, nF = I.fases || 2;
+        const acCanal = canal.acBandeja ? 'Bandeja portacable' : `${canal.acTipo} ${canal.acDim}`;
+        const dcCanal = canal.dcBandeja ? 'Bandeja portacable' : `${canal.dcTipo} ${canal.dcDim}`;
+        const brk = C.regAC[0].proteccion;
+        const SP = 59.8;
+
+        // ---------- strings, caja de paso e inversor ----------
+        const rows = [];
+        inv.strings.forEach(s => { for (let k = 0; k < s.paralelos; k++) rows.push({ mppt: s.mppt, series: s.series, largo: s.longitud }); });
+        rows.forEach((r, k) => { r.y = 360.8 + SP * k; });
+        const yFirst = rows[0].y, yLast = rows[rows.length - 1].y, nStr = rows.length;
+        rows.forEach((r, k) => {
+            const col = COLOR_STRING[k % COLOR_STRING.length], y = r.y;
+            d.text(31.8, y - 8, `STRING ${k + 1} - ${r.series} MODULOS ${P.pmax}W`, { size: 4.2, color: col });
+            moduloFV(d, 31.9, y - 7.4, r.series);
+            lineas(d, 31.8, y + 14.2, [`I1M${r.mppt}S${k + 1}`, 'STC: 1000W/m2 25°C, AM1.5', `Voc: ${(r.series * P.voc).toFixed(2)}V`, `Isc: ${P.isc}A`, `Vmp: ${(r.series * P.vmpp).toFixed(2)}V`, `Imp: ${P.imp}A`, `Distancia:${r.largo}m`], { size: 3.4, gap: 4.1 });
+            d.line(62.7, y, 170.9, y);
+            lineas(d, 85, y + 4.6, ['Cable Fotovoltaico', `2x#${C.cablePV.match(/(\d+)mm/)[1]}mm²/XLPE`], { size: 3.3, gap: 3.9 });
+            S.cuadrado(d, 170.9, y, 3); S.cuadrado(d, 206.5, y, 3);
+            d.rect(176.6, y - 7.9, 21.4, 16.6, { w: 0.4 }); S.fusible(d, 180, y - 3.2, 14.6, 6.4);
+            d.text(175.9, y + 12.6, '2XFUSIBLE 20A', { size: 3.3 });
+            d.line(206.5, y, 312.5, y);
+            lineas(d, 247.7, y + 4.6, [`2x#${C.cablePV.match(/(\d+)mm/)[1]}mm²/XLPE`, `Imax: ${P.isc * 1.0}A`, `Conducto: ${dcCanal}`, `Distancia: ${dist.cajaInversor}m`], { size: 3.3, gap: 3.9 });
+            S.cuadrado(d, 312.5, y, 3);
+        });
+        [[102.4, 87.5], [221.5, 206.6]].forEach(([xr, xl]) => {
+            d.rect(xr, yFirst - 3.5, 4.4, yLast - yFirst + 33.9, { w: 0.6 });
+            S.flecha(d, xr + 2.2, yLast + 31.2);
+            d.text(xl, yLast + 39.2, `Tubería metálica ${dcCanal}`, { size: 3.3 });
+        });
+        const cTop = yFirst - 22.2, cBot = yLast + 27.7;
+        d.rect(170.9, cTop, 35.6, cBot - cTop, { w: 0.9 });
+        d.text(157.9, cTop - 9.5, 'CAJA DE PASO FV-INVERSOR', { size: 4.2 }); d.text(161, cTop - 4.8, `${nStr * 2} FUSIBLES 20A-1000VDC`, { size: 4.2 });
+        S.cuadrado(d, 170.9, cTop + 4.5, 3);
+        d.circle(174.5, yLast + 21, 1.2, { fill: NEGRO }); S.tierraCirculo(d, 177.4, yLast + 21);
+        const bTop = yFirst - 13, bBot = yLast + 76.6;
+        d.rect(312.5, bTop, 109.9, bBot - bTop, { w: 0.9 });
+        d.text(312.2, bTop - 1.7, 'INVERSOR', { size: 4.2 });
+        d.rect(309.8, yFirst - 3.5, 5.5, yLast - yFirst + 7, { color: AZUL, w: 0.6, layer: 'COMUNICACION' });
+        rows.forEach(r => S.cuadrado(d, 312.5, r.y, 3));
+        const mpptY = {}; rows.forEach(r => { if (mpptY[r.mppt] === undefined) mpptY[r.mppt] = r.y; });
+        Object.keys(mpptY).forEach(m => {
+            const y = mpptY[m];
+            d.rect(328.8, y - 7.6, 7.5, 16, { w: 0.6 }); d.text(334, y + 6.8, `MPPT ${m}`, { size: 3.7, rot: 90 });
+            d.line(312.5, y, 328.8, y); d.line(336.3, y, 344, y);
+        });
+        const ms = Object.keys(mpptY).map(Number), yM2 = mpptY[ms[ms.length - 1]];
+        d.line(344, mpptY[ms[0]], 344, yM2 + 33.4);
+        d.line(344, yM2, 349.6, yM2); d.line(349.6, yM2 + 0.6, 355.5, yM2 - 3.9); d.line(356.2, yM2 + 0.8, 365.3, yM2 + 0.8);
+        d.text(346.1, yM2 + 6.7, 'Seccionador', { size: 2.4 }); d.text(346.1, yM2 + 9.6, 'integrado', { size: 2.4 });
+        d.line(344, yM2 + 33.4, 353.3, yM2 + 33.4); d.rect(350.5, yM2 + 33.4, 4.6, 6, { w: 0.5 }); d.text(357, yM2 + 38, 'DPS Tipo 2', { size: 2.6 });
+        d.rect(365.3, yM2 - 22.5, 37.3, 45.2, { w: 0.9 }); d.line(365.3, yM2 + 22.7, 402.6, yM2 - 22.5, { w: 0.9 });
+        d.text(389, yM2 - 14, '~', { size: 5.5, align: 'center' }); d.text(375, yM2 + 17, '=', { size: 5.5, align: 'center' });
+        // puertos del inversor híbrido
+        [['BATTERY', 345, 30], ['COM', 375, 22], ['COM', 397, 22]].forEach(([t, x, w]) => { d.rect(x, bTop, w, 6, { w: 0.5 }); d.text(x + w / 2, bTop + 4.2, t, { size: 3.1, align: 'center' }); });
+        const yGrid = bTop + 16.5, yLoad = bTop + 28.5;
+        [['GRID', yGrid], ['LOAD', yLoad]].forEach(([t, y]) => { d.rect(419.5, y - 4.5, 6, 9, { w: 0.5 }); d.text(423.6, y + 3.3, t, { size: 2.8, rot: 90 }); });
+        const refTxt = /srne/i.test(I.fabricante) ? I.modelo : `${I.fabricante}/${I.modelo}`;
+        lineas(d, 350, bTop + 15.5, [`REF:${refTxt}`, `Potencia Max: ${I.pAC}W`, `Imax:${I.iSalida}A`, `Conexión: ${nF}L+PE`, `Vac:${vac}V`], { size: 4.2, gap: 4.7 });
+        // cables AC del inversor (LOAD y GRID)
+        const etAc = (x, y) => lineas(d, x, y, [`${nF}XNo.${awgAc} AWG 60° Cu. THHN/THWN-2 (F)`, `1XNo.${awgAc} AWG 60° Cu. THHN/THWN-2 (N)`, `Imax: ${I.iSalida}A`, `Vac: ${vac}V`, `Conducto: ${acCanal}`, `Distancia: ${dist.invTablero}m`], { size: 3.1, gap: 3.5 });
+        etAc(431, yGrid - 24); etAc(431, yLoad + 6);
+        S.marcas(d, 470, yGrid - 3.1, 2, false); S.marcas(d, 470, yLoad - 3.1, 2, false);
+        // tierra del inversor
+        d.circle(326, yLast + 56, 1.2, { fill: NEGRO }); S.tierraCirculo(d, 326, yLast + 59.6);
+        const yG = yLast + 61.2;
+        d.line(326, yLast + 59.6 + 1.9, 326, yG, { color: VERDE, layer: 'TIERRA' });
+        d.line(170.9, cTop + 4.5, 27.5, cTop + 4.5, { color: VERDE, layer: 'TIERRA', dash: true });
+        d.line(27.5, cTop + 4.5, 27.5, yG, { color: VERDE, layer: 'TIERRA', dash: true });
+        d.line(27.5, yG, 530, yG, { color: VERDE, layer: 'TIERRA', dash: true });
+        d.text(121.8, cTop + 10.6, '1XNo. 10AWG (T)', { size: 3.3 }); d.text(126.4, yG + 4, '1XNo. 10AWG (T)', { size: 3.3 }); d.text(430, yG + 4, '1XNo. 10AWG (T)', { size: 3.3 });
+
+        // ---------- batería ----------
+        const bx0 = 322, bx1 = 420, by0 = 262, by1 = 322;
+        d.rect(bx0, by0, bx1 - bx0, by1 - by0, { w: 0.8 });
+        const nBat = B.cantidad > 1 ? `${B.cantidad} x ` : '';
+        d.text((bx0 + bx1) / 2, by0 + 6.5, `BATERIA ${String(B.marca || '').toUpperCase()}`.trim(), { size: 4.2, align: 'center' });
+        d.text((bx0 + bx1) / 2, by0 + 11.7, `${nBat}${B.kwh ? B.kwh + 'KWH - ' : ''}${B.ah ? B.ah + 'AH - ' : ''}${String(B.modelo || '').toUpperCase()}`.replace(/ - $/, ''), { size: 4.2, align: 'center' });
+        const yb = (by0 + by1) / 2 + 6;   // símbolo de batería
+        d.line(bx0 + 14, yb, 366, yb, { w: 0.8 }); d.line(366, yb - 9, 366, yb + 9, { w: 0.9 }); d.line(371, yb - 5.5, 371, yb + 5.5, { w: 1.5 }); d.line(371, yb, bx1 - 14, yb, { w: 0.8 });
+        d.text(bx0 + 8, yb - 2, '+', { size: 5.5 }); d.text(bx1 - 11, yb - 2, '-', { size: 5.5 });
+        d.line(360, by1, 360, bTop, { w: 1.2 });
+        d.line(386, by1, 386, bTop, { color: AZUL, w: 0.75, layer: 'COMUNICACION' });
+        lineas(d, 270, by1 + 9, [`Cable rojo ${B.cableMm2 || 50} mm² (+),`, `Cable negro ${B.cableMm2 || 50} mm² (-)`, `Distancia: ${B.distancia || 0.8}m`, `Imax: ${B.imax || 160}A`], { size: 3.5, gap: 4.1 });
+        d.text(392, by1 + 12, 'Comunicación', { size: 3.4 }); d.line(391, by1 + 13.4, 421, by1 + 13.4, { color: [56, 80, 158], w: 0.5 });
+        d.text(396, by1 + 24, '1XNo. 10AWG (T)', { size: 3.1 });
+
+        // ---------- red (arriba a la derecha): compacta para que el diagrama llene la hoja ----------
+        const xR = 642.8;
+        (function (d) {
+            d.text(xR, 14, 'Red Eléctrica del', { size: 4.2, align: 'center' }); d.text(xR, 18.6, `Operador de Red ${D.operador || ''}`.trim(), { size: 4.2, align: 'center' });
+            d.poly([[xR - 6.6, 22], [xR + 6.7, 22], [xR + 0.1, 32]], { closed: true, w: 0.6 });
+            for (let k = -5; k <= 5; k += 2.4) d.line(xR + k * 0.9, 22.2, xR + k * 0.45, 29, { w: 0.25 });
+            d.line(xR, 32, xR, 44.8);
+            d.circle(xR + 0.2, 53, 8.2); d.circle(xR + 0.2, 62.6, 8.2);
+            const t1 = [`Transformador ${tf.fases == 3 ? 'Trifásico' : 'Monofásico'}`, `Relación: ${tf.tensionPrim || ''}/${tf.tensionSec || ''}`, `Potencia: ${tf.kva || ''}kVA`, `Código: ${tf.codigo || ''}`, tf.matricula ? `Matrícula: ${tf.matricula}` : '', D.nic ? `Cuenta: ${D.nic}` : ''].filter(Boolean);
+            t1.forEach((t, k) => d.text(xR - 12, 50 + k * 4.7, t, { size: 4.2, align: 'right' }));
+            d.line(xR + 8.6, 57, xR + 30.6, 57, { color: VERDE, layer: 'TIERRA', dash: true });
+            S.tierra(d, xR + 30.6, 57, { w: 0.6 }); d.text(xR + 36, 60.5, 'Puesta a tierra poste', { size: 3.7 }); d.text(xR + 36, 64.9, 'y transformador', { size: 3.7 });
+            d.line(xR, 70.8, xR, 84);
+            S.marcas(d, xR - 2.8, 74.6, 2, false);
+            lineas(d, xR + 8.6, 76.2, [`2XNo.${awgAco} AWG Cu. THHN/THWN-2 (F)`, `1XNo.${awgAco} AWG Cu. THHN/THWN-2 (N)`], { size: 3.3, gap: 3.8 });
+            d.rect(xR - 11.4, 84, 22.7, 20, { w: 0.75 }); d.rect(xR - 6.4, 86.5, 12.8, 4, { w: 0.4 }); d.text(xR, 99, 'kW/h', { size: 4.6, align: 'center' });
+            d.rect(xR - 105.5, 80, 82.4, 42.7, { w: 0.6, color: NARANJA });
+            lineas(d, xR - 104.2, 87.4, ['EQUIPO DE MEDIDA DIRECTA', 'SE REEMPLAZA POR MEDIDOR', 'BIDIRECCIONAL CALIBRADO Y', 'HOMOLOGADO POR OPERADOR DE', 'RED Y COMERCIALIZADOR DE', 'ENERGIA'], { size: 4.9, gap: 6.7 });
+            d.line(xR, 104, xR, 142);
+            S.marcas(d, xR - 2.8, 112.4, 2, false);
+            lineas(d, xR + 8.6, 114, [`2XNo.${awgAco} AWG Cu. THHN/THWN-2 (F)`, `1XNo.${awgAco} AWG Cu. THHN/THWN-2 (N)`], { size: 3.3, gap: 3.8 });
+        })(r);
+
+        // ---------- tablero AC SSFV ----------
+        const yBus = 322, xB1 = 540, xB3 = 555, xB2 = 575;
+        d.rect(511.9, 285, 195, 188, { color: ROJO, w: 0.5, dash: true, layer: 'TABLERO' });
+        S.breaker(d, xR, 292);
+        lineas(d, xR + 4.5, 296, ['Interruptor', 'termomagnético', 'red', `${nF}X${brk}A - 10kA`], { size: 3.2, gap: 3.6 });
+        d.line(xR, 303, xR, yBus);
+        d.line(528, yBus, 668, yBus, { w: 2.2, color: NARANJA });
+        d.text(528, yBus - 3, `BARRAJE 160A - ${vac}V`, { size: 4 }); d.text(528, yBus - 7.2, `${nF}F - 4H`, { size: 4 });
+        // red SSFV (GRID del inversor)
+        d.line(xB1, yBus, xB1, yBus + 4); S.breaker(d, xB1, yBus + 4); d.line(xB1, yBus + 15, xB1, yGrid);
+        d.line(xB1, yGrid, 425.5, yGrid);
+        lineas(d, xB1 - 28, yBus + 12, ['Interruptor', 'termomagnético', 'red SSFV', `${nF}X${brk}A - 10kA`], { size: 3.1, gap: 3.5 });
+        // load SSFV (LOAD del inversor)
+        d.line(425.5, yLoad, xB3, yLoad); d.line(xB3, yLoad, xB3, yLoad + 3); S.breaker(d, xB3, yLoad + 3); d.line(xB3, yLoad + 14, xB3, 395);
+        lineas(d, xB3 + 3.5, yLoad + 6, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brk}A - 10kA`], { size: 3.1, gap: 3.5 });
+        // red directa al selector
+        d.line(xB2, yBus, xB2, 395);
+        // selector de transferencia de 3 posiciones
+        d.rect(548, 395, 40, 30, { w: 0.6 });
+        S.cuadrado(d, xB3, 395, 2.4); S.cuadrado(d, xB2, 395, 2.4); S.cuadrado(d, 566, 425, 2.4);
+        d.text(xB3 - 3, 392.6, 'Estado 2', { size: 3, align: 'right' }); d.text(xB3 - 3, 396, 'Solar', { size: 3, align: 'right' });
+        d.text(xB2 + 3, 392.6, 'Estado 1', { size: 3 }); d.text(xB2 + 3, 396, 'Red', { size: 3 });
+        d.text(566, 431, 'Estado 3', { size: 3, align: 'center' }); d.text(566, 434.4, 'Común', { size: 3, align: 'center' });
+        d.line(555, 399, 555, 415); d.line(555, 415, 566, 421); d.line(575, 399, 575, 410);
+        lineas(d, 592, 410, ['Selector de', 'transferencia', 'de 3 posiciones'], { size: 4, gap: 4.6 });
+        // salida a cargas
+        const xG = 745;
+        d.line(566, 425, 566, 446); d.line(566, 446, xG, 446);
+        d.rect(xG, 431, 30, 30, { w: 1.2 }); d.poly([[xG, 461], [xG + 30, 431], [xG + 30, 461]], { closed: true, fill: NEGRO });
+        d.text(xG + 15, 466, 'Tablero de distribución', { size: 3.4, align: 'center' }); d.text(xG + 15, 470, 'de cargas', { size: 3.4, align: 'center' });
+        lineas(d, 640, 450, [`${nF}XNo.${awgAc} AWG Cu. THHN/THWN-2 (F)`, `Conducto: ${acCanal}`, `Distancia: ${dist.tableroGeneral}m`], { size: 3.1, gap: 3.5 });
+        // barraje de tierra y electrodo
+        const yPE = 458;
+        d.line(528, yPE, 600, yPE, { w: 1.6, color: NARANJA }); d.text(530, yPE - 2, 'Barraje de Tierra', { size: 2.8 }); d.text(580, yPE - 2, 'Icc ≥ 6kA', { size: 2.8 });
+        d.line(530, yG, 530, yPE, { color: VERDE, layer: 'TIERRA', dash: true });
+        d.line(565, yPE, 565, 490, { color: VERDE, layer: 'TIERRA', dash: true }); S.tierra(d, 565, 490, { w: 1.6 });
+        d.text(574, 476, '1XNo. 8 AWG (T)', { size: 3.1 }); d.text(578, 494, 'ELECTRODO DE PUESTA A TIERRA,', { size: 4 }); d.text(578, 499, 'VARILLA COPPERWELD 3/8 - 2.4m', { size: 4 });
+        d.text(640, 466, 'TABLERO AC SSFV', { size: 4.2 }); d.text(640, 470.5, `BARRAJE ${nF}F`, { size: 4.2 });
+        desplazar(d, -150);
+        r.it.forEach(i => d.it.push(i));
+        return d;
+    }
+
+    function desplazar(d, dy) {
+        d.it.forEach(i => {
+            if (i.t === 'l') { i.y1 += dy; i.y2 += dy; }
+            else if (i.t === 'p') i.pts = i.pts.map(p => [p[0], p[1] + dy]);
+            else i.y += dy;
+        });
+    }
+
+    // módulos fotovoltaicos dibujados como cuadrícula azul (2 columnas)
+    function moduloFV(d, x, y, n) {
+        const cw = 14, ch = 7.2, cols = 2, rowsN = Math.ceil(n / cols);
+        for (let k = 0; k < n; k++) {
+            const cx = x + (k % cols) * (cw + 0.6), cy = y + Math.floor(k / cols) * (ch + 0.6);
+            d.rect(cx, cy, cw, ch, { fill: [20, 30, 120], w: 0.3 });
+            d.line(cx + cw / 2, cy, cx + cw / 2, cy + ch, { color: [150, 160, 220], w: 0.2 });
+            d.line(cx, cy + ch / 2, cx + cw, cy + ch / 2, { color: [150, 160, 220], w: 0.2 });
+        }
+        return rowsN * (ch + 0.6);
+    }
+
+    // ------------------------------------------------------------
+    // Hoja A3 de los híbridos: título, diagrama, convenciones, rótulo, logo y firmas
+    // ------------------------------------------------------------
+    function hojaA3(d, D) {
+        const A3 = { w: 420, h: 297 };
+        const e = new Dib(); e.hoja = A3;
+        const T = ajuste(d, { x: 10, y: 20, w: 400, h: 176 });
+        aplicar(d, T).it.forEach(i => e.it.push(i));
+        const M = { marco: true };
+        const L = (x1, y1, x2, y2, w) => e.line(x1, y1, x2, y2, { w: w || 0.4, marco: true, layer: 'MARCO' });
+        const R = (x, y, w, h, ww) => e.rect(x, y, w, h, { w: ww || 0.4, marco: true, layer: 'MARCO' });
+        const Tx = (x, y, s, sz, o) => e.text(x, y, s, Object.assign({ size: sz, marco: true, layer: 'TEXTO', helv: true }, o || {}));
+        R(5, 5, 410, 287, 0.6);
+        L(5, 17, 415, 17, 0.4);
+        Tx(210, 12.4, `DIAGRAMA UNIFILAR SISTEMA SOLAR FOTOVOLTAICO - PROYECTO ${D.nombre}`, 5, { align: 'center' });
+
+        // cuadro de convenciones (vectorial, ya extraído)
+        const yB = 200;
+        const CV = window.UNIFILAR_CONVENCIONES;
+        if (CV) {
+            const s = Math.min(256 / CV.w, 88 / CV.h), ox = 8, oy = yB;
+            const px = (x) => ox + x * s, py = (y) => oy + y * s;
+            CV.dib.forEach(i => {
+                const o = { w: Math.max((i.w || i.lw || 0.2) * s, 0.15), color: i.s || undefined, marco: true, layer: 'SIMBOLOS' };
+                if (i.t === 'r') { e.rect(px(i.x), py(i.y), i.w * s, i.h * s, Object.assign(o, { w: Math.max((i.lw || 0.2) * s, 0.15), fill: i.f || undefined })); }
+                else {
+                    const pts = i.pts.map(p => [px(p[0]), py(p[1])]);
+                    if (i.f && i.c) e.poly(pts, Object.assign(o, { closed: true, fill: i.f }));
+                    else e.poly(pts, Object.assign(o, { closed: !!i.c }));
+                }
+            });
+            CV.txt.forEach(t => e.text(px(t.x), py(t.y), t.s, { size: Math.max(t.sz * s, 1.2), marco: true, layer: 'TEXTO', bold: t.b, helv: true }));
+        }
+
+        // rótulo (datos del proyecto, empresa promotora y firmas)
+        const wrap = (arr, max) => {
+            const out = [];
+            (arr || []).forEach(t => { let cur = ''; String(t).split(' ').forEach(w => { if ((cur + ' ' + w).trim().length > max && cur) { out.push(cur); cur = '  ' + w; } else cur = (cur ? cur + ' ' : '') + w; }); if (cur) out.push(cur); });
+            return out;
+        };
+        const rx = 267, ry = yB, wL = 98, cw = 50, alto = 90;
+        R(rx, ry, wL, alto); R(rx + wL, ry, cw, alto);
+        [8, 15.5, 25.5, 58, 74].forEach(y => L(rx, ry + y, rx + wL, ry + y));
+        Tx(rx + 1.5, ry + 5.5, `PROYECTO ${D.nombre}`, 3.6);
+        Tx(rx + 1.5, ry + 12.2, `Tipo de sistema fotovoltaico: ${D.tipoSistemaTxt || 'Híbrido'}`, 3.0);
+        Tx(rx + 1.5, ry + 19.2, 'POTENCIA NOMINAL INSTALADA:', 3.0); Tx(rx + 1.5, ry + 23.4, `${D.potAC}kW.`, 3.0);
+        Tx(rx + 1.5, ry + 29.6, 'DESCRIPCIÓN DE LA INSTALACIÓN:', 3.0);
+        wrap(D.descripcion, 58).slice(0, 7).forEach((t, k) => Tx(rx + 1.5, ry + 34 + k * 3.5, t, 2.8));
+        Tx(rx + 1.5, ry + 62, 'DIRECCIÓN:', 3.0);
+        wrap([D.direccion || ''], 62).slice(0, 2).forEach((t, k) => Tx(rx + 1.5, ry + 66 + k * 3.6, t, 2.9));
+        Tx(rx + 1.5, ry + 71.8, `CIUDAD/MUNICIPIO: ${String(D.municipio || '').toUpperCase()}`, 2.9);
+        Tx(rx + 1.5, ry + 78, 'UBICACIÓN GEOGRÁFICA:', 3.0); Tx(rx + 1.5, ry + 82.4, `Latitud: ${D.lat || ''}`, 2.9); Tx(rx + 1.5, ry + 86.4, `Longitud: ${D.lng || ''}`, 2.9);
+        const cx = rx + wL;
+        [24, 57].forEach(y => L(cx, ry + y, cx + cw, ry + y));
+        Tx(cx + cw / 2, ry + 5, 'EMPRESA PROMOTORA', 2.8, { align: 'center' });
+        if (D.logo) { const lw = cw - 8, lh = lw * D.logo.h / D.logo.w; e.img(cx + 4, ry + 14 - lh / 2 + 3, lw, lh, D.logo.data, D.logo.fmt, 'LOGO'); }
+        const F = D.firmas || {};
+        const firma = (y0, titulo, f, nombre, mp) => {
+            Tx(cx + cw / 2, ry + y0 + 4, titulo, 2.3, { align: 'center' });
+            if (f) e.img(cx + 5, ry + y0 + 6, cw - 10, Math.min((cw - 10) * f.h / f.w, 16), f.data, f.fmt, 'FIRMA');
+            Tx(cx + cw / 2, ry + y0 + 25, nombre, 1.9, { align: 'center' }); Tx(cx + cw / 2, ry + y0 + 28.5, mp, 1.9, { align: 'center' });
+        };
+        firma(24, 'FIRMA DEL INGENIERO CONSTRUCTOR', F.cons, F.consNombre || 'ING. OSCAR ANDRES GODOY RODRIGUEZ', F.consMp ? (/^M\.?P/i.test(F.consMp) ? F.consMp : `M.P. No.${F.consMp}`) : '');
+        firma(57, 'FIRMA DEL INGENIERO DISEÑADOR', F.dis, F.disNombre || '', F.disMp ? (/MATR|^M\.?P/i.test(F.disMp) ? F.disMp : `MATRICULA PROF.: ${F.disMp}`) : '');
+        return e;
+    }
+
     // ------------------------------------------------------------
     // API
     // ------------------------------------------------------------
     function dibujar(D, area) {
+        if (D.inversor && D.inversor.tipoSistema === 'hibrido') return hojaA3(construirHibrido(D), D);
         const d = construir(D);
         const T = ajuste(d, area || { x: 28, y: 34, w: 946, h: 656 });
         const e = aplicar(d, T);
@@ -523,5 +790,5 @@
         return { pdf: doc.output('blob'), dxf: toDXF(e), dibujo: e };
     }
 
-    root.Unifilar = { construir, dibujar, generar, toPDF, toDXF, Dib };
+    root.Unifilar = { construir, construirHibrido, dibujar, generar, toPDF, toDXF, Dib };
 })(typeof window !== 'undefined' ? window : globalThis);

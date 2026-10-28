@@ -179,6 +179,28 @@
         return { copiados, generadas, detalle };
     }
 
+    // Firmas del constructor y del diseñador: imágenes en una carpeta "FIRMAS" dentro de
+    // "1. DOCUMENTACION OR" (o dentro de la biblioteca). Se reconocen por el nombre del archivo.
+    async function cargarFirmasIngenieria() {
+        const out = {};
+        try {
+            const raiz = await currentHandle.getDirectoryHandle(CARPETA);
+            let dir = null;
+            for await (const e of raiz.values()) if (e.kind === 'directory' && /firma/.test(norm(e.name))) { dir = e; break; }
+            if (!dir) { const bib = await entrar(raiz, BIBLIOTECA_DIR); if (bib) for await (const e of bib.values()) if (e.kind === 'directory' && /firma/.test(norm(e.name))) { dir = e; break; } }
+            if (!dir) return out;
+            for await (const f of dir.values()) {
+                if (f.kind !== 'file' || !/\.(png|jpe?g)$/i.test(f.name)) continue;
+                const n = norm(f.name), clave = /godoy|oscar|constructor/.test(n) ? 'cons' : /hassit|mueg|disen/.test(n) ? 'dis' : null;
+                if (!clave || out[clave]) continue;
+                const img = await window.MemoriaPDF.cargarImagen(await f.getFile(), { png: true, maxW: 700 });
+                if (img) out[clave] = img;
+            }
+        } catch (e) { console.info('[firmas]', e.message); }
+        return out;
+    }
+
+    window.cargarFirmasIngenieria = cargarFirmasIngenieria;
     window.sincronizarDocumentosEquipo = sincronizarDocumentosEquipo;
     window.REGLAS_EQUIPOS = REGLAS;
 })();

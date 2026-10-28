@@ -23,7 +23,7 @@
 
 // Subir esta versión al cambiar la lista de archivos: al cambiar el nombre de
 // la caché, la vieja se borra en la activación.
-const CACHE = 'gestion-doc-v3';
+const CACHE = 'gestion-doc-v4';
 
 // El esqueleto de la app: lo mínimo para que abra sin conexión.
 const SHELL = [
@@ -39,6 +39,7 @@ const SHELL = [
     './plan-mantenimiento-texto.js',
     './plan-mantenimiento.js',
     './plan-mantenimiento-ui.js',
+    './unifilar-convenciones.js',
     './unifilar.js',
     './drive-fs.js',
     './drive-ui.js',

@@ -185,6 +185,16 @@
                   <label class="meml">Inversor → tablero AC (m)<input id="unDistInv" type="number" step="0.1" class="memi" value="1.5"></label>
                   <label class="meml">Cable RS485 (m)<input id="unDistRs" type="number" step="0.1" class="memi" value="1.5"></label>
                 </div>
+                <div id="unBatBox" class="hidden mt-3">
+                  <p class="text-[10px] font-black text-slate-500 uppercase mb-2">Batería (inversor híbrido)</p>
+                  <div class="grid grid-cols-4 gap-3">
+                    <label class="meml col-span-2">Batería<select id="unBat" class="memi"></select></label>
+                    <label class="meml">Cantidad<input id="unBatCant" type="number" min="1" class="memi" value="1"></label>
+                    <label class="meml">Corriente máx. (A)<input id="unBatImax" type="number" class="memi"></label>
+                    <label class="meml">Cable batería (mm²)<input id="unBatCable" type="number" class="memi" value="50"></label>
+                    <label class="meml">Distancia batería → inversor (m)<input id="unBatDist" type="number" step="0.1" class="memi" value="0.8"></label>
+                  </div>
+                </div>
               </section>
             </div>
             <div class="p-5 border-t border-slate-100 flex items-center justify-between gap-3">
@@ -361,6 +371,7 @@
         try {
             const P = panelSel(), I = inversorSel();
             const av = $('memAvisoEquipo');
+            $('unBatBox').classList.toggle('hidden', !(I && I.tipoSistema === 'hibrido'));
             if (I && I.tipoSistema === 'hibrido') { av.textContent = 'Inversor híbrido: la memoria sale igual que las anteriores de SEING (el cálculo es el del lado solar, sin sección de baterías).'; av.classList.remove('hidden'); }
             else av.classList.add('hidden');
             if (!P || !I || !est.config.length) { box.textContent = 'Elige los equipos y el número de módulos.'; return; }
@@ -445,6 +456,10 @@
         setU('unTensionSec', 'tensionSec'); setU('unCodigo', 'codigo'); setU('unMatricula', 'matricula'); setU('unAwgAco', 'awgAco', 8);
         setU('unAcTipo', 'acTipo', 'EMT'); setU('unAcDim', 'acDim', '1"'); setU('unDcTipo', 'dcTipo', 'IMC'); setU('unDcDim', 'dcDim', '1"');
         setU('unDistCaja', 'distCaja', 1.7); setU('unDistInv', 'distInv', 1.5); setU('unDistRs', 'distRs', 1.5);
+        $('unBat').innerHTML = (equipos.baterias || []).map(e => `<option value="${esc(e.id)}">${esc(e.fabricante)} ${esc(e.modelo)}${e.capacidadKwh ? ' (' + e.capacidadKwh + ' kWh)' : ''}</option>`).join('');
+        const mb = mejorCoincidencia(equipos.baterias || [], info.marcaBateria || '', info.referenciaBateria || '');
+        if (un.bateria || mb) $('unBat').value = un.bateria || mb.id;
+        setU('unBatCant', 'batCant', info.numBaterias || 1); setU('unBatImax', 'batImax'); setU('unBatCable', 'batCable', 50); setU('unBatDist', 'batDist', 0.8);
         pintarChecklist(p);
 
         $('memResumen').innerHTML = [['Cliente', info.dueno], ['Proyecto', limpiarNombreProyecto(p.name)], ['Panel', `${info.marcaPaneles || ''} ${info.referenciaPanel || ''}`.trim()], ['Inversor', `${info.marcaFabricante || ''} ${info.referenciaInversor || ''}`.trim()]]
@@ -563,7 +578,8 @@
             nic: g('unNic'), kva: g('unKva'), tensionPrim: g('unTensionPrim'), fases: parseInt(g('unFasesTrafo'), 10) || 2, tensionSec: g('unTensionSec'),
             codigo: g('unCodigo'), matricula: g('unMatricula'), awgAco: parseInt(g('unAwgAco'), 10) || 8,
             acTipo: g('unAcTipo'), acDim: g('unAcDim'), dcTipo: g('unDcTipo'), dcDim: g('unDcDim'),
-            distCaja: parseFloat(g('unDistCaja')) || 1.7, distInv: parseFloat(g('unDistInv')) || 1.5, distRs: parseFloat(g('unDistRs')) || 1.5
+            distCaja: parseFloat(g('unDistCaja')) || 1.7, distInv: parseFloat(g('unDistInv')) || 1.5, distRs: parseFloat(g('unDistRs')) || 1.5,
+            bateria: g('unBat'), batCant: parseInt(g('unBatCant'), 10) || 1, batImax: parseFloat(g('unBatImax')) || '', batCable: parseFloat(g('unBatCable')) || 50, batDist: parseFloat(g('unBatDist')) || 0.8
         };
     }
 
@@ -624,24 +640,45 @@
             const nombrePlan = await window.__pmApi.guardarPdf(p, info, window.PlanMantenimiento.generar(pmd));
             hechos.push('Plan de mantenimiento');
 
-            // Diagrama unifilar (PDF + DXF) — solo sistemas on-grid por ahora
+            // Diagrama unifilar (PDF + DXF): on-grid (hoja grande) o híbrido (A3)
             const u = leerUnifilar();
             const noHechos = [];
             const faltaTrafo = [['nic', 'cuenta'], ['kva', 'kVA'], ['tensionPrim', 'tensión primaria'], ['tensionSec', 'tensión secundaria'], ['codigo', 'código'], ['matricula', 'matrícula']].filter(([k]) => !u[k]).map(x => x[1]);
             if (!window.Unifilar) noHechos.push('Unifilar (no se cargó el motor)');
-            else if (I.tipoSistema === 'hibrido') noHechos.push('Unifilar (el de sistemas híbridos aún no está disponible)');
+            else if (I.tipoSistema === 'hibrido' && est.config.length !== 1) noHechos.push('Unifilar (el híbrido con más de un inversor aún no está disponible)');
+            else if (I.tipoSistema === 'hibrido' && !equipoSel('baterias', u.bateria)) noHechos.push('Unifilar (elige la batería)');
             else if (faltaTrafo.length) noHechos.push(`Unifilar (faltan datos del transformador: ${faltaTrafo.join(', ')})`);
             else {
                 btn.textContent = 'Unifilar...';
                 const Cc = window.MemoriaCalc.calcular({ panel: P, inversor: I, inversores: est.config, tmin: D.tmin, cablePV: D.cablePV });
-                const U = window.Unifilar.generar({
+                const hib = I.tipoSistema === 'hibrido';
+                let extra = {};
+                if (hib) {
+                    const B = equipoSel('baterias', u.bateria);
+                    const kwh = B.capacidadKwh || (B.capacidadAh && B.tension ? +(B.capacidadAh * B.tension / 1000).toFixed(2) : '');
+                    btn.textContent = 'Logo y firmas...';
+                    const logo = await window.MemoriaPDF.cargarImagen('img/logo.png', { png: true, maxW: 900 });
+                    const firmas = window.cargarFirmasIngenieria ? await window.cargarFirmasIngenieria() : {};
+                    const nB = u.batCant;
+                    extra = {
+                        bateria: { marca: B.fabricante, modelo: B.modelo, kwh: (kwh && nB > 1) ? +(kwh * nB).toFixed(2) : kwh, ah: B.capacidadAh || '', cantidad: nB, cableMm2: u.batCable, distancia: u.batDist, imax: u.batImax },
+                        tipoSistemaTxt: 'Híbrido', direccion: f.direccion, municipio: f.municipio, lat: f.lat, lng: f.lng, logo,
+                        descripcion: [`- Sistema solar fotovoltaico compuesto por ${f.numMod} paneles solares de ${P.pmax}W`, `- Marca: ${P.fabricante} ${P.referencia || ''}`.trim(),
+                            `- Sistema solar fotovoltaico compuesto por 1 Inversor Solar ${I.fabricante} ${I.modelo} y ${nB > 1 ? nB + ' baterías' : 'una batería'} ${B.fabricante} ${B.modelo}${kwh ? ' ' + (nB > 1 ? kwh * nB : kwh) + 'kWh' : ''}`],
+                        firmas: Object.assign({
+                            consNombre: 'ING. ' + RESPONSABLE.nombre, consMp: RESPONSABLE.matricula,
+                            disNombre: 'ING. HASSITH MUEGUES', disMp: 'SN285-187274'
+                        }, firmas)
+                    };
+                }
+                const U = window.Unifilar.generar(Object.assign({
                     nombre: D.nombre, potDC: f.potDC, potAC: f.potAC, operador: f.operador, nic: u.nic,
                     trafo: { tensionPrim: u.tensionPrim, kva: u.kva, fases: u.fases, tensionSec: u.tensionSec, codigo: u.codigo, matricula: u.matricula },
                     panel: P, inversor: I, inversores: est.config, calc: Cc,
                     canal: { acTipo: u.acTipo, acDim: u.acDim, acBandeja: /bandeja/i.test(u.acTipo), dcTipo: u.dcTipo, dcDim: u.dcDim, dcBandeja: /bandeja/i.test(u.dcTipo) },
                     dist: { cajaInversor: u.distCaja, invTablero: u.distInv, rs485: u.distRs, tableroGeneral: est.config[0].longitudAC },
                     acometida: { awg: u.awgAco }, vSistema: parseInt($('memPmSel').value, 10) || I.vNom
-                });
+                }, extra));
                 const nU = nombreBoveda('1.', info, limpiarNombreProyecto(p.name)).texto;
                 await guardarArchivo(folder, `1. ${nU}.pdf`, new Uint8Array(await U.pdf.arrayBuffer()));
                 await guardarArchivo(folder, `1. ${nU}.dxf`, new TextEncoder().encode(U.dxf));
