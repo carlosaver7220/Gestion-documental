@@ -549,10 +549,10 @@
         rows.forEach((r, k) => {
             const col = COLOR_STRING[k % COLOR_STRING.length], y = r.y;
             d.text(31.8, y - 8, `STRING ${k + 1} - ${r.series} MODULOS ${P.pmax}W`, { size: 4.2, color: col });
-            moduloFV(d, 31.9, y - 7.4, r.series);
-            lineas(d, 31.8, y + 14.2, [`I1M${r.mppt}S${k + 1}`, 'STC: 1000W/m2 25°C, AM1.5', `Voc: ${(r.series * P.voc).toFixed(2)}V`, `Isc: ${P.isc}A`, `Vmp: ${(r.series * P.vmpp).toFixed(2)}V`, `Imp: ${P.imp}A`, `Distancia:${r.largo}m`], { size: 3.4, gap: 4.1 });
+            const hMod = moduloFV(d, 31.9, y - 7.4, r.series);
+            lineas(d, 31.8, y - 7.4 + hMod + 4.2, [`I1M${r.mppt}S${k + 1}`, 'STC: 1000W/m2 25°C, AM1.5', `Voc: ${(r.series * P.voc).toFixed(2)}V`, `Isc: ${P.isc}A`, `Vmp: ${(r.series * P.vmpp).toFixed(2)}V`, `Imp: ${P.imp}A`, `Distancia:${r.largo}m`], { size: 3.4, gap: 4.1 });
             d.line(62.7, y, 170.9, y);
-            lineas(d, 85, y + 4.6, ['Cable Fotovoltaico', `2x#${C.cablePV.match(/(\d+)mm/)[1]}mm²/XLPE`], { size: 3.3, gap: 3.9 });
+            lineas(d, 65, y + 4.6, ['Cable Fotovoltaico', `2x#${C.cablePV.match(/(\d+)mm/)[1]}mm²/XLPE`], { size: 3.3, gap: 3.9 });
             S.cuadrado(d, 170.9, y, 3); S.cuadrado(d, 206.5, y, 3);
             d.rect(176.6, y - 7.9, 21.4, 16.6, { w: 0.4 }); S.fusible(d, 180, y - 3.2, 14.6, 6.4);
             d.text(175.9, y + 12.6, '2XFUSIBLE 20A', { size: 3.3 });
@@ -583,15 +583,16 @@
         });
         const ms = Object.keys(mpptY).map(Number), yM2 = mpptY[ms[ms.length - 1]];
         d.line(344, mpptY[ms[0]], 344, yM2 + 33.4);
-        d.line(344, yM2, 349.6, yM2); d.line(349.6, yM2 + 0.6, 355.5, yM2 - 3.9); d.line(356.2, yM2 + 0.8, 365.3, yM2 + 0.8);
-        d.text(346.1, yM2 + 6.7, 'Seccionador', { size: 2.4 }); d.text(346.1, yM2 + 9.6, 'integrado', { size: 2.4 });
-        d.line(344, yM2 + 33.4, 353.3, yM2 + 33.4); d.rect(350.5, yM2 + 33.4, 4.6, 6, { w: 0.5 }); d.text(357, yM2 + 38, 'DPS Tipo 2', { size: 2.6 });
-        d.rect(365.3, yM2 - 22.5, 37.3, 45.2, { w: 0.9 }); d.line(365.3, yM2 + 22.7, 402.6, yM2 - 22.5, { w: 0.9 });
-        d.text(389, yM2 - 14, '~', { size: 5.5, align: 'center' }); d.text(375, yM2 + 17, '=', { size: 5.5, align: 'center' });
+        d.line(344, yM2, 336.3, yM2);
+        // DPS tipo 2 (cuadro con triángulo hacia abajo), como en el cuadro de convenciones
+        d.line(344, yM2 + 33.4, 353.3, yM2 + 33.4); d.line(353.3, yM2 + 33.4, 353.3, yM2 + 35.5);
+        d.rect(350.7, yM2 + 35.5, 5.2, 9.5, { w: 0.4 });
+        d.poly([[351.9, yM2 + 38.3], [354.7, yM2 + 38.3], [353.3, yM2 + 40.8]], { closed: true, fill: NEGRO, w: 0.2 });
+        d.text(358, yM2 + 41, 'DPS Tipo 2', { size: 2.8 });
         // puertos del inversor híbrido
         [['BATTERY', 345, 30], ['COM', 375, 22], ['COM', 397, 22]].forEach(([t, x, w]) => { d.rect(x, bTop, w, 6, { w: 0.5 }); d.text(x + w / 2, bTop + 4.2, t, { size: 3.1, align: 'center' }); });
-        const yGrid = bTop + 16.5, yLoad = bTop + 28.5;
-        [['GRID', yGrid], ['LOAD', yLoad]].forEach(([t, y]) => { d.rect(419.5, y - 4.5, 6, 9, { w: 0.5 }); d.text(423.6, y + 3.3, t, { size: 2.8, rot: 90 }); });
+        const yGrid = bTop + 16.5, yLoad = bTop + 30;
+        [['GRID', yGrid], ['LOAD', yLoad]].forEach(([t, y]) => { d.rect(418.5, y - 6, 7.5, 12, { w: 0.4 }); d.text(423.4, y + 3.2, t, { size: 3, rot: 90 }); });
         const refTxt = /srne/i.test(I.fabricante) ? I.modelo : `${I.fabricante}/${I.modelo}`;
         lineas(d, 350, bTop + 15.5, [`REF:${refTxt}`, `Potencia Max: ${I.pAC}W`, `Imax:${I.iSalida}A`, `Conexión: ${nF}L+PE`, `Vac:${vac}V`], { size: 4.2, gap: 4.7 });
         // cables AC del inversor (LOAD y GRID)
@@ -663,13 +664,14 @@
         // red directa al selector
         d.line(xB2, yBus, xB2, 395);
         // selector de transferencia de 3 posiciones
-        d.rect(548, 395, 40, 30, { w: 0.6 });
+        d.rect(540, 395, 58, 30, { w: 0.4 });
         S.cuadrado(d, xB3, 395, 2.4); S.cuadrado(d, xB2, 395, 2.4); S.cuadrado(d, 566, 425, 2.4);
-        d.text(xB3 - 3, 392.6, 'Estado 2', { size: 3, align: 'right' }); d.text(xB3 - 3, 396, 'Solar', { size: 3, align: 'right' });
-        d.text(xB2 + 3, 392.6, 'Estado 1', { size: 3 }); d.text(xB2 + 3, 396, 'Red', { size: 3 });
-        d.text(566, 431, 'Estado 3', { size: 3, align: 'center' }); d.text(566, 434.4, 'Común', { size: 3, align: 'center' });
-        d.line(555, 399, 555, 415); d.line(555, 415, 566, 421); d.line(575, 399, 575, 410);
-        lineas(d, 592, 410, ['Selector de', 'transferencia', 'de 3 posiciones'], { size: 4, gap: 4.6 });
+        d.text(xB3 - 2.8, 402, 'Estado 2', { size: 3, align: 'right' }); d.text(xB3 - 2.8, 405.5, 'Solar', { size: 3, align: 'right' });
+        d.text(xB2 + 2.8, 402, 'Estado 1', { size: 3 }); d.text(xB2 + 2.8, 405.5, 'Red', { size: 3 });
+        d.text(563, 431, 'Estado 3', { size: 3, align: 'right' }); d.text(563, 434.4, 'Común', { size: 3, align: 'right' });
+        d.line(xB3, 395, xB3, 407); d.line(xB2, 395, xB2, 410);
+        d.line(566, 425, 566, 416); d.line(566, 416, xB3 + 0.6, 408.4);
+        lineas(d, 602, 410, ['Selector de', 'transferencia', 'de 3 posiciones'], { size: 4, gap: 4.6 });
         // salida a cargas
         const xG = 745;
         d.line(566, 425, 566, 446); d.line(566, 446, xG, 446);
@@ -678,13 +680,17 @@
         lineas(d, 640, 450, [`${nF}XNo.${awgAc} AWG Cu. THHN/THWN-2 (F)`, `Conducto: ${acCanal}`, `Distancia: ${dist.tableroGeneral}m`], { size: 3.1, gap: 3.5 });
         // barraje de tierra y electrodo
         const yPE = 458;
-        d.line(528, yPE, 600, yPE, { w: 1.6, color: NARANJA }); d.text(530, yPE - 2, 'Barraje de Tierra', { size: 2.8 }); d.text(580, yPE - 2, 'Icc ≥ 6kA', { size: 2.8 });
+        d.line(528, yPE, 600, yPE, { w: 1.6, color: NARANJA }); d.text(530, yPE - 2, 'Barraje de Tierra', { size: 2.8 }); d.text(580, yPE - 2, 'Icc >= 6kA', { size: 2.8 });
         d.line(530, yG, 530, yPE, { color: VERDE, layer: 'TIERRA', dash: true });
         d.line(565, yPE, 565, 490, { color: VERDE, layer: 'TIERRA', dash: true }); S.tierra(d, 565, 490, { w: 1.6 });
         d.text(574, 476, '1XNo. 8 AWG (T)', { size: 3.1 }); d.text(578, 494, 'ELECTRODO DE PUESTA A TIERRA,', { size: 4 }); d.text(578, 499, 'VARILLA COPPERWELD 3/8 - 2.4m', { size: 4 });
         d.text(640, 466, 'TABLERO AC SSFV', { size: 4.2 }); d.text(640, 470.5, `BARRAJE ${nF}F`, { size: 4.2 });
         desplazar(d, -150);
         r.it.forEach(i => d.it.push(i));
+        d.it.forEach(i => {
+            if (i.t === 't') i.o.helv = true;
+            else if (i.t !== 'i') { const w = i.o.w || 0.5; i.o.w = w >= 1.5 ? w * 0.75 : Math.max(0.22, w * 0.5); }
+        });
         return d;
     }
 
@@ -698,10 +704,10 @@
 
     // módulos fotovoltaicos dibujados como cuadrícula azul (2 columnas)
     function moduloFV(d, x, y, n) {
-        const cw = 14, ch = 7.2, cols = 2, rowsN = Math.ceil(n / cols);
+        const cw = 9.6, ch = 5.2, cols = 3, rowsN = Math.ceil(n / cols);
         for (let k = 0; k < n; k++) {
             const cx = x + (k % cols) * (cw + 0.6), cy = y + Math.floor(k / cols) * (ch + 0.6);
-            d.rect(cx, cy, cw, ch, { fill: [20, 30, 120], w: 0.3 });
+            d.rect(cx, cy, cw, ch, { fill: [20, 30, 120], w: 0.2 });
             d.line(cx + cw / 2, cy, cx + cw / 2, cy + ch, { color: [150, 160, 220], w: 0.2 });
             d.line(cx, cy + ch / 2, cx + cw, cy + ch / 2, { color: [150, 160, 220], w: 0.2 });
         }
