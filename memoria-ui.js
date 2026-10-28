@@ -86,14 +86,15 @@
           <div class="w-full max-w-4xl bg-white rounded-xl shadow-2xl flex flex-col max-h-[92vh]">
             <div class="p-5 border-b border-slate-100 flex justify-between items-center">
               <div>
-                <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Ingeniería · inciso 15</p>
-                <h3 class="text-lg font-black text-slate-900">Memoria de Cálculo</h3>
+                <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Ingeniería de detalle</p>
+                <h3 class="text-lg font-black text-slate-900">Generar Ingeniería</h3>
               </div>
               <button type="button" onclick="cerrarMemoria()" class="p-2 hover:bg-slate-100 rounded-full text-slate-400 text-xl leading-none">✕</button>
             </div>
             <div class="flex-1 overflow-y-auto p-5 space-y-5">
-              <p class="text-[10px] text-slate-400 leading-relaxed">Los datos del proyecto, los equipos y las potencias se toman de <b class="text-slate-500">Datos del Proyecto</b>. Aquí confirmas lo que falta y el PDF sale con el formato de las memorias de Smart Energy.</p>
+              <p class="text-[10px] text-slate-400 leading-relaxed">Los datos del proyecto, los equipos y las potencias se toman de <b class="text-slate-500">Datos del Proyecto</b>. Aquí confirmas lo que falta y se generan la memoria de cálculo y el plan de mantenimiento en PDF. Los documentos de los equipos y de la carpeta contractual ya se trajeron al abrir.</p>
               <div id="memResumen" class="p-3 bg-slate-50 border border-slate-200 rounded-md text-[10px] text-slate-500 leading-relaxed"></div>
+              <div id="memChecklist"></div>
 
               <section>
                 <h4 class="memh">Equipos</h4>
@@ -153,10 +154,20 @@
                   <button type="button" id="memCuadroQuitar" onclick="memQuitarCuadro()" class="text-[10px] font-black text-rose-500 uppercase hidden">Quitar imagen</button>
                 </div>
               </section>
+
+              <section>
+                <h4 class="memh">Plan de mantenimiento</h4>
+                <div class="grid grid-cols-4 gap-3">
+                  <label class="meml">Tipo de acometida<select id="memPmAcom" class="memi"><option value="2|Monofásica">2Φ Monofásica</option><option value="3|Trifásica">3Φ Trifásica</option></select></label>
+                  <label class="meml">Tipo de usuario<select id="memPmUsuario" class="memi"><option>Residencial</option><option>Comercial</option><option>Industrial</option></select></label>
+                  <label class="meml">Tensión del predio (V)<input id="memPmNivel" class="memi" placeholder="240/120"></label>
+                  <label class="meml">Selección (V)<input id="memPmSel" class="memi" placeholder="240"></label>
+                </div>
+              </section>
             </div>
             <div class="p-5 border-t border-slate-100 flex items-center justify-between gap-3">
-              <p class="text-[10px] text-slate-400">El PDF se guarda en 1. INGENIERIA DE DETALLE como inciso 15.</p>
-              <button type="button" id="memGenerar" onclick="generarMemoria()" class="px-6 py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-md hover:bg-blue-700 shadow-lg shadow-blue-200">Generar Memoria PDF</button>
+              <p class="text-[10px] text-slate-400">Los PDF se guardan en 1. INGENIERIA DE DETALLE con el nombre y el inciso de la Bóveda.</p>
+              <button type="button" id="memGenerar" onclick="generarMemoria()" class="px-6 py-3 bg-blue-600 text-white font-black text-xs uppercase rounded-md hover:bg-blue-700 shadow-lg shadow-blue-200">Generar ingeniería</button>
             </div>
           </div>
         </div>
@@ -396,6 +407,16 @@
         $('memTempRango').value = v('tempRango', CLIMA.tempRango);
         $('memTmin').value = v('tmin', CLIMA.tmin);
         $('memCable').value = String(v('cable', 4));
+        // Plan de mantenimiento: valores por defecto (o los últimos usados)
+        try {
+            const pmd = await window.__pmApi.datosDe(projectId);
+            const pm = guardado.plan || {};
+            $('memPmAcom').value = pm.acom || `${pmd.fases}|${pmd.acometida}`;
+            $('memPmUsuario').value = pm.usuario || pmd.usuario;
+            $('memPmNivel').value = pm.nivel || pmd.nivelTension;
+            $('memPmSel').value = pm.seleccion || pmd.seleccion;
+        } catch (e) { console.warn('Plan de mantenimiento:', e); }
+        pintarChecklist(p);
 
         $('memResumen').innerHTML = [['Cliente', info.dueno], ['Proyecto', limpiarNombreProyecto(p.name)], ['Panel', `${info.marcaPaneles || ''} ${info.referenciaPanel || ''}`.trim()], ['Inversor', `${info.marcaFabricante || ''} ${info.referenciaInversor || ''}`.trim()]]
             .map(([k, val]) => `<span class="font-bold text-slate-600">${k}:</span> ${val ? esc(val) : '<span class="text-red-400">falta</span>'}`).join(' &nbsp;·&nbsp; ');
@@ -413,6 +434,39 @@
         refrescarChequeo();
     };
     window.cerrarMemoria = () => $('memoriaModal').classList.add('hidden');
+
+    // ------------------------------------------------------------
+    // Estado de la Ingeniería de Detalle del proyecto
+    // ------------------------------------------------------------
+    // Estos incisos dependen del sitio (techo, fotos, planos): se agregan a mano.
+    const MANUALES = { '10.': 1, '13.': 1, '14.': 1, '16.': 1 };
+    const PROXIMOS = { '1.': 1, '18.': 1 };
+    function pintarChecklist(p, banner) {
+        const items = (p.ingItems || []).filter(i => !i.sinValor);
+        const ok = items.filter(i => i.found).length;
+        const fila = (i) => {
+            const e = i.found ? ['✓', 'text-emerald-600', 'listo']
+                : i.generated ? ['◐', 'text-amber-600', 'borrador: falta firmar y subir el PDF']
+                : PROXIMOS[i.id] ? ['○', 'text-slate-400', 'próximamente se genera aquí']
+                : MANUALES[i.id] ? ['○', 'text-rose-500', 'se agrega a mano'] : ['○', 'text-rose-500', 'falta'];
+            return `<span class="inline-flex items-center gap-1 mr-3 mb-0.5 text-[10px] ${e[1]}" title="${esc(i.label)} — ${e[2]}"><b>${e[0]}</b>${esc(i.id)} ${esc(i.label)}</span>`;
+        };
+        $('memChecklist').innerHTML = `
+            ${banner ? `<div class="p-3 mb-2 bg-emerald-50 border border-emerald-200 rounded-md text-[11px] font-bold text-emerald-800 leading-relaxed">${banner}</div>` : ''}
+            <div class="p-3 bg-white border border-slate-200 rounded-md">
+              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Ingeniería de detalle: ${ok} de ${items.length} incisos</p>
+              <div>${items.map(fila).join('')}</div>
+            </div>`;
+    }
+
+    // Botón único: primero trae los documentos (equipos, contractual, declaraciones) y luego abre el formulario.
+    window.abrirGenerarIngenieria = async (projectId) => {
+        try {
+            showToast('Trayendo los documentos del proyecto…');
+            if (window.sincronizarDocumentosEquipo) await window.sincronizarDocumentosEquipo(projectId);
+        } catch (e) { console.warn('No se pudieron traer los documentos:', e); }
+        await window.abrirMemoriaCalculo(projectId);
+    };
 
     // ------------------------------------------------------------
     // Agregar equipo
@@ -488,7 +542,8 @@
             if (!est.config.length) return alert('Configura los strings (botón Auto-distribuir).');
 
             btn.disabled = true; btn.textContent = 'Generando...';
-            const p = est.p;
+            const hechos = [];
+            const p = projects.find(x => x.id === est.projectId) || est.p;   // el escaneo de los documentos renovó el proyecto
             const D = {
                 nombre: limpiarNombreProyecto(p.name).toUpperCase(), potDC: parseFloat(f.potDC) || 0, potAC: f.potAC, municipio: f.municipio, departamento: f.departamento,
                 direccion: f.direccion, tipoPredio: f.predio, operadorRed: f.operador, fecha: f.fecha, lat: f.lat, lng: f.lng,
@@ -516,16 +571,33 @@
                 await guardarArchivo(folder, `11. ${n11}.png`, new Uint8Array(await blob.arrayBuffer()));
             }
 
-            const guardar = Object.assign({}, f, { cuadro: undefined });
+            hechos.push(`Memoria de cálculo (${r.paginas} págs.)`);
+            if (est.cuadro && est.cuadroOrigen === 'nuevo' && !est.hayInciso11) hechos.push('Cuadro de cargas');
+
+            // Plan de mantenimiento (inciso 17) con lo que se confirmó aquí
+            btn.textContent = 'Plan de mantenimiento...';
+            const pmd = await window.__pmApi.datosDe(est.projectId);
+            const [fases, acometida] = $('memPmAcom').value.split('|');
+            Object.assign(pmd, {
+                nombre: `${D.nombre} ${f.potDC} kWp - ${f.potAC}kW`.replace(/\s+/g, ' '), fases, acometida, usuario: $('memPmUsuario').value,
+                nivelTension: $('memPmNivel').value.trim(), seleccion: $('memPmSel').value.trim(), inversores: f.numInv, paneles: f.numMod
+            });
+            const nombrePlan = await window.__pmApi.guardarPdf(p, info, window.PlanMantenimiento.generar(pmd));
+            hechos.push('Plan de mantenimiento');
+
+            const guardar = Object.assign({}, f, { cuadro: undefined, plan: { acom: $('memPmAcom').value, usuario: $('memPmUsuario').value, nivel: $('memPmNivel').value.trim(), seleccion: $('memPmSel').value.trim() } });
             await saveProjectField(est.projectId, 'memoria', guardar);
-            cerrarMemoria();
-            showToast(`Memoria generada: ${nombre} (${r.paginas} págs.)`);
             await scan();
+            const pf = projects.find(x => x.id === est.projectId) || p;
+            const pendientes = (pf.ingItems || []).filter(i => !i.found && !i.sinValor).map(i => i.id + ' ' + i.label);
+            pintarChecklist(pf, `Generado: ${hechos.join(', ')}.${pendientes.length ? ' Falta: ' + pendientes.join(', ') + '.' : ' Ingeniería completa.'}`);
+            $('memChecklist').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            showToast(`Ingeniería generada: ${hechos.length} documentos`);
         } catch (e) {
             console.error('Error generando la memoria:', e);
             alert('No se pudo generar la memoria: ' + e.message);
         } finally {
-            btn.disabled = false; btn.textContent = 'Generar Memoria PDF';
+            btn.disabled = false; btn.textContent = 'Generar ingeniería';
         }
     };
 })();

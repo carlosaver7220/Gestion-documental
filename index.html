@@ -736,7 +736,7 @@
                                     <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Ingeniería de Detalle</h3>
                                     <div class="flex items-center gap-2">
                                         <span id="bovedaPctBadge" class="px-2.5 py-1 bg-slate-900 text-[10px] text-white font-black rounded-full">0%</span>
-                                        <button onclick="sincronizarDocumentosEquipo(selectedProjectId, { avisar: true })" class="px-3 py-1 bg-slate-100 text-[10px] text-slate-600 font-bold rounded-full hover:bg-blue-600 hover:text-white transition-colors" title="Copia desde la biblioteca las fichas técnicas, certificados y CNO de los equipos de este proyecto y genera las declaraciones">TRAER DOCUMENTOS DE EQUIPOS</button>
+                                        <button onclick="abrirGenerarIngenieria(selectedProjectId)" class="px-4 py-1.5 bg-blue-600 text-[10px] text-white font-black rounded-full hover:bg-blue-700 transition-colors shadow shadow-blue-200" title="Trae los documentos de los equipos y de la carpeta contractual, genera las declaraciones y abre el formulario para la memoria de cálculo y el plan de mantenimiento">GENERAR INGENIERÍA</button>
                                         <span class="px-3 py-1 bg-blue-600 text-[10px] text-white font-bold rounded-full">PDF OBLIGATORIOS</span>
                                     </div>
                                 </div>
@@ -4304,10 +4304,14 @@
             // mayúsculas, tildes ni el número del inicio): no todos los suben desde la app.
             const porNombre = true;
             const states = await getStates(handle.name);
-            let ingFolder, actFolder, budgetFolder, preliminarFolder, estadosFolder, retieFolder, orFolder, dossierFolder;
+            let ingFolder, actFolder, budgetFolder, preliminarFolder, estadosFolder, retieFolder, orFolder, dossierFolder, contractualFolder;
             try {
                 for await (const e of handle.values()) {
                     if (e.name.startsWith('1.') && e.name.includes('Preeliminar')) preliminarFolder = e;
+                    // "0. DOCUMENTACION CONTRACTUAL": contrato, cédulas, CTL, kick-off, recibo... Es la carpeta que
+                    // usan los proyectos reales y la que crea la app; si no hay "1. Preeliminar", la pestaña
+                    // Preliminar trabaja sobre ella.
+                    if (e.name.startsWith('0.') && /CONTRACTUAL/i.test(e.name)) contractualFolder = e;
                     if (e.name.startsWith('1.') && !e.name.includes('Preeliminar')) ingFolder = e;
                     if (e.name.startsWith('2.') && /ESTADO/i.test(e.name)) estadosFolder = e;
                     if (e.name.startsWith('3.')) budgetFolder = e;
@@ -4437,6 +4441,8 @@
             const actasPct = actasValen.length ? Math.round((actasValen.filter(i => i.found).length / actasValen.length) * 100) : 0;
             const informePct = informeFile ? 100 : 0;   // informativo: ya no pondera
 
+            preliminarFolder = preliminarFolder || contractualFolder;
+
             // Qué trámites le aplican a ESTE proyecto y cómo queda el reparto del 100%.
             const req = requisitosProyecto(infoProyecto);
             const pesos = pesosProyecto(req);
@@ -4447,7 +4453,7 @@
             return {
                 id: handle.name,
                 name: handle.name.replace(/^\d+\.\s*/, ''),
-                ingItems, ingItemsTodos: ingTodos, actItems, ingFolder, actFolder, budgetFolder, preliminarFolder,
+                ingItems, ingItemsTodos: ingTodos, actItems, ingFolder, actFolder, budgetFolder, preliminarFolder, contractualFolder,
                 orFolder, retieFolder, dossierFolder,
                 informeFile, informeFound: !!informeFile,
                 info: infoProyecto,
@@ -5160,9 +5166,9 @@
                 }
                 // Memoria de Cálculo (inciso 15): se puede generar en PDF desde el formulario.
                 const generarMem = item.id === '15.'
-                    ? `<button onclick="abrirMemoriaCalculo('${p.id}')" class="btn-action btn-upload" title="Genera la memoria con los datos del proyecto">Generar</button>`
+                    ? `<button onclick="abrirGenerarIngenieria('${p.id}')" class="btn-action btn-upload" title="Abre Generar ingeniería (memoria de cálculo y demás)">Generar</button>`
                     : item.id === '17.'
-                        ? `<button onclick="abrirPlanMantenimiento('${p.id}')" class="btn-action btn-upload" title="Genera el plan de mantenimiento con los datos del proyecto">Generar</button>` : '';
+                        ? `<button onclick="abrirGenerarIngenieria('${p.id}')" class="btn-action btn-upload" title="Abre Generar ingeniería (plan de mantenimiento y demás)">Generar</button>` : '';
                 // Ítems normales de Bóveda Técnica: solo se detectan/suben a mano, sin plantilla.
                 // Si el inciso admite varios archivos (2., 2.1, 2.2...), "Subir" sigue
                 // disponible aunque ya haya uno, y cada archivo tiene su propio botón.

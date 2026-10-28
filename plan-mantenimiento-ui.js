@@ -108,6 +108,8 @@
         } finally { btn.disabled = false; btn.textContent = 'Generar Plan PDF'; }
     };
 
+    window.__pmApi = { datosDe, guardarPdf };
+
     // Sin preguntar nada: para el botón único "Generar ingeniería". Devuelve el nombre del archivo o null.
     window.generarPlanMantenimientoAuto = async (projectId) => {
         const d = await datosDe(projectId);

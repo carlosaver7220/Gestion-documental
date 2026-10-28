@@ -5,7 +5,11 @@
  * documentos de esos equipos hacia 1. INGENIERIA DE DETALLE y genera las
  * declaraciones de Diseño (5) y Construcción (5.1) si todavía no existen.
  *
- * Los documentos salen de la biblioteca:
+ * También trae de la carpeta contractual del proyecto (0. DOCUMENTACION CONTRACTUAL) la cédula (6),
+ * el certificado de tradición y libertad (7) y la disponibilidad del transformador (10) si están ahí, y
+ * de la biblioteca GENERAL el certificado de experiencia del constructor (12).
+ *
+ * Los documentos de equipos salen de la biblioteca:
  *   3. SEING / 1. DOCUMENTACION OR / 0. BIBLIOTECA POR EQUIPO /
  *       INVERSORES / <equipo> /   2. CERTIFICADO..., 3-4. Declaracion CNO...,
  *                                 8. FICHA TÉCNICA..., 8.2. MANUAL...
@@ -64,6 +68,39 @@
         return null;
     }
 
+    // Clasifica por el nombre (los proyectos numeran distinto: "1. CC ...", "5. CTL ...", "CC Normedys...").
+    async function traerContractuales(p, info) {
+        const folder = p.contractualFolder;
+        if (!folder || !p.ingFolder) return [];
+        const proyecto = limpiarNombreProyecto(p.name);
+        const archivos = [];
+        for await (const f of folder.values()) if (f.kind === 'file' && !/^desktop\.ini$/i.test(f.name) && !/^~\$/.test(f.name)) archivos.push(f);
+        const n = (f) => norm(f.name);
+        const esPdf = (f) => /\.pdf$/i.test(f.name);
+        const imagen = (f) => /\.(jpe?g|png)$/i.test(f.name);
+        const cedula = (f) => /(^|[^a-z])(cc|cedula)([^a-z]|$)/.test(n(f)) && !/poliza|rut|camara/.test(n(f));
+        const ctl = (f) => !cedula(f) && /(^|[^a-z])ctl([^a-z]|$)|tradicion|libertad/.test(n(f));
+        const disp = (f) => /disponibilidad/.test(n(f));
+        const util = (f) => esPdf(f) || imagen(f);
+        const copiados = [];
+        const copiar = async (inc, lista) => {
+            const item = (p.ingItemsTodos || []).find(i => i.id === inc);
+            if (!item || item.found || !lista.length) return;
+            const { texto } = nombreBoveda(inc, info, proyecto);
+            const archivosF = []; for (const h of lista) archivosF.push(await h.getFile());
+            const exts = archivosF.map(a => (a.name.match(/\.[^.]+$/) || ['.pdf'])[0].toLowerCase());
+            const nombres = nombresParaSubida(item, texto, exts);
+            for (let k = 0; k < archivosF.length; k++) { await guardarArchivo(p.ingFolder, nombres[k], archivosF[k]); copiados.push(nombres[k]); }
+            item.found = true;
+        };
+        // Si el mismo documento está en PDF y en imagen, se prefiere el PDF.
+        const preferirPdf = (l) => (l.some(esPdf) ? l.filter(esPdf) : l);
+        await copiar('6.', preferirPdf(archivos.filter(f => util(f) && cedula(f))).sort((a, b) => a.name.localeCompare(b.name)));
+        await copiar('7.', preferirPdf(archivos.filter(f => util(f) && ctl(f))).sort((a, b) => b.name.localeCompare(a.name)).slice(0, 1));
+        await copiar('10.', archivos.filter(f => util(f) && disp(f)).slice(0, 1));
+        return copiados;
+    }
+
     async function sincronizarDocumentosEquipo(projectId, opts) {
         opts = opts || {};
         const avisar = (m) => { if (opts.avisar) showToast(m); else console.info('[equipos]', m); };
@@ -84,7 +121,7 @@
             ['PANELES', reglaPara(REGLAS.PANELES, `${info.marcaPaneles || ''} ${info.referenciaPanel || ''}`)]
         ].filter(([, r]) => r);
 
-        let copiados = 0;
+        let copiados = 0; const detalle = [];
         for (const [tipo, regla] of equipos) {
             const dirTipo = await entrar(biblioteca, tipo);
             const dirEquipo = dirTipo && await entrar(dirTipo, regla.carpeta);
@@ -96,9 +133,27 @@
                 if (!item || item.found) continue;                 // el inciso ya tiene archivo: no se toca
                 await guardarArchivo(p.ingFolder, f.name, await f.getFile());
                 item.found = true;                                  // evita repetir si dos archivos caen en el mismo inciso
-                copiados++;
+                copiados++; detalle.push(f.name);
             }
         }
+
+        // Documentos generales (los mismos en todos los proyectos): certificado de experiencia del constructor.
+        try {
+            const general = await entrar(biblioteca, 'GENERAL');
+            if (general) for await (const f of general.values()) {
+                if (f.kind !== 'file' || /^desktop\.ini$/i.test(f.name)) continue;
+                const item = (p.ingItemsTodos || []).find(c => archivosDelItem(c, [{ n: f.name }]).length > 0);
+                if (!item || item.found) continue;
+                await guardarArchivo(p.ingFolder, f.name, await f.getFile());
+                item.found = true; copiados++; detalle.push(f.name);
+            }
+        } catch (e) { console.warn('GENERAL:', e); }
+
+        // Cédula (6), CTL (7) y disponibilidad del transformador (10) desde la carpeta contractual del proyecto.
+        try {
+            const r = await traerContractuales(p, info);
+            copiados += r.length; detalle.push(...r);
+        } catch (e) { console.warn('Carpeta contractual:', e); }
 
         // Declaraciones de diseño (5) y construcción (5.1): se generan una sola vez; después es "Regenerar".
         let generadas = 0;
@@ -121,7 +176,7 @@
         } else if (opts.avisar) {
             showToast(equipos.length ? 'Ingeniería ya tiene los documentos de estos equipos.' : 'Faltan el inversor, la batería o los paneles en Datos del Proyecto (o no están en la biblioteca).');
         }
-        return { copiados, generadas };
+        return { copiados, generadas, detalle };
     }
 
     window.sincronizarDocumentosEquipo = sincronizarDocumentosEquipo;
