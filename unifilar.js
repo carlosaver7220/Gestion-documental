@@ -411,7 +411,7 @@
             const o = i.o, col = o.color || NEGRO;
             const fc = Array.isArray(o.fill) ? o.fill : col;
             doc.setDrawColor(col[0], col[1], col[2]); doc.setFillColor(fc[0], fc[1], fc[2]);
-            doc.setLineWidth(o.w || 0.5);
+            doc.setLineWidth(o.w || 0.5); doc.setLineCap(o.dash ? 0 : 2); doc.setLineJoin(0);
             doc.setLineDashPattern(o.dash ? [2.2, 1.4] : [], 0);
             if (i.t === 'l') doc.line(i.x1, i.y1, i.x2, i.y2);
             else if (i.t === 'r') doc.rect(i.x, i.y, i.w, i.h, o.fill ? 'F' : 'S');
@@ -438,7 +438,9 @@
     // ------------------------------------------------------------
     function toDXF(d) {
         const out = [];
-        const g = (c, v) => { out.push(String(c)); out.push(String(v)); };
+        // R2000 no lee UTF-8: todo carácter no ASCII va como \U+XXXX, que AutoCAD sí entiende
+        const asc = (v) => String(v).replace(/[^\x20-\x7e]/g, (c) => '\\U+' + c.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0'));
+        const g = (c, v) => { out.push(String(c)); out.push(typeof v === 'string' ? asc(v) : String(v)); };
         const Y = (y) => (d.hoja.h - y).toFixed(3);
         const X = (x) => x.toFixed(3);
         let hnd = 0x100;
