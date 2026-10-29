@@ -763,23 +763,34 @@
     // Cables ortogonales: donde una horizontal cruza una vertical de otro cable, salta con un arco
     function cablesConSaltos(d, cables) {
         const segs = [];
-        cables.forEach((c, ci) => { for (let k = 0; k < c.pts.length - 1; k++) segs.push({ ci, a: c.pts[k], b: c.pts[k + 1], o: c.o || {} }); });
+        cables.forEach((c, ci) => { for (let k = 0; k < c.pts.length - 1; k++) segs.push({ ci, a: c.pts[k], b: c.pts[k + 1], o: c.o || {}, sv: !!c.saltaV }); });
+        const arcoH = (x, y, r) => { const q = []; for (let t = 0; t <= 6; t++) { const w = Math.PI * t / 6; q.push([x - r * Math.cos(w), y - r * Math.sin(w)]); } return q; };
+        const arcoV = (x, y, r) => { const q = []; for (let t = 0; t <= 6; t++) { const w = Math.PI * t / 6; q.push([x - r * Math.sin(w), y - r * Math.cos(w)]); } return q; };
         segs.forEach(sg => {
             const x1 = sg.a[0], y1 = sg.a[1], x2 = sg.b[0], y2 = sg.b[1];
-            if (Math.abs(y1 - y2) > 0.01) { d.line(x1, y1, x2, y2, sg.o); return; }
+            if (Math.abs(y1 - y2) > 0.01) {                       // vertical
+                if (!sg.sv) { d.line(x1, y1, x2, y2, sg.o); return; }
+                const x = x1, ya = Math.min(y1, y2), yb = Math.max(y1, y2), cruces = [];
+                segs.forEach(o2 => {
+                    if (o2.ci === sg.ci || Math.abs(o2.a[1] - o2.b[1]) > 0.01) return;
+                    const v = o2.a[1], xa = Math.min(o2.a[0], o2.b[0]), xb = Math.max(o2.a[0], o2.b[0]);
+                    if (v > ya + 2.5 && v < yb - 2.5 && x > xa + 0.5 && x < xb - 0.5) cruces.push(v);
+                });
+                cruces.sort((p, q) => p - q);
+                let cur = ya;
+                cruces.forEach(v => { d.line(x, cur, x, v - 1.8, sg.o); d.poly(arcoV(x, v, 1.8), sg.o); cur = v + 1.8; });
+                d.line(x, cur, x, yb, sg.o);
+                return;
+            }
             const y = y1, xa = Math.min(x1, x2), xb = Math.max(x1, x2), cruces = [];
             segs.forEach(o2 => {
-                if (o2.ci === sg.ci || Math.abs(o2.a[0] - o2.b[0]) > 0.01) return;
+                if (o2.ci === sg.ci || o2.sv || Math.abs(o2.a[0] - o2.b[0]) > 0.01) return;
                 const u = o2.a[0], ya = Math.min(o2.a[1], o2.b[1]), yb = Math.max(o2.a[1], o2.b[1]);
                 if (u > xa + 2.5 && u < xb - 2.5 && y > ya + 0.5 && y < yb - 0.5) cruces.push(u);
             });
             cruces.sort((p, q) => p - q);
             let cur = xa;
-            cruces.forEach(u => {
-                d.line(cur, y, u - 1.8, y, sg.o);
-                const arco = []; for (let t = 0; t <= 6; t++) { const q = Math.PI * t / 6; arco.push([u - 1.8 * Math.cos(q), y - 1.8 * Math.sin(q)]); }
-                d.poly(arco, sg.o); cur = u + 1.8;
-            });
+            cruces.forEach(u => { d.line(cur, y, u - 1.8, y, sg.o); d.poly(arcoH(u, y, 1.8), sg.o); cur = u + 1.8; });
             d.line(cur, y, xb, y, sg.o);
         });
     }
@@ -821,7 +832,7 @@
         // ---------- bloques de inversor ----------
         const bl = D.inversores.map((inv, k) => construirHibrido(Object.assign({}, D, {
             inversores: [inv], calc: Object.assign({}, C, { regAC: [C.regAC[k] || C.regAC[0]] }),
-            _bloque: true, _numInv: k + 1, _etiqInv: `INVERSOR ${k + 1}`, _xTierra: 536
+            _bloque: true, _numInv: k + 1, _etiqInv: `INVERSOR ${k + 1}`, _xTierra: 534
         })));
         const bb = bl.map(b => b.d.bbox());
         const dy = [0];
@@ -902,78 +913,97 @@
         }
         d.text(390, P[0].bBot + 6, 'Comunicación', { size: 3.2 });
 
-        // ---------- tablero AC SSFV (compacto) ----------
-        // Los cables de cada inversor llegan por unos pasillos verticales a la izquierda del tablero y entran por
-        // filas propias entre los dos barrajes: los de red suben a su breaker, los de carga bajan al suyo.
-        const yBU = P[0].yL - 38;
-        const eG = P.map((_, k) => yBU + 36 + 6 * k);
-        const eL = P.map((_, k) => yBU + 36 + 6 * N + 8 + 6 * (N - 1 - k));
-        const yBL = eL[0] + 28;
-        const xg = P.map((_, k) => 568 + 32 * k), xl = P.map((_, k) => 708 + 32 * k);
-        const xE1 = 684, xE2 = 694.4, xC = 689.2, xLm = xl[Math.floor(N / 2)], xRb = 642.8, xGc = 800 + 32 * Math.max(0, N - 3);
-        const yS = yBL + 34, yOut = yS + 41, yPE = yOut + 16;
-        const xRect0 = 548, xRect1 = xl[N - 1] + 34;
-        d.rect(xRect0, yBU - 40, xRect1 - xRect0, yPE + 24 - (yBU - 40), { color: ROJO, w: 0.5, layer: 'TABLERO' });
-        d.line(556, yBU, xE1 + 4, yBU, { w: 2.2, color: NARANJA });
-        d.text(556, yBU - 3, `BARRAJE 160A - ${vac}V`, { size: 4 }); d.text(556, yBU - 7.2, `${nF}F - 4H`, { size: 4 });
-        S.breaker(d, xRb, yBU - 30);
-        lineas(d, xRb + 4.5, yBU - 26, ['Interruptor', 'termomagnético', 'red', `${nF}X${brkTot}A - 10kA`], { size: 3.2, gap: 3.6 });
-        d.line(xRb, yBU - 19, xRb, yBU);
-        d.line(xl[0] - 12, yBL, xl[N - 1] + 12, yBL, { w: 2.2, color: NARANJA });
-        d.text(xl[0] - 12, yBL + 7, `BARRAJE 160A - ${vac}V`, { size: 3.4 }); d.text(xl[0] - 12, yBL + 11, `${nF}F - 4H`, { size: 3.4 });
-        // pasillos (x) de cada cable: arriba de la franja de entradas, el cable más alto queda más a la derecha; abajo, el más bajo
-        const bandaMid = (eG[0] + eL[0]) / 2;
-        const lista = [];
-        P.forEach((p, k) => { lista.push({ tipo: 'G', k, y: p.yG }); lista.push({ tipo: 'L', k, y: p.yL }); });
-        const arriba = lista.filter(w => w.y < bandaMid).sort((a, b) => a.y - b.y);
-        const abajo = lista.filter(w => w.y >= bandaMid).sort((a, b) => b.y - a.y);
-        arriba.forEach((w, j) => { w.xc = 534 - 6 * j; });
-        abajo.forEach((w, j) => { w.xc = 531 - 6 * j; });
-        lista.forEach(w => {
-            const k = w.k, p = P[k];
-            if (w.tipo === 'G') cables.push({ pts: [[422.4, w.y], [w.xc, w.y], [w.xc, eG[k]], [xg[k], eG[k]], [xg[k], yBU + 15]], o: NEGRO_O });
-            else cables.push({ pts: [[422.4, w.y], [w.xc, w.y], [w.xc, eL[k]], [xl[k], eL[k]], [xl[k], yBL - 15]], o: NEGRO_O });
-        });
-        P.forEach((p, k) => {
-            d.line(xg[k], yBU, xg[k], yBU + 4); S.breaker(d, xg[k], yBU + 4);
-            lineas(d, xg[k] + 4, yBU + 12, ['Interruptor', 'termomagnético', 'red SSFV', `${nF}X${brkK(k)}A - 10kA`], { size: 3.1, gap: 3.5 });
-            S.breaker(d, xl[k], yBL - 15); d.line(xl[k], yBL - 4, xl[k], yBL);
-            lineas(d, xl[k] + 4, yBL - 17, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brkK(k)}A - 10kA`], { size: 3.1, gap: 3.5 });
-        });
-        // breaker general de carga hacia el selector (Estado 2 Solar) y red directa (Estado 1)
-        d.line(xLm, yBL, xLm, yBL + 4); S.breaker(d, xLm, yBL + 4);
-        lineas(d, xLm + 4, yBL + 12, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brkTot}A - 10kA`], { size: 3.1, gap: 3.5 });
-        cables.push({ pts: [[xLm, yBL + 15], [xLm, yBL + 24], [xE2, yBL + 24], [xE2, yS]], o: NEGRO_O });
-        cables.push({ pts: [[xE1, yBU], [xE1, yS]], o: NEGRO_O });
-        // selector de transferencia
-        d.rect(xE1 - 2.6, yS, xE2 - xE1 + 5.2, 19, { w: 0.4 });
-        S.cuadrado(d, xE1, yS, 2); S.cuadrado(d, xE2, yS, 2); S.cuadrado(d, xC, yS + 19, 2);
-        d.line(xE1, yS, xE1, yS + 9); d.line(xE2, yS, xE2, yS + 6);
-        d.line(xC, yS + 19, xC, yS + 13); d.line(xC, yS + 13, xE2 - 0.3, yS + 6.6);
-        d.text(xE1 - 1.6, yS - 5.4, 'Estado 1', { size: 2.6, align: 'right' }); d.text(xE1 - 1.6, yS - 2.6, 'Red', { size: 2.6, align: 'right' });
-        d.text(xE2 + 1.6, yS - 5.4, 'Estado 2', { size: 2.6 }); d.text(xE2 + 1.6, yS - 2.6, 'Solar', { size: 2.6 });
-        d.text(xC - 1.8, yS + 22.6, 'Estado 3', { size: 2.6, align: 'right' }); d.text(xC - 1.8, yS + 25.4, 'Común', { size: 2.6, align: 'right' });
-        lineas(d, xE2 + 6, yS + 7, ['Selector de', 'transferencia', 'de 3 posiciones'], { size: 3.6, gap: 4.2 });
+        // ---------- tablero AC SSFV: copiado del plano de referencia (Lorena Ocampo) ----------
+        // Barraje de red arriba con un breaker "red SSFV" por inversor; barraje de carga con un breaker "load SSFV"
+        // por inversor y un breaker general hacia el selector de transferencia (Estado 2 Solar); Estado 1 Red baja del
+        // barraje de arriba. Los cables de cada inversor llegan por pasillos a la izquierda y entran por filas propias.
+        const tf_ = 0.3, xB = 540.8, yBU = P[0].yL + 73.6;
+        const tx = (X) => xB + (X - 8097) * tf_, ty = (Y) => yBU + (15482 - Y) * tf_;
+        const Xg = (j) => 8252 + 85.5 * j, Xl = (i) => 8507 + 90.5 * i;
+        const xRectR = Math.max(8760, Xl(N - 1) + 73), xBusUR = Math.max(8475, Xg(N - 1) + 52), xBusLR = Xl(N - 1) + 10;
+        const Xm = Xl(0) + 11, XE1 = 8469, XE2 = 8518, XC = 8494;
+        const xLB = tx(xRectR) + 100, wLB = 142 * tf_;
+        const brk2 = (X, Yb) => {
+            d.line(tx(X), ty(Yb), tx(X), ty(Yb + 26.1)); d.line(tx(X), ty(Yb + 26.1), tx(X - 15.1), ty(Yb + 52.5));
+            d.line(tx(X - 4.7), ty(Yb + 47.8), tx(X + 4.7), ty(Yb + 57.2)); d.line(tx(X - 4.7), ty(Yb + 57.2), tx(X + 4.7), ty(Yb + 47.8));
+            d.line(tx(X), ty(Yb + 52.5), tx(X), ty(Yb + 79));
+        };
+        // texto en bloque: la última línea queda con su base en Ybase; alineado al centro o a la izquierda
+        const bloqueT = (X, Ybase, arr, o) => { const gp = o.gap, n = arr.length; arr.forEach((t, i) => d.text(tx(X), ty(Ybase) - (n - 1 - i) * gp, t, { size: o.size, align: o.align })); };
+        // rectángulo del tablero y barrajes
+        d.rect(tx(8097), ty(15558), (xRectR - 8097) * tf_, (15558 - 14890) * tf_, { color: ROJO, w: 0.5, layer: 'TABLERO' });
+        d.rect(tx(8243), ty(15489), (xBusUR - 8243) * tf_, 7 * tf_, { w: 0.4, color: NARANJA, fill: NARANJA });
+        d.rect(tx(8496), ty(15216), (xBusLR - 8496) * tf_, 7 * tf_, { w: 0.4, color: NARANJA, fill: NARANJA });
+        bloqueT(8243, 15496, ['BARRAJE 160A - 240V', '2F - 4H'].map(t => t.replace('240V', vac + 'V').replace('2F', nF + 'F')), { size: 3.1, gap: 3.4, align: 'left' });
+        bloqueT(8604, 15189, ['BARRAJE 160A - 240V', '2F - 4H'].map(t => t.replace('240V', vac + 'V').replace('2F', nF + 'F')), { size: 3.1, gap: 3.4, align: 'left' });
+        bloqueT(8100, 15516, ['TABLERO AC SSFV', `BARRAJE ${nF}F`], { size: 5, gap: 5.8, align: 'left' });
+        // acometida: breaker "red" sobre el barraje (la línea llega por arriba)
+        const xRb2 = tx(8437);
+        brk2(8437, 15489);
+        bloqueT(8474, 15513 + 6, ['Interruptor', 'termomagnético', 'red', `${nF}X${brkTot}A - 10kA`], { size: 2.9, gap: 3.3, align: 'center' });
+        // breakers red SSFV (cuelgan del barraje de arriba) y load SSFV (sobre el de abajo)
+        for (let j = 0; j < N; j++) {
+            brk2(Xg(j), 15403);
+            bloqueT(Xg(j) - 48, 15423 + 4, ['Interruptor', 'termomagnético', 'red SSFV', `${nF}X${brkK(j)}A - 10kA`], { size: 2.9, gap: 3.3, align: 'center' });
+        }
+        for (let i = 0; i < N; i++) {
+            brk2(Xl(i), 15216);
+            bloqueT(Xl(i) + 58, 15247 + 4, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brkK(N - 1 - i)}A - 10kA`], { size: 2.9, gap: 3.3, align: 'center' });
+        }
+        // breaker general de carga -> Estado 2 del selector
+        brk2(Xm, 15131);
+        bloqueT(Xm + 38, 15159 + 4, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brkTot}A - 10kA`], { size: 2.9, gap: 3.3, align: 'center' });
+        d.line(tx(Xm), ty(15131), tx(Xm), ty(15128));
+        // selector de transferencia (misma figura del bloque del plano)
+        d.rect(tx(8457), ty(15128), 73 * tf_, 90 * tf_, { w: 0.4 });
+        [[XE1, 15128], [XE2, 15128], [XC, 15038]].forEach(([X, Y]) => d.circle(tx(X), ty(Y), 0.9, { fill: NEGRO }));
+        d.line(tx(8476), ty(15128), tx(8476), ty(15110)); d.line(tx(XE1), ty(15110), tx(XE2), ty(15110));
+        d.line(tx(XE1), ty(15110), tx(XE1), ty(15081)); d.line(tx(XE2), ty(15110), tx(XE2), ty(15081));
+        d.line(tx(XC), ty(15041), tx(XC), ty(15064)); d.line(tx(XC), ty(15064), tx(8470), ty(15079));
+        bloqueT(8466, 15135 + 4, ['Estado 1', 'Red'], { size: 2.6, gap: 3, align: 'center' });
+        bloqueT(8554, 15133 + 4, ['Estado 2', 'Solar'], { size: 2.6, gap: 3, align: 'center' });
+        bloqueT(8483, 15017 + 4, ['Estado 3', 'Común'], { size: 2.6, gap: 3, align: 'center' });
+        bloqueT(8540, 15057 + 6, ['Selector de', 'transferencia', 'de 3 posiciones'], { size: 4.2, gap: 4.8, align: 'left' });
         // salida a cargas
-        d.line(xC, yS + 19, xC, yOut); d.line(xC, yOut, xGc, yOut);
-        d.rect(xGc, yOut - 15, 30, 30, { w: 1.2 }); d.poly([[xGc, yOut + 15], [xGc + 30, yOut - 15], [xGc + 30, yOut + 15]], { closed: true, fill: NEGRO });
-        d.text(xGc + 15, yOut + 20, 'Tablero de distribución', { size: 3.4, align: 'center' }); d.text(xGc + 15, yOut + 24, 'de cargas', { size: 3.4, align: 'center' });
-        lineas(d, xC + 30, yOut + 4, [`${nF}XNo.${awgAc} AWG Cu. THHN/THWN-2 (F)`, `Conducto: ${acCanal}`, `Distancia: ${dist.tableroGeneral}m`], { size: 3.1, gap: 3.5 });
-        // barraje de tierra y electrodo; la tierra de cada bloque llega por un tronco a la izquierda
-        d.line(556, yPE, 656, yPE, { w: 1.6, color: NARANJA }); d.text(558, yPE - 2, 'Barraje de Tierra', { size: 2.8 }); d.text(636, yPE - 2, 'Icc >= 6kA', { size: 2.8 });
-        const yTmax = Math.max(yPE, P[N - 1].yTierra);
-        cables.push({ pts: [[536, P[0].yTierra], [536, yTmax]], o: VERDE_O });
-        cables.push({ pts: [[536, yPE], [556, yPE]], o: VERDE_O });
-        S.tierra(d, 662, yPE + 1.2, { w: 0.6, color: [0, 110, 0] });
-        d.line(596, yPE, 596, yPE + 32, VERDE_O); S.tierra(d, 596, yPE + 32, { w: 1.6 }); S.cond(d, 596, yPE + 14, true, { t: true });
-        d.text(605, yPE + 18, '1XNo. 8 AWG (T)', { size: 3.1 }); d.text(609, yPE + 36, 'ELECTRODO DE PUESTA A TIERRA,', { size: 4 }); d.text(609, yPE + 41, 'VARILLA COPPERWELD 3/8 - 2.4m', { size: 4 });
-        d.text(xRect1 - 100, yPE + 8, 'TABLERO AC SSFV', { size: 4.2 }); d.text(xRect1 - 100, yPE + 12.5, `BARRAJE ${nF}F`, { size: 4.2 });
+        d.rect(xLB, ty(15052), wLB, 71 * tf_, { w: 0.5 });
+        d.poly([[xLB, ty(14981)], [xLB + wLB, ty(14981)], [xLB + wLB, ty(15052)]], { closed: true, fill: NEGRO });
+        d.text(xLB + wLB / 2, ty(15059) + 1, 'Tablero de distribución', { size: 3.6, align: 'center' }); d.text(xLB + wLB / 2, ty(15059) + 5.2, 'de cargas', { size: 3.6, align: 'center' });
+        d.line(tx(XC), ty(15035), tx(XC), ty(15016));
+        d.line(tx(XC), ty(15016), xLB, ty(15016));
+        lineas(d, tx(8760) + 12, ty(15016) + 4, [`${nF}XNo.${awgAc} AWG Cu. THHN/THWN-2 (F)`, `Conducto: ${acCanal}`, `Distancia: ${dist.tableroGeneral}m`], { size: 2.6, gap: 3 });
+        // barraje de tierra, electrodo y tierra del tablero de cargas
+        const yPE2 = ty(15029);
+        d.rect(tx(8120), yPE2 - 0.3, 95 * tf_, 0.6, { w: 0.5, color: NARANJA, fill: NARANJA });
+        d.text(tx(8138), yPE2 - 1.4, 'Barraje de Tierra', { size: 2.4 }); d.text(tx(8200), yPE2 + 3.4, 'Icc >= 6kA', { size: 2.4 });
+        S.tierra(d, tx(8250), yPE2 + 0.4, { w: 0.5, color: [0, 110, 0] });
+        const xEl = tx(8166);
+        d.line(xEl, yPE2, xEl, yPE2 + 22, VERDE_O); S.tierra(d, xEl, yPE2 + 22, { w: 1.4 }); S.cond(d, xEl, yPE2 + 9, true, { t: true });
+        d.text(xEl + 6, yPE2 + 13, '1XNo. 8 AWG (T)', { size: 2.6 }); d.text(xEl + 9, yPE2 + 26, 'ELECTRODO DE PUESTA A TIERRA,', { size: 3.4 }); d.text(xEl + 9, yPE2 + 30.6, 'VARILLA COPPERWELD 3/8 - 2.4m', { size: 3.4 });
+        cables.push({ pts: [[xLB + wLB - 8, ty(14981)], [xLB + wLB - 8, ty(14901)], [tx(8195), ty(14901)], [tx(8195), yPE2]], o: VERDE_O });
+        S.cond(d, tx(9090), ty(14901), false, { t: true }); d.text(tx(9053), ty(14901) + 4.6, '1XNo. 10AWG (T)', { size: 2.6 });
+        cables.push({ pts: [[534, P[0].yTierra], [534, Math.max(yPE2, P[N - 1].yTierra)]], o: VERDE_O });
+        cables.push({ pts: [[534, yPE2], [tx(8120), yPE2]], o: VERDE_O });
+        // Estado 1 Red: baja del barraje de arriba (salta sobre los cables que cruza)
+        cables.push({ pts: [[tx(XE1), ty(15482)], [tx(XE1), ty(15131)]], o: NEGRO_O, saltaV: true });
+        // cables de los inversores: de su puerto al pasillo, del pasillo a su fila y de la fila a su breaker
+        const filas = [];
+        for (let j = 0; j < N; j++) {
+            filas.push({ port: P[j].yG, lv: ty(15403 - 22 * j), pts: [[tx(Xg(j)), ty(15403)], [tx(Xg(j)), ty(15403 - 22 * j)]], x: tx(Xg(j)) });
+            const i = N - 1 - j, lvL = i === N - 1 ? ty(15744) : ty(15295 + 40 * i);
+            filas.push({ port: P[j].yL, lv: lvL, pts: [[tx(Xl(i)), ty(15295)], [tx(Xl(i)), lvL]], x: tx(Xl(i)) });
+        }
+        const sube = filas.filter(w => w.port < w.lv).sort((a, b) => b.lv - a.lv), baja = filas.filter(w => w.port >= w.lv).sort((a, b) => a.lv - b.lv);
+        [...sube, ...baja].forEach((w, q) => { w.xc = 496 + 4.5 * q; });
+        filas.forEach(w => {
+            const dentro = w.pts[0], fin = w.pts[1];
+            cables.push({ pts: [[422.4, w.port], [w.xc, w.port], [w.xc, w.lv], [fin[0], fin[1]], [dentro[0], dentro[1]]], o: NEGRO_O });
+        });
 
         cablesConSaltos(d, cables);
 
         // ---------- red (arriba a la derecha) ----------
         const dAll = -150;
-        bloqueRedHibrido(D, r, yBU - 30 + dAll);
+        bloqueRedHibrido(D, r, ty(15568) + dAll);
         desplazar(d, dAll);
         r.it.forEach(i => d.it.push(i));
         d.it.forEach(i => {
