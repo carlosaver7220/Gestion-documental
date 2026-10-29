@@ -177,9 +177,9 @@
                   <label class="meml">Código del trafo<input id="unCodigo" class="memi"></label>
                   <label class="meml">Matrícula del trafo<input id="unMatricula" class="memi"></label>
                   <label class="meml">Acometida existente (AWG)<input id="unAwgAco" type="number" class="memi" value="8"></label>
-                  <label class="meml">Canalización AC<select id="unAcTipo" class="memi"><option>EMT</option><option>IMC</option><option>Bandeja</option></select></label>
+                  <label class="meml">Canalización AC<select id="unAcTipo" class="memi"><option>EMT</option><option>IMC</option><option>PVC</option><option>PVC empotrado</option><option>Bandeja</option></select></label>
                   <label class="meml">Diámetro AC<input id="unAcDim" class="memi" value='1"'></label>
-                  <label class="meml">Canalización DC<select id="unDcTipo" class="memi"><option>IMC</option><option>EMT</option><option>Bandeja</option></select></label>
+                  <label class="meml">Canalización DC<select id="unDcTipo" class="memi"><option>IMC</option><option>EMT</option><option>PVC</option><option>PVC empotrado</option><option>Bandeja</option></select></label>
                   <label class="meml">Diámetro DC<input id="unDcDim" class="memi" value='1"'></label>
                   <label class="meml">Caja de paso → inversor (m)<input id="unDistCaja" type="number" step="0.1" class="memi" value="1.7"></label>
                   <label class="meml">Inversor → tablero AC (m)<input id="unDistInv" type="number" step="0.1" class="memi" value="1.5"></label>

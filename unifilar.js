@@ -85,7 +85,7 @@
                 if (vertical) { a = [x - 2.6, y + p + 1.4]; b = [x + 2.6, y + p - 1.4]; } else { a = [x + p - 1.4, y + 2.6]; b = [x + p + 1.4, y - 2.6]; }
                 d.line(a[0], a[1], b[0], b[1], { w: 0.3 });
                 if (tipo === 'n') d.circle(b[0] + (vertical ? 0.2 : 0.5), b[1] - (vertical ? 0.8 : 0.6), 0.7, { w: 0.25 });
-                if (tipo === 't') d.line(b[0] - (vertical ? 0.2 : 1.2), b[1], b[0] + (vertical ? 1.8 : 1.2), b[1], { w: 0.3 });
+                if (tipo === 't') d.line(b[0] - (vertical ? 0.6 : 1.4), b[1], b[0] + (vertical ? 2.8 : 1.4), b[1], { w: 0.3 });
             });
         },
         // dos cables de un string: raya roja con "+" y raya gris con "|"
@@ -122,6 +122,11 @@
             d.poly([[x - 2.6, y + 4.2], [x + 2.6, y + 4.2], [x, y]], { closed: true, w: 0.2, fill: [150, 150, 205], color: [150, 150, 205] });
         }
     };
+
+    // "Tubería metálica IMC de 1"" / "Tubería PVC empotrada de 1""
+    function txtTubo(tipo, dim) {
+        return /pvc/i.test(tipo) ? `Tubería ${/empotr/i.test(tipo) ? 'PVC empotrada' : 'PVC'} de ${dim}` : `Tubería metálica ${tipo} de ${dim}`;
+    }
 
     function lineas(d, x, y, arr, o) {
         o = o || {}; const gap = o.gap || (o.size || 3.7) * 1.17;
@@ -571,6 +576,7 @@
         inv.strings.forEach(s => { for (let k = 0; k < s.paralelos; k++) rows.push({ mppt: s.mppt, series: s.series, largo: s.longitud }); });
         rows.forEach((r, k) => { r.y = 360.8 + SP * k; });
         const yFirst = rows[0].y, yLast = rows[rows.length - 1].y, nStr = rows.length;
+        const yG = yLast + 88, yG0 = yG;
         rows.forEach((r, k) => {
             const col = COLOR_STRING[k % COLOR_STRING.length], y = r.y;
             d.text(31.8, y - 8, `STRING ${k + 1} - ${r.series} MODULOS ${P.pmax}W`, { size: 4.2, color: col });
@@ -579,22 +585,29 @@
             d.line(62.7, y, 170.9, y); S.polar(d, 78, y);
             lineas(d, 65, y + 9, ['Cable Fotovoltaico', `2x#${C.cablePV.match(/(\d+)mm/)[1]}mm²/XLPE`], { size: 3.3, gap: 3.9 });
             S.cuadrado(d, 170.9, y, 3); S.cuadrado(d, 206.5, y, 3);
-            d.rect(176.6, y - 7.9, 21.4, 16.6, { w: 0.4 }); S.fusible(d, 180, y - 3.2, 14.6, 6.4);
-            d.text(175.9, y + 12.6, '2XFUSIBLE 20A', { size: 3.3 });
+            d.line(170.9, y, 179, y); d.line(198, y, 206.5, y);
+            d.rect(179, y - 7.9, 19, 16.6, { w: 0.4 }); S.fusible(d, 181, y - 3.2, 15, 6.4);
+            d.text(178.5, y + 12.6, '2XFUSIBLE 20A', { size: 3.3 });
+            d.line(27.5, y - 7.4 + hMod / 2, 31.9, y - 7.4 + hMod / 2, { color: VERDE, layer: 'TIERRA' });   // tierra de cada string
             d.line(206.5, y, 312.5, y); S.polar(d, 238, y);
             lineas(d, 247.7, y + 4.6, [`2x#${C.cablePV.match(/(\d+)mm/)[1]}mm²/XLPE`, `Imax: ${P.isc * 1.0}A`, `Conducto: ${dcCanal}`, `Distancia: ${dist.cajaInversor}m`], { size: 3.3, gap: 3.9 });
             S.cuadrado(d, 312.5, y, 3);
         });
         [[102.4, 87.5], [221.5, 206.6]].forEach(([xr, xl]) => {
-            d.rect(xr, yFirst - 3.5, 4.4, yLast - yFirst + 33.9, { w: 0.6 });
-            S.flecha(d, xr + 2.2, yLast + 31.2);
-            d.text(xl, yLast + 39.2, canal.dcBandeja ? 'Bandeja portacable' : `Tubería metálica ${canal.dcTipo} de ${canal.dcDim}`, { size: 3.6 });
+            d.rect(xr, yFirst - 4, 4.4, yLast - yFirst + 8, { w: 0.4 });
+            S.flecha(d, xr + 2.2, yLast + 5);
+            d.line(xr + 2.2, yLast + 9.5, xr + 2.2, yLast + 19, { color: [150, 150, 205], w: 0.2, dash: true, keepDash: true });
+            d.text(xr - 1, yLast + 24, canal.dcBandeja ? 'Bandeja portacable' : txtTubo(canal.dcTipo, canal.dcDim), { size: 3.6 });
         });
         const cTop = yFirst - 22.2, cBot = yLast + 27.7;
         d.rect(170.9, cTop, 35.6, cBot - cTop, { w: 0.9 });
         d.text(157.9, cTop - 9.5, 'CAJA DE PASO FV-INVERSOR', { size: 4.2 }); d.text(161, cTop - 4.8, `${nStr * 2} FUSIBLES 20A-1000VDC`, { size: 4.2 });
         S.cuadrado(d, 170.9, cTop + 4.5, 3);
-        d.circle(174.5, yLast + 21, 1.2, { fill: NEGRO }); S.tierraCirculo(d, 177.4, yLast + 21);
+        const yCt = nStr === 2 ? (yFirst + yLast) / 2 : yLast + 18;
+        d.line(175.5, cTop + 4.5, 175.5, yG0, { color: VERDE, layer: 'TIERRA' });
+        d.circle(175.5, yCt, 1.2, { fill: NEGRO }); d.line(175.5, yCt, 177.6, yCt);
+        d.circle(181.8, yCt, 4.2);
+        d.line(181.8, yCt - 2.6, 181.8, yCt - 0.3, { w: 0.4 }); d.line(179.4, yCt - 0.3, 184.2, yCt - 0.3, { w: 0.4 }); d.line(180.2, yCt + 1, 183.4, yCt + 1, { w: 0.4 }); d.line(181, yCt + 2.2, 182.6, yCt + 2.2, { w: 0.4 });
         const bTop = yFirst - 13, bBot = yLast + 76.6;
         d.rect(312.5, bTop, 109.9, bBot - bTop, { w: 0.9 });
         d.text(312.2, bTop - 1.7, 'INVERSOR', { size: 4.2 });
@@ -626,16 +639,17 @@
         etAc(439, yGrid - 24, false); etAc(439, yLoad + 6, true);
         S.cond(d, 484, yGrid, false, { f: nF, n: true }); S.cond(d, 484, yLoad, false, { f: nF, n: true, t: true });
         if (!canal.acBandeja) {
-            d.rect(428, yGrid - 28, 5, yLoad + 36 - (yGrid - 28), { w: 0.4 }); S.flecha(d, 430.5, yLoad + 36);
-            d.text(428, yLoad + 47, `Tubería metálica ${canal.acTipo} de ${canal.acDim}`, { size: 3.6 });
+            d.rect(428, yGrid - 9, 5, yLoad - yGrid + 18, { w: 0.4 }); S.flecha(d, 430.5, yLoad + 9);
+            d.line(430.5, yLoad + 13.5, 430.5, yLoad + 32, { color: [150, 150, 205], w: 0.2, dash: true, keepDash: true });
+            d.text(426, yLoad + 37, txtTubo(canal.acTipo, canal.acDim), { size: 3.6 });
         }
         // tierra del inversor: punto, círculo con el símbolo de tierra y línea verde continua
-        const yE = yLast + 56, yG = yLast + 88;
+        const yE = yLast + 56;
         d.circle(326, yE, 1.2, { fill: NEGRO }); d.line(326, yE, 328.6, yE);
         d.circle(334.4, yE, 5.8);
         d.line(334.4, yE - 3.6, 334.4, yE - 0.4, { w: 0.4 }); d.line(331.4, yE - 0.4, 337.4, yE - 0.4, { w: 0.4 }); d.line(332.4, yE + 1.2, 336.4, yE + 1.2, { w: 0.4 }); d.line(333.4, yE + 2.8, 335.4, yE + 2.8, { w: 0.4 });
         d.line(326, yE, 326, yG, { color: VERDE, layer: 'TIERRA' });
-        d.line(170.9, cTop + 4.5, 27.5, cTop + 4.5, { color: VERDE, layer: 'TIERRA' });
+        d.line(175.5, cTop + 4.5, 27.5, cTop + 4.5, { color: VERDE, layer: 'TIERRA' });
         d.line(27.5, cTop + 4.5, 27.5, yG, { color: VERDE, layer: 'TIERRA' });
         d.line(27.5, yG, 530, yG, { color: VERDE, layer: 'TIERRA' });
         d.text(121.8, cTop + 10.6, '1XNo. 10AWG (T)', { size: 3.3 }); d.text(126.4, yG + 4, '1XNo. 10AWG (T)', { size: 3.3 }); d.text(430, yG + 4, '1XNo. 10AWG (T)', { size: 3.3 });
@@ -677,14 +691,14 @@
             lineas(d, xR + 8.6, 76.2, [`2XNo.${awgAco} AWG Cu. THHN/THWN-2 (F)`, `1XNo.${awgAco} AWG Cu. THHN/THWN-2 (N)`], { size: 3.3, gap: 3.8 });
             d.rect(xR - 11.4, 84, 22.7, 20, { w: 0.75 }); d.rect(xR - 6.4, 86.5, 12.8, 4, { w: 0.4 }); d.text(xR, 99, 'kW/h', { size: 4.6, align: 'center' });
             d.rect(xR - 105.5, 80, 82.4, 42.7, { w: 0.6, color: NARANJA });
-            lineas(d, xR - 104.2, 87.4, ['EQUIPO DE MEDIDA DIRECTA', 'SE REEMPLAZA POR MEDIDOR', 'BIDIRECCIONAL CALIBRADO Y', 'HOMOLOGADO POR OPERADOR DE', 'RED Y COMERCIALIZADOR DE', 'ENERGIA'], { size: 4.9, gap: 6.7 });
+            lineas(d, xR - 104.2, 87.4, ['EQUIPO DE MEDIDA DIRECTA', 'SE REEMPLAZA POR MEDIDOR', 'BIDIRECCIONAL CALIBRADO Y', 'HOMOLOGADO POR OPERADOR DE', 'RED Y COMERCIALIZADOR DE', 'ENERGIA'], { size: 4.2, gap: 6.2 });
             d.line(xR, 104, xR, 142);
             S.cond(d, xR, 111.2, true, { f: 2, n: true });
             lineas(d, xR + 8.6, 114, [`2XNo.${awgAco} AWG Cu. THHN/THWN-2 (F)`, `1XNo.${awgAco} AWG Cu. THHN/THWN-2 (N)`], { size: 3.3, gap: 3.8 });
         })(r);
 
         // ---------- tablero AC SSFV ----------
-        const yBus = 322, xB1 = 540, xB3 = 555, xB2 = 575;
+        const yBus = 322, xB1 = 540, xB3 = 555, xB2 = 600;
         d.rect(511.9, 285, 195, 188, { color: ROJO, w: 0.5, dash: true, layer: 'TABLERO' });
         S.breaker(d, xR, 292);
         lineas(d, xR + 4.5, 296, ['Interruptor', 'termomagnético', 'red', `${nF}X${brk}A - 10kA`], { size: 3.2, gap: 3.6 });
@@ -694,21 +708,21 @@
         // red SSFV (GRID del inversor)
         d.line(xB1, yBus, xB1, yBus + 4); S.breaker(d, xB1, yBus + 4); d.line(xB1, yBus + 15, xB1, yGrid);
         d.line(xB1, yGrid, 422.4, yGrid);
-        lineas(d, xB1 - 28, yBus + 12, ['Interruptor', 'termomagnético', 'red SSFV', `${nF}X${brk}A - 10kA`], { size: 3.1, gap: 3.5 });
+        lineas(d, xB1 + 4, yBus + 12, ['Interruptor', 'termomagnético', 'red SSFV', `${nF}X${brk}A - 10kA`], { size: 3.1, gap: 3.5 });
         // load SSFV (LOAD del inversor)
         d.line(422.4, yLoad, xB3, yLoad); d.line(xB3, yLoad, xB3, yLoad + 3); S.breaker(d, xB3, yLoad + 3); d.line(xB3, yLoad + 14, xB3, 395);
         lineas(d, xB3 + 3.5, yLoad + 6, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brk}A - 10kA`], { size: 3.1, gap: 3.5 });
         // red directa al selector
         d.line(xB2, yBus, xB2, 395);
         // selector de transferencia de 3 posiciones
-        d.rect(540, 395, 58, 30, { w: 0.4 });
+        d.rect(540, 395, 82, 30, { w: 0.4 });
         S.cuadrado(d, xB3, 395, 2.4); S.cuadrado(d, xB2, 395, 2.4); S.cuadrado(d, 566, 425, 2.4);
         d.text(xB3 - 2.8, 409.5, 'Estado 2', { size: 3, align: 'right' }); d.text(xB3 - 2.8, 413, 'Solar', { size: 3, align: 'right' });
         d.text(xB2 + 2.8, 409.5, 'Estado 1', { size: 3 }); d.text(xB2 + 2.8, 413, 'Red', { size: 3 });
         d.text(563, 431, 'Estado 3', { size: 3, align: 'right' }); d.text(563, 434.4, 'Común', { size: 3, align: 'right' });
         d.line(xB3, 395, xB3, 407); d.line(xB2, 395, xB2, 410);
         d.line(566, 425, 566, 416); d.line(566, 416, xB3 + 0.6, 408.4);
-        lineas(d, 602, 410, ['Selector de', 'transferencia', 'de 3 posiciones'], { size: 4, gap: 4.6 });
+        lineas(d, 626, 410, ['Selector de', 'transferencia', 'de 3 posiciones'], { size: 4, gap: 4.6 });
         // salida a cargas
         const xG = 745;
         d.line(566, 425, 566, 446); d.line(566, 446, xG, 446);
@@ -726,7 +740,7 @@
         desplazar(d, -150);
         r.it.forEach(i => d.it.push(i));
         d.it.forEach(i => {
-            i.o.dash = false;
+            if (!i.o.keepDash) i.o.dash = false;
             if (i.t === 't') i.o.helv = true;
             else if (i.t !== 'i') { const w = i.o.w || 0.5; i.o.w = w >= 1.5 ? w * 0.75 : Math.max(0.22, w * 0.5); }
         });
