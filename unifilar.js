@@ -629,19 +629,19 @@
         d.text(358, yM2 + 41, 'DPS Tipo 2', { size: 2.8 });
         // puertos del inversor híbrido
         [['BATTERY', 345, 30], ['COM', 375, 22], ['COM', 397, 22]].forEach(([t, x, w]) => { d.rect(x, bTop, w, 6, { w: 0.5 }); d.text(x + w / 2, bTop + 4.2, t, { size: 3.1, align: 'center' }); });
-        const yGrid = bTop + 16.5, yLoad = bTop + 30;
-        [['GRID', yGrid], ['LOAD', yLoad]].forEach(([t, y]) => { d.rect(413.9, y - 6.75, 8.5, 13.5, { w: 0.4 }); d.text(419.3, y + 3.4, t, { size: 3, rot: 90 }); });
+        const yLoad = bTop + 16.5, yGrid = bTop + 30;
+        [['LOAD', yLoad], ['GRID', yGrid]].forEach(([t, y]) => { d.rect(413.9, y - 6.75, 8.5, 13.5, { w: 0.4 }); d.text(419.3, y + 3.4, t, { size: 3, rot: 90 }); });
         const refTxt = /srne/i.test(I.fabricante) ? I.modelo : `${I.fabricante}/${I.modelo}`;
         lineas(d, 350, bTop + 15.5, [`REF:${refTxt}`, `Potencia Max: ${I.pAC}W`, `Imax:${I.iSalida}A`, `Conexión: ${nF}L+PE`, `Vac:${vac}V`], { size: 4.2, gap: 4.7 });
         // cables AC del inversor (LOAD y GRID)
         const awgTAc = (C.regAC[0].tierraCond.match(/^(\d+)/) || [0, 10])[1];
         const etAc = (x, y, conTierra) => lineas(d, x, y, [`${nF}XNo.${awgAc} AWG 60° Cu. THHN/THWN-2 (F)`, `1XNo.${awgAc} AWG 60° Cu. THHN/THWN-2 (N)`].concat(conTierra ? [`1XNo.${awgTAc} AWG 60° Cu. THHN/THWN-2 (T)`] : [], [`Imax: ${I.iSalida}A`, `Vac: ${vac}V`, `Conducto: ${acCanal}`, `Distancia: ${dist.invTablero}m`]), { size: 3.1, gap: 3.5 });
-        etAc(439, yGrid - 24, false); etAc(439, yLoad + 6, true);
-        S.cond(d, 484, yGrid, false, { f: nF, n: true }); S.cond(d, 484, yLoad, false, { f: nF, n: true, t: true });
+        etAc(439, yLoad - 27, true); etAc(439, yGrid + 6, false);
+        S.cond(d, 484, yLoad, false, { f: nF, n: true, t: true }); S.cond(d, 484, yGrid, false, { f: nF, n: true });
         if (!canal.acBandeja) {
-            d.rect(428, yGrid - 9, 5, yLoad - yGrid + 18, { w: 0.4 }); S.flecha(d, 430.5, yLoad + 9);
-            d.line(430.5, yLoad + 13.5, 430.5, yLoad + 32, { color: [150, 150, 205], w: 0.2, dash: true, keepDash: true });
-            d.text(426, yLoad + 37, txtTubo(canal.acTipo, canal.acDim), { size: 3.6 });
+            d.rect(428, yLoad - 9, 5, yGrid - yLoad + 18, { w: 0.4 }); S.flecha(d, 430.5, yGrid + 9);
+            d.line(430.5, yGrid + 13.5, 430.5, yGrid + 32, { color: [150, 150, 205], w: 0.2, dash: true, keepDash: true });
+            d.text(426, yGrid + 37, txtTubo(canal.acTipo, canal.acDim), { size: 3.6 });
         }
         // tierra del inversor: punto, círculo con el símbolo de tierra y línea verde continua
         const yE = yLast + 56;
@@ -652,8 +652,7 @@
         d.line(175.5, cTop + 4.5, 27.5, cTop + 4.5, { color: VERDE, layer: 'TIERRA' });
         d.line(27.5, cTop + 4.5, 27.5, yG, { color: VERDE, layer: 'TIERRA' });
         d.line(27.5, yG, 530, yG, { color: VERDE, layer: 'TIERRA' });
-        d.text(121.8, cTop + 10.6, '1XNo. 10AWG (T)', { size: 3.3 }); d.text(126.4, yG + 4, '1XNo. 10AWG (T)', { size: 3.3 }); d.text(430, yG + 4, '1XNo. 10AWG (T)', { size: 3.3 });
-        S.cond(d, 410, yG, false, { t: true });
+        S.cond(d, 116, cTop + 4.5, false, { t: true }); d.text(121.8, cTop + 10.6, '1XNo. 10AWG (T)', { size: 3.3 }); S.cond(d, 122, yG, false, { t: true }); d.text(126.4, yG + 4, '1XNo. 10AWG (T)', { size: 3.3 }); S.cond(d, 426, yG, false, { t: true }); d.text(430, yG + 4, '1XNo. 10AWG (T)', { size: 3.3 });
 
         // ---------- batería ----------
         const bx0 = 322, bx1 = 420, by0 = 240, by1 = 292, bm = (bx0 + bx1) / 2;
@@ -692,51 +691,57 @@
             d.rect(xR - 11.4, 84, 22.7, 20, { w: 0.75 }); d.rect(xR - 6.4, 86.5, 12.8, 4, { w: 0.4 }); d.text(xR, 99, 'kW/h', { size: 4.6, align: 'center' });
             d.rect(xR - 105.5, 80, 82.4, 42.7, { w: 0.6, color: NARANJA });
             lineas(d, xR - 104.2, 87.4, ['EQUIPO DE MEDIDA DIRECTA', 'SE REEMPLAZA POR MEDIDOR', 'BIDIRECCIONAL CALIBRADO Y', 'HOMOLOGADO POR OPERADOR DE', 'RED Y COMERCIALIZADOR DE', 'ENERGIA'], { size: 4.2, gap: 6.2 });
-            d.line(xR, 104, xR, 142);
+            d.line(xR, 104, xR, 260);
             S.cond(d, xR, 111.2, true, { f: 2, n: true });
             lineas(d, xR + 8.6, 114, [`2XNo.${awgAco} AWG Cu. THHN/THWN-2 (F)`, `1XNo.${awgAco} AWG Cu. THHN/THWN-2 (N)`], { size: 3.3, gap: 3.8 });
         })(r);
 
         // ---------- tablero AC SSFV ----------
-        const yBus = 322, xB1 = 540, xB3 = 555, xB2 = 600;
-        d.rect(511.9, 285, 195, 188, { color: ROJO, w: 0.5, dash: true, layer: 'TABLERO' });
-        S.breaker(d, xR, 292);
-        lineas(d, xR + 4.5, 296, ['Interruptor', 'termomagnético', 'red', `${nF}X${brk}A - 10kA`], { size: 3.2, gap: 3.6 });
-        d.line(xR, 303, xR, yBus);
+        // El barraje queda debajo de los puertos: GRID baja y entra por abajo al breaker "red SSFV";
+        // LOAD pasa por encima, baja por la derecha del barraje y entra al breaker "load SSFV" (Estado 2 Solar).
+        const yBus = 440, xB1 = 548, xE1 = 600, xE2 = 610.4, xC = 605.2, yS = yBus + 44, xL = 690, xgd = 504;
+        d.rect(511.9, yBus - 40, 195, 165, { color: ROJO, w: 0.5, layer: 'TABLERO' });
+        S.breaker(d, xR, yBus - 30);
+        lineas(d, xR + 4.5, yBus - 26, ['Interruptor', 'termomagnético', 'red', `${nF}X${brk}A - 10kA`], { size: 3.2, gap: 3.6 });
+        d.line(xR, yBus - 19, xR, yBus);
         d.line(528, yBus, 668, yBus, { w: 2.2, color: NARANJA });
         d.text(528, yBus - 3, `BARRAJE 160A - ${vac}V`, { size: 4 }); d.text(528, yBus - 7.2, `${nF}F - 4H`, { size: 4 });
-        // red SSFV (GRID del inversor)
-        d.line(xB1, yBus, xB1, yBus + 4); S.breaker(d, xB1, yBus + 4); d.line(xB1, yBus + 15, xB1, yGrid);
-        d.line(xB1, yGrid, 422.4, yGrid);
+        // GRID -> breaker red SSFV (cuelga del barraje)
+        d.line(422.4, yGrid, xgd, yGrid); d.line(xgd, yGrid, xgd, yBus + 32); d.line(xgd, yBus + 32, xB1, yBus + 32); d.line(xB1, yBus + 32, xB1, yBus + 15);
+        d.line(xB1, yBus, xB1, yBus + 4); S.breaker(d, xB1, yBus + 4);
         lineas(d, xB1 + 4, yBus + 12, ['Interruptor', 'termomagnético', 'red SSFV', `${nF}X${brk}A - 10kA`], { size: 3.1, gap: 3.5 });
-        // load SSFV (LOAD del inversor)
-        d.line(422.4, yLoad, xB3, yLoad); d.line(xB3, yLoad, xB3, yLoad + 3); S.breaker(d, xB3, yLoad + 3); d.line(xB3, yLoad + 14, xB3, 395);
-        lineas(d, xB3 + 3.5, yLoad + 6, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brk}A - 10kA`], { size: 3.1, gap: 3.5 });
-        // red directa al selector
-        d.line(xB2, yBus, xB2, 395);
-        // selector de transferencia de 3 posiciones
-        d.rect(540, 395, 82, 30, { w: 0.4 });
-        S.cuadrado(d, xB3, 395, 2.4); S.cuadrado(d, xB2, 395, 2.4); S.cuadrado(d, 566, 425, 2.4);
-        d.text(xB3 - 2.8, 409.5, 'Estado 2', { size: 3, align: 'right' }); d.text(xB3 - 2.8, 413, 'Solar', { size: 3, align: 'right' });
-        d.text(xB2 + 2.8, 409.5, 'Estado 1', { size: 3 }); d.text(xB2 + 2.8, 413, 'Red', { size: 3 });
-        d.text(563, 431, 'Estado 3', { size: 3, align: 'right' }); d.text(563, 434.4, 'Común', { size: 3, align: 'right' });
-        d.line(xB3, 395, xB3, 407); d.line(xB2, 395, xB2, 410);
-        d.line(566, 425, 566, 416); d.line(566, 416, xB3 + 0.6, 408.4);
-        lineas(d, 626, 410, ['Selector de', 'transferencia', 'de 3 posiciones'], { size: 4, gap: 4.6 });
+        // LOAD -> pasa sobre la línea de la red (salto), baja a la derecha del barraje y vuelve al breaker load SSFV
+        d.line(422.4, yLoad, xR - 1.8, yLoad);
+        const arco = []; for (let a = 0; a <= 6; a++) { const t = Math.PI * a / 6; arco.push([xR - 1.8 * Math.cos(t), yLoad - 1.8 * Math.sin(t)]); }
+        d.poly(arco);
+        d.line(xR + 1.8, yLoad, xL, yLoad); d.line(xL, yLoad, xL, yBus + 14); d.line(xL, yBus + 14, xE2, yBus + 14);
+        d.line(xE2, yBus + 14, xE2, yBus + 17); S.breaker(d, xE2, yBus + 17); d.line(xE2, yBus + 28, xE2, yS);
+        lineas(d, xE2 + 3.5, yBus + 20, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brk}A - 10kA`], { size: 3.1, gap: 3.5 });
+        // red directa al selector (Estado 1)
+        d.line(xE1, yBus, xE1, yS);
+        // selector de transferencia de 3 posiciones (compacto)
+        d.rect(xE1 - 2.6, yS, xE2 - xE1 + 5.2, 19, { w: 0.4 });
+        S.cuadrado(d, xE1, yS, 2); S.cuadrado(d, xE2, yS, 2); S.cuadrado(d, xC, yS + 19, 2);
+        d.line(xE1, yS, xE1, yS + 9); d.line(xE2, yS, xE2, yS + 6);
+        d.line(xC, yS + 19, xC, yS + 13); d.line(xC, yS + 13, xE2 - 0.3, yS + 6.6);
+        d.text(xE1 - 1.6, yS - 5.4, 'Estado 1', { size: 2.6, align: 'right' }); d.text(xE1 - 1.6, yS - 2.6, 'Red', { size: 2.6, align: 'right' });
+        d.text(xE2 + 1.6, yS - 5.4, 'Estado 2', { size: 2.6 }); d.text(xE2 + 1.6, yS - 2.6, 'Solar', { size: 2.6 });
+        d.text(xC - 1.8, yS + 22.6, 'Estado 3', { size: 2.6, align: 'right' }); d.text(xC - 1.8, yS + 25.4, 'Común', { size: 2.6, align: 'right' });
+        lineas(d, xE2 + 6, yS + 7, ['Selector de', 'transferencia', 'de 3 posiciones'], { size: 3.6, gap: 4.2 });
         // salida a cargas
-        const xG = 745;
-        d.line(566, 425, 566, 446); d.line(566, 446, xG, 446);
-        d.rect(xG, 431, 30, 30, { w: 1.2 }); d.poly([[xG, 461], [xG + 30, 431], [xG + 30, 461]], { closed: true, fill: NEGRO });
-        d.text(xG + 15, 466, 'Tablero de distribución', { size: 3.4, align: 'center' }); d.text(xG + 15, 470, 'de cargas', { size: 3.4, align: 'center' });
-        lineas(d, 640, 450, [`${nF}XNo.${awgAc} AWG Cu. THHN/THWN-2 (F)`, `Conducto: ${acCanal}`, `Distancia: ${dist.tableroGeneral}m`], { size: 3.1, gap: 3.5 });
+        const xG = 745, yOut = yS + 41;
+        d.line(xC, yS + 19, xC, yOut); d.line(xC, yOut, xG, yOut);
+        d.rect(xG, yOut - 15, 30, 30, { w: 1.2 }); d.poly([[xG, yOut + 15], [xG + 30, yOut - 15], [xG + 30, yOut + 15]], { closed: true, fill: NEGRO });
+        d.text(xG + 15, yOut + 20, 'Tablero de distribución', { size: 3.4, align: 'center' }); d.text(xG + 15, yOut + 24, 'de cargas', { size: 3.4, align: 'center' });
+        lineas(d, xC + 30, yOut + 4, [`${nF}XNo.${awgAc} AWG Cu. THHN/THWN-2 (F)`, `Conducto: ${acCanal}`, `Distancia: ${dist.tableroGeneral}m`], { size: 3.1, gap: 3.5 });
         // barraje de tierra y electrodo
-        const yPE = 458;
+        const yPE = yOut + 16;
         d.line(528, yPE, 600, yPE, { w: 1.6, color: NARANJA }); d.text(530, yPE - 2, 'Barraje de Tierra', { size: 2.8 }); d.text(580, yPE - 2, 'Icc >= 6kA', { size: 2.8 });
         d.line(530, yG, 530, yPE, { color: VERDE, layer: 'TIERRA' });
         S.tierra(d, 606, yPE + 1.2, { w: 0.6, color: [0, 110, 0] });
-        d.line(565, yPE, 565, 490, { color: VERDE, layer: 'TIERRA' }); S.tierra(d, 565, 490, { w: 1.6 }); S.cond(d, 565, 474, true, { t: true });
-        d.text(574, 478, '1XNo. 8 AWG (T)', { size: 3.1 }); d.text(578, 494, 'ELECTRODO DE PUESTA A TIERRA,', { size: 4 }); d.text(578, 499, 'VARILLA COPPERWELD 3/8 - 2.4m', { size: 4 });
-        d.text(640, 466, 'TABLERO AC SSFV', { size: 4.2 }); d.text(640, 470.5, `BARRAJE ${nF}F`, { size: 4.2 });
+        d.line(565, yPE, 565, yPE + 32, { color: VERDE, layer: 'TIERRA' }); S.tierra(d, 565, yPE + 32, { w: 1.6 }); S.cond(d, 565, yPE + 14, true, { t: true });
+        d.text(574, yPE + 18, '1XNo. 8 AWG (T)', { size: 3.1 }); d.text(578, yPE + 36, 'ELECTRODO DE PUESTA A TIERRA,', { size: 4 }); d.text(578, yPE + 41, 'VARILLA COPPERWELD 3/8 - 2.4m', { size: 4 });
+        d.text(640, yPE + 8, 'TABLERO AC SSFV', { size: 4.2 }); d.text(640, yPE + 12.5, `BARRAJE ${nF}F`, { size: 4.2 });
         desplazar(d, -150);
         r.it.forEach(i => d.it.push(i));
         d.it.forEach(i => {
