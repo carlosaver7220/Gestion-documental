@@ -680,16 +680,17 @@
 
         if (D._bloque) return { d, yLoad, yGrid, bTop, bBot: yLast + 76.6, yG, yFirst };
 
-        // ---------- batería ----------
-        const bx0 = 322, bx1 = 420, by0 = 240, by1 = 292, bm = (bx0 + bx1) / 2;
-        d.rect(bx0, by0, bx1 - bx0, by1 - by0, { w: 0.6 });
+        // ---------- batería (misma figura que el bloque "bateria" del plano de referencia) ----------
+        const bx0 = 322, bx1 = 420, by0 = 240, kb = (bx1 - bx0) / 157.5, by1 = by0 + 96.2 * kb, bm = (bx0 + bx1) / 2;
+        const px = (v) => bx0 + v * kb, py = (v) => by1 - v * kb;
+        d.rect(px(0.3), py(96.2), 157.5 * kb, 96.2 * kb, { w: 0.6 });
+        d.line(px(20.8), py(77.3), px(20.8), py(58.3), { w: 0.5 }); d.line(px(12), py(67.4), px(30.3), py(67.4), { w: 0.5 });
+        d.line(px(116.3), py(66.9), px(134.6), py(66.9), { w: 0.5 });
+        d.line(px(14.3), py(35.5), px(73.3), py(35.5), { w: 0.5 }); d.line(px(83.1), py(35.5), px(141.5), py(35.5), { w: 0.5 });
+        d.line(px(73.3), py(20.5), px(73.3), py(50.4), { w: 0.5 }); d.line(px(83.1), py(28), px(83.1), py(43), { w: 0.9 });
         const nBat = B.cantidad > 1 ? `${B.cantidad} x ` : '';
         d.text(bm, by0 - 9.5, `BATERIA ${String(B.marca || '').toUpperCase()}`.trim(), { size: 4.6, align: 'center' });
         d.text(bm, by0 - 4, `${nBat}${B.kwh ? B.kwh + 'KWH - ' : ''}${B.ah ? B.ah + 'AH - ' : ''}${String(B.modelo || '').toUpperCase()}`.replace(/ - $/, ''), { size: 4.6, align: 'center' });
-        const yb = by0 + 34;   // símbolo de batería
-        d.line(bx0 + 14, yb, 366, yb, { w: 0.6 }); d.line(366, yb - 9, 366, yb + 9, { w: 0.6 }); d.line(371, yb - 5.5, 371, yb + 5.5, { w: 1.2 }); d.line(371, yb, bx1 - 14, yb, { w: 0.6 });
-        d.line(bx0 + 7, by0 + 11, bx0 + 14, by0 + 11, { w: 0.5 }); d.line(bx0 + 10.5, by0 + 7.5, bx0 + 10.5, by0 + 14.5, { w: 0.5 });
-        d.line(bx1 - 14, by0 + 11, bx1 - 7, by0 + 11, { w: 0.5 });
         d.line(360, by1, 360, bTop, { w: 0.6 });                                        // potencia (+ y -)
         d.line(386, by1, 386, bTop, { color: AZUL, w: 0.5, layer: 'COMUNICACION' });    // comunicación
         d.line(408, by1, 408, bTop, { color: VERDE, w: 0.5, layer: 'TIERRA' });         // tierra
@@ -830,33 +831,73 @@
         const cables = [];
         const NEGRO_O = {}, VERDE_O = { color: VERDE, layer: 'TIERRA' }, AZUL_O = { color: AZUL, layer: 'COMUNICACION', w: 0.5 };
 
-        // ---------- banco de baterías ----------
-        const yDC = P[0].yH - 22, by1 = yDC - 34, by0 = by1 - 22, cx0 = 50, sp = 56;
-        const cxs = Array.from({ length: nB }, (_, i) => cx0 + i * sp);
-        const nombreBat = (i) => `BATERIA ${nB > 1 ? (i + 1) + ' ' : ''}${String(B.marca || '').toUpperCase()}`.replace(/\s+$/, '');
-        cxs.forEach((cx, i) => {
-            d.rect(cx - 22, by0, 44, 22, { w: 0.6 });
-            d.text(cx, by0 - 9.5, nombreBat(i), { size: 3.6, align: 'center' });
-            d.text(cx, by0 - 4.6, `${B.kwh ? B.kwh + 'KWH - ' : ''}${B.ah ? B.ah + 'AH - ' : ''}${String(B.modelo || '').toUpperCase()}`.replace(/ - $/, ''), { size: 3.6, align: 'center' });
-            const yb = by0 + 13;
-            d.line(cx - 16, yb, cx - 2.5, yb, { w: 0.6 }); d.line(cx - 2.5, yb - 6, cx - 2.5, yb + 6, { w: 0.6 }); d.line(cx + 0.5, yb - 3.5, cx + 0.5, yb + 3.5, { w: 1.2 }); d.line(cx + 0.5, yb, cx + 16, yb, { w: 0.6 });
-            d.line(cx - 18, by0 + 6, cx - 12, by0 + 6, { w: 0.5 }); d.line(cx - 15, by0 + 3, cx - 15, by0 + 9, { w: 0.5 });
-            d.line(cx + 12, by0 + 6, cx + 18, by0 + 6, { w: 0.5 });
-            d.line(cx, by1, cx, by1 + 14, { w: 0.6 }); S.breaker(d, cx, by1 + 14); d.line(cx, by1 + 25, cx, yDC, { w: 0.6 });
-            d.line(cx - 3.2, by1 + 5.6, cx + 3.2, by1 + 2.4, { color: ROJO, w: 0.3 }); d.line(cx - 3.2, by1 + 9, cx + 3.2, by1 + 5.8, { w: 0.3 });
-            lineas(d, cx + 4.5, by1 + 3.5, [`Cable rojo ${B.cableMm2 || 50} mm² (+)`, `Cable negro ${B.cableMm2 || 50} mm² (-)`, `Distancia: ${B.distancia || 0.8}m`, `Imax: ${B.imax || 160}A`], { size: 2.4, gap: 2.9 });
-        });
-        const xBusA = cxs[0] - 12, xBusB = cxs[nB - 1] + 12;
-        d.line(xBusA, yDC, xBusB, yDC, { w: 2.2 });
-        d.rect(cxs[0] - 24, by1 + 28, xBusB - xBusA + 36, yDC - by1 - 19, { w: 0.3, color: GRIS, dash: true, keepDash: true });
-        d.text(xBusB + 8, yDC + 6.5, 'BARRAJE DC', { size: 3 });
-        // tronco por la izquierda y ramales al puerto BATTERY de cada inversor
-        cables.push({ pts: [[xBusA, yDC], [14, yDC], [14, P[N - 1].yH]], o: { w: 0.6 } });
-        P.forEach(p => {
-            cables.push({ pts: [[14, p.yH], [360, p.yH], [360, p.bTop]], o: { w: 0.6 } });
-            S.cuadrado(d, 14, p.yH, 2);
-        });
-        for (let k = 0; k < N - 1; k++) {                     // comunicación en cadena
+        // ---------- banco de baterías + tablero de protecciones de baterías ----------
+        // Copiado del plano de referencia (Lorena Ocampo): baterías en fila con su cable de potencia (+/-) y su
+        // cable CAN/BMS, un barraje con un breaker BAT-INVk por inversor y la salida de cada breaker hacia su inversor.
+        const fs = 0.3, xo = 34, yTop = P[0].yH - 12 - 124;
+        const bx = (X) => xo + (X - 5318) * fs, by = (Y) => yTop + (16430 - Y) * fs;
+        const nSl = Math.max(nB, N), dSl = nSl - 3;
+        const ROJO_O = { color: ROJO, w: 0.3 }, OSC = [110, 20, 20];
+        // dos rayas de polaridad (roja y oscura) sobre un cable vertical / horizontal
+        const marcasV = (X, Yc) => {
+            [[ROJO, 4.5], [OSC, -4.5]].forEach(([col, dyy]) => d.line(bx(X - 8), by(Yc + dyy + 4.5), bx(X + 8), by(Yc + dyy - 4.5), { color: col, w: 0.3 }));
+        };
+        const marcasH = (Xc, Y) => {
+            [[ROJO, 4.5], [OSC, -4.5]].forEach(([col, dxx]) => d.line(bx(Xc + dxx - 4.5), by(Y - 8), bx(Xc + dxx + 4.5), by(Y + 8), { color: col, w: 0.3 }));
+        };
+        // baterías
+        for (let j = 0; j < nB; j++) {
+            const X0 = 5318 + 256.5 * j, Y0 = 16236;
+            const px = (v) => bx(X0 + v), py = (v) => by(Y0 + v);
+            d.rect(px(0.3), py(96.2), 157.5 * fs, 96.2 * fs, { w: 0.5 });
+            d.line(px(20.8), py(77.3), px(20.8), py(58.3), { w: 0.5 }); d.line(px(12), py(67.4), px(30.3), py(67.4), { w: 0.5 });
+            d.line(px(116.3), py(66.9), px(134.6), py(66.9), { w: 0.5 });
+            d.line(px(14.3), py(35.5), px(73.3), py(35.5), { w: 0.5 }); d.line(px(83.1), py(35.5), px(141.5), py(35.5), { w: 0.5 });
+            d.line(px(73.3), py(20.5), px(73.3), py(50.4), { w: 0.5 }); d.line(px(83.1), py(28), px(83.1), py(43), { w: 0.9 });
+            const cx = px(78.9);
+            d.text(cx, by(16336) - 4.2, `BATERIA ${nB > 1 ? (j + 1) + ' ' : ''}${String(B.marca || '').toUpperCase()}`.replace(/\s+$/, ''), { size: 3.4, align: 'center' });
+            d.text(cx, by(16336), `${B.kwh ? B.kwh + 'KWH - ' : ''}${B.ah ? B.ah + 'AH - ' : ''}${String(B.modelo || '').toUpperCase()}`.replace(/ - $/, ''), { size: 3.4, align: 'center' });
+            // cable de potencia: baja, corre en horizontal (cada batería a su altura) y sube al barraje
+            const xp = 5362 + 256.5 * j, yh = 16074 + 10 * j, xIn = 6290 - 69.5 * j;
+            cables.push({ pts: [[bx(xp), by(16236)], [bx(xp), by(yh)], [bx(xIn), by(yh)], [bx(xIn), by(16222)]], o: { w: 0.6 } });
+            // cable CAN / BMS en cadena
+            const xc = 5429 + 256 * j;
+            cables.push({ pts: [[bx(xc), by(16236)], [bx(xc), by(16134)]], o: { color: AZUL, w: 0.4, layer: 'COMUNICACION' } });
+            if (j === nB - 1 && nB > 1) cables.push({ pts: [[bx(5429), by(16134)], [bx(xc), by(16134)]], o: { color: AZUL, w: 0.4, layer: 'COMUNICACION' } });
+            marcasV(xp, 16198.5); marcasV(xIn, 16198.5);
+            lineas(d, bx(xp) - 3, by(16202) + 2.2, [`Cable rojo ${B.cableMm2 || 50} mm² (+),`, `Cable negro ${B.cableMm2 || 50} mm² (-)`, `Distancia: ${B.distancia || 0.8}m`, `Imax: ${B.imax || 160}A`, `Ducto: ${canal.acDim} EMT`], { size: 2.1, gap: 2.5, align: 'right' });
+            lineas(d, bx(xIn) - 2.5, by([16217, 16172, 16218][j % 3]) + 2.2, [`Cable rojo ${B.cableMm2 || 50} mm² (+),`, `Cable negro ${B.cableMm2 || 50} mm² (-)`, `Distancia: ${B.distancia || 0.8}m`, `Imax: ${B.imax || 160}A`, `Ducto: ${canal.acDim} EMT`], { size: 2.1, gap: 2.5, align: 'right' });
+            if (j < nB - 1 || nB === 1) lineas(d, bx(xc) + 2, by(16197) + 2.2, ['1X cable UTP Cat 6', '(Protocolo Can Bus / BMS)'], { size: 2.1, gap: 2.5 });
+        }
+        // barraje del tablero de protecciones y recuadro punteado
+        const xb0 = Math.min(6105, 6290 - 69.5 * (nB - 1) - 46), xb1 = 6316 + 73 * dSl;
+        d.rect(bx(xb0), by(16227), (xb1 - xb0) * fs, 5 * fs, { w: 0.4, color: NARANJA, fill: NARANJA });
+        d.rect(bx(xb0 - 62), by(16403), (6370 + 73 * dSl - (xb0 - 62)) * fs, (16403 - 16017) * fs, { color: ROJO, w: 0.4, dash: true, keepDash: true, layer: 'TABLERO' });
+        d.text(bx(6259 + 73 * dSl / 2 + 54), by(16381) + 2.6, 'TABLERO PROTECCIONES', { size: 2.9, align: 'center' }); d.text(bx(6259 + 73 * dSl / 2 + 54), by(16381) + 6, 'BATERÍAS', { size: 2.9, align: 'center' });
+        // breakers BAT-INVk (uno por inversor) y su salida hacia el inversor
+        const brkDXF = (X, Yb) => {
+            d.line(bx(X), by(Yb), bx(X), by(Yb + 26.1)); d.line(bx(X), by(Yb + 26.1), bx(X - 15.1), by(Yb + 52.5));
+            d.line(bx(X - 4.7), by(Yb + 47.8), bx(X + 4.7), by(Yb + 57.2)); d.line(bx(X - 4.7), by(Yb + 57.2), bx(X + 4.7), by(Yb + 47.8));
+            d.line(bx(X), by(Yb + 52.5), bx(X), by(Yb + 79));
+        };
+        for (let j = 0; j < N; j++) {
+            const Xb = 6134 + 73 * j, inv = j === N - 1 ? 1 : j + 2;
+            brkDXF(Xb, 16227);
+            lineas(d, bx(Xb - 44), by(16274) + 1, ['Interruptor', 'termomagnético', `BAT-INV${inv}`, `2X${sigBreaker(1.25 * (B.imax || 160) * nB / N)}A`], { size: 2.6, gap: 3.2, align: 'center' });
+            const kInv = inv - 1;
+            if (j === N - 1) {                       // inversor 1: sale a la derecha y baja por su lado
+                cables.push({ pts: [[bx(Xb), by(16306)], [360, by(16306)], [360, P[0].bTop]], o: { w: 0.6 } });
+                marcasH(Xb + 57, 16306);
+                lineas(d, 357, P[0].bTop - 44 + 2, [`1XNo. 350 kcmil 75° Cu. THHN/THWN-2 (+)`, `1XNo. 350 kcmil 75° Cu. THHN/THWN-2 (-)`, 'Imax: 300A', 'Conducto: EMT 3"', 'Distancia: 1m'], { size: 2, gap: 2.4, align: 'right' });
+                d.line(360 - 2.6, P[0].bTop - 52, 360 + 2.6, P[0].bTop - 56, { color: ROJO, w: 0.3 }); d.line(360 - 2.6, P[0].bTop - 55, 360 + 2.6, P[0].bTop - 59, { color: OSC, w: 0.3 });
+            } else {                                 // inversores 2..N: suben, van a la izquierda y bajan hasta su puerto
+                const yT = 16414 + 16 * j, xL = 5271 - 19 * j;
+                cables.push({ pts: [[bx(Xb), by(16306)], [bx(Xb), by(yT)], [bx(xL), by(yT)], [bx(xL), P[kInv].yH], [360, P[kInv].yH], [360, P[kInv].bTop]], o: { w: 0.6 } });
+                marcasV(Xb, 16349);
+                [`1XNo. 350 kcmil 75° Cu. (+)`, `1XNo. 350 kcmil 75° Cu. (-)`, 'Imax: 300A'].forEach((t, q) => d.text(bx(Xb) - 4.5 + q * 2.2, by(16292), t, { size: 1.8, rot: 90 }));
+            }
+        }
+        for (let k = 0; k < N - 1; k++) {                     // comunicación entre inversores (cadena)
             cables.push({ pts: [[386, P[k].bBot], [386, P[k + 1].bTop]], o: AZUL_O });
         }
         d.text(390, P[0].bBot + 6, 'Comunicación', { size: 3.2 });
