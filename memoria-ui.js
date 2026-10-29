@@ -663,7 +663,6 @@
             const faltaTrafo = [['nic', 'cuenta'], ['kva', 'kVA'], ['tensionPrim', 'tensión primaria'], ['tensionSec', 'tensión secundaria'], ['codigo', 'código'], ['matricula', 'matrícula']].filter(([k]) => !u[k]).map(x => x[1]);
             if (solo && solo !== 'unifilar') { /* solo se regenera otro archivo */ }
             else if (!window.Unifilar) noHechos.push('Unifilar (no se cargó el motor)');
-            else if (I.tipoSistema === 'hibrido' && est.config.length !== 1) noHechos.push('Unifilar (el híbrido con más de un inversor aún no está disponible)');
             else if (I.tipoSistema === 'hibrido' && !equipoSel('baterias', u.bateria)) noHechos.push('Unifilar (elige la batería)');
             else if (faltaTrafo.length) noHechos.push(`Unifilar (faltan datos del transformador: ${faltaTrafo.join(', ')})`);
             else {
@@ -677,12 +676,12 @@
                     btn.textContent = 'Logo y firmas...';
                     const logo = await window.MemoriaPDF.cargarImagen('img/logo.png', { png: true, maxW: 900 });
                     const firmas = window.cargarFirmasIngenieria ? await window.cargarFirmasIngenieria() : {};
-                    const nB = u.batCant;
+                    const nB = u.batCant, nI = est.config.length;
                     extra = {
-                        bateria: { marca: B.fabricante, modelo: B.modelo, kwh: (kwh && nB > 1) ? +(kwh * nB).toFixed(2) : kwh, ah: B.capacidadAh || '', cantidad: nB, cableMm2: u.batCable, distancia: u.batDist, imax: u.batImax },
+                        bateria: { marca: B.fabricante, modelo: B.modelo, kwh, ah: B.capacidadAh || '', cantidad: nB, cableMm2: u.batCable, distancia: u.batDist, imax: u.batImax },
                         tipoSistemaTxt: 'Híbrido', direccion: f.direccion, municipio: f.municipio, lat: f.lat, lng: f.lng, logo,
                         descripcion: [`- Sistema solar fotovoltaico compuesto por ${f.numMod} paneles solares de ${P.pmax}W`, `- Marca: ${P.fabricante} ${P.referencia || ''}`.trim(),
-                            `- Sistema solar fotovoltaico compuesto por 1 Inversor Solar ${I.fabricante} ${I.modelo} y ${nB > 1 ? nB + ' baterías' : 'una batería'} ${B.fabricante} ${B.modelo}${kwh ? ' ' + (nB > 1 ? kwh * nB : kwh) + 'kWh' : ''}`],
+                            `- Sistema solar fotovoltaico compuesto por ${nI > 1 ? nI + ' Inversores Solares' : '1 Inversor Solar'} ${I.fabricante} ${I.modelo} y ${nB > 1 ? nB + ' baterías' : 'una batería'} ${B.fabricante} ${B.modelo}${kwh ? ' ' + kwh + 'kWh' : ''}`],
                         firmas: Object.assign({
                             consNombre: 'ING. ' + RESPONSABLE.nombre, consMp: RESPONSABLE.matricula,
                             disNombre: 'ING. HASSITH MUEGUES', disMp: 'SN285-187274'
