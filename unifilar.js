@@ -603,7 +603,7 @@
         const yG = yLast + 88, yG0 = yG;
         rows.forEach((r, k) => {
             const col = COLOR_STRING[k % COLOR_STRING.length], y = r.y;
-            d.text(31.8, y - 8, `STRING ${k + 1} - ${r.series} MODULOS ${P.pmax}W`, { size: 4.2, color: col });
+            d.text(31.8, y - 9.8, `STRING ${k + 1} - ${r.series} MODULOS ${P.pmax}W`, { size: 4.2, color: col });
             const hMod = moduloFV(d, 31.9, y - 7.4, r.series);
             lineas(d, 31.8, y - 7.4 + hMod + 4.2, [`I${D._numInv || 1}M${r.mppt}S${k + 1}`, 'STC: 1000W/m2 25°C, AM1.5', `Voc: ${(r.series * P.voc).toFixed(2)}V`, `Isc: ${P.isc}A`, `Vmp: ${(r.series * P.vmpp).toFixed(2)}V`, `Imp: ${P.imp}A`, `Distancia:${r.largo}m`], { size: 3.4, gap: 4.1 });
             d.line(62.7, y, 170.9, y); S.polar(d, 78, y);
@@ -899,13 +899,13 @@
             if (j === N - 1) {                       // inversor 1: sale a la derecha y baja por su lado
                 cables.push({ pts: [[bx(Xb), by(16306)], [360, by(16306)], [360, P[0].bTop]], o: { w: 0.6 } });
                 marcasH(Xb + 57, 16306);
-                lineas(d, 357, P[0].bTop - 44 + 2, [`1XNo. 350 kcmil 75° Cu. THHN/THWN-2 (+)`, `1XNo. 350 kcmil 75° Cu. THHN/THWN-2 (-)`, 'Imax: 300A', 'Conducto: EMT 3"', 'Distancia: 1m'], { size: 2, gap: 2.4, align: 'right' });
+                lineas(d, 357, P[0].bTop - 44 + 10, [`1XNo. 350 kcmil 75° Cu. THHN/THWN-2 (+)`, `1XNo. 350 kcmil 75° Cu. THHN/THWN-2 (-)`, 'Imax: 300A', 'Conducto: EMT 3"', 'Distancia: 1m'], { size: 2, gap: 2.4, align: 'right' });
                 d.line(360 - 2.6, P[0].bTop - 52, 360 + 2.6, P[0].bTop - 56, { color: ROJO, w: 0.3 }); d.line(360 - 2.6, P[0].bTop - 55, 360 + 2.6, P[0].bTop - 59, { color: OSC, w: 0.3 });
             } else {                                 // inversores 2..N: suben, van a la izquierda y bajan hasta su puerto
                 const yT = 16414 + 16 * j, xL = 5271 - 19 * j;
                 cables.push({ pts: [[bx(Xb), by(16306)], [bx(Xb), by(yT)], [bx(xL), by(yT)], [bx(xL), P[kInv].yH], [360, P[kInv].yH], [360, P[kInv].bTop]], o: { w: 0.6 } });
                 marcasV(Xb, 16349);
-                [`1XNo. 350 kcmil 75° Cu. (+)`, `1XNo. 350 kcmil 75° Cu. (-)`, 'Imax: 300A'].forEach((t, q) => d.text(bx(Xb) - 4.5 + q * 2.2, by(16292), t, { size: 1.8, rot: 90 }));
+                [`1XNo. 350 kcmil 75° Cu. (+)`, `1XNo. 350 kcmil 75° Cu. (-)`, 'Imax: 300A'].forEach((t, q) => d.text(bx(Xb) - 9 + q * 2.2, by(16292), t, { size: 1.8, rot: 90 }));
             }
         }
         for (let k = 0; k < N - 1; k++) {                     // comunicación entre inversores (cadena)
@@ -940,19 +940,19 @@
         // acometida: breaker "red" sobre el barraje (la línea llega por arriba)
         const xRb2 = tx(8437);
         brk2(8437, 15489);
-        bloqueT(8474, 15513 + 6, ['Interruptor', 'termomagnético', 'red', `${nF}X${brkTot}A - 10kA`], { size: 2.9, gap: 3.3, align: 'center' });
+        bloqueT(8479, 15513 + 2, ['Interruptor', 'termomagnético', 'red', `${nF}X${brkTot}A - 10kA`], { size: 2.9, gap: 3.3, align: 'center' });
         // breakers red SSFV (cuelgan del barraje de arriba) y load SSFV (sobre el de abajo)
         for (let j = 0; j < N; j++) {
             brk2(Xg(j), 15403);
-            bloqueT(Xg(j) - 48, 15423 + 4, ['Interruptor', 'termomagnético', 'red SSFV', `${nF}X${brkK(j)}A - 10kA`], { size: 2.9, gap: 3.3, align: 'center' });
+            bloqueT(Xg(j) - 56, 15423 + 4, ['Interruptor', 'termomagnético', 'red SSFV', `${nF}X${brkK(j)}A - 10kA`], { size: 2.3, gap: 3.1, align: 'center' });
         }
         for (let i = 0; i < N; i++) {
             brk2(Xl(i), 15216);
-            bloqueT(Xl(i) + 58, 15247 + 4, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brkK(N - 1 - i)}A - 10kA`], { size: 2.9, gap: 3.3, align: 'center' });
+            bloqueT(Xl(i) + 52, 15247 + 4, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brkK(N - 1 - i)}A - 10kA`], { size: 2.6, gap: 3.1, align: 'center' });
         }
         // breaker general de carga -> Estado 2 del selector
         brk2(Xm, 15131);
-        bloqueT(Xm + 38, 15159 + 4, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brkTot}A - 10kA`], { size: 2.9, gap: 3.3, align: 'center' });
+        bloqueT(Xm + 56, 15159 + 4, ['Interruptor', 'termomagnético', 'load SSFV', `${nF}X${brkTot}A - 10kA`], { size: 2.6, gap: 3.1, align: 'center' });
         d.line(tx(Xm), ty(15131), tx(Xm), ty(15128));
         // selector de transferencia (misma figura del bloque del plano)
         d.rect(tx(8457), ty(15128), 73 * tf_, 90 * tf_, { w: 0.4 });
@@ -960,9 +960,9 @@
         d.line(tx(8476), ty(15128), tx(8476), ty(15110)); d.line(tx(XE1), ty(15110), tx(XE2), ty(15110));
         d.line(tx(XE1), ty(15110), tx(XE1), ty(15081)); d.line(tx(XE2), ty(15110), tx(XE2), ty(15081));
         d.line(tx(XC), ty(15041), tx(XC), ty(15064)); d.line(tx(XC), ty(15064), tx(8470), ty(15079));
-        bloqueT(8466, 15135 + 4, ['Estado 1', 'Red'], { size: 2.6, gap: 3, align: 'center' });
+        bloqueT(8463, 15135 + 4, ['Estado 1', 'Red'], { size: 2.6, gap: 3, align: 'right' });
         bloqueT(8554, 15133 + 4, ['Estado 2', 'Solar'], { size: 2.6, gap: 3, align: 'center' });
-        bloqueT(8483, 15017 + 4, ['Estado 3', 'Común'], { size: 2.6, gap: 3, align: 'center' });
+        bloqueT(8488, 15017 + 4, ['Estado 3', 'Común'], { size: 2.6, gap: 3, align: 'right' });
         bloqueT(8540, 15057 + 6, ['Selector de', 'transferencia', 'de 3 posiciones'], { size: 4.2, gap: 4.8, align: 'left' });
         // salida a cargas
         d.rect(xLB, ty(15052), wLB, 71 * tf_, { w: 0.5 });
@@ -978,7 +978,7 @@
         S.tierra(d, tx(8250), yPE2 + 0.4, { w: 0.5, color: [0, 110, 0] });
         const xEl = tx(8166);
         d.line(xEl, yPE2, xEl, yPE2 + 22, VERDE_O); S.tierra(d, xEl, yPE2 + 22, { w: 1.4 }); S.cond(d, xEl, yPE2 + 9, true, { t: true });
-        d.text(xEl + 6, yPE2 + 13, '1XNo. 8 AWG (T)', { size: 2.6 }); d.text(xEl + 9, yPE2 + 26, 'ELECTRODO DE PUESTA A TIERRA,', { size: 3.4 }); d.text(xEl + 9, yPE2 + 30.6, 'VARILLA COPPERWELD 3/8 - 2.4m', { size: 3.4 });
+        d.text(xEl - 3, yPE2 + 13, '1XNo. 8 AWG (T)', { size: 2.2, align: 'right' }); d.text(xEl + 9, yPE2 + 26, 'ELECTRODO DE PUESTA A TIERRA,', { size: 3.4 }); d.text(xEl + 9, yPE2 + 30.6, 'VARILLA COPPERWELD 3/8 - 2.4m', { size: 3.4 });
         cables.push({ pts: [[xLB + wLB - 8, ty(14981)], [xLB + wLB - 8, ty(14901)], [tx(8195), ty(14901)], [tx(8195), yPE2]], o: VERDE_O });
         S.cond(d, tx(9090), ty(14901), false, { t: true }); d.text(tx(9053), ty(14901) + 4.6, '1XNo. 10AWG (T)', { size: 2.6 });
         cables.push({ pts: [[534, P[0].yTierra], [534, Math.max(yPE2, P[N - 1].yTierra)]], o: VERDE_O });
