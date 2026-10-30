@@ -168,7 +168,7 @@
         }
 
         if (copiados || generadas) {
-            await scan();
+            await refrescarProyecto(projectId);
             const partes = [];
             if (copiados) partes.push(`${copiados} documento${copiados > 1 ? 's' : ''} de equipos copiado${copiados > 1 ? 's' : ''}`);
             if (generadas) partes.push(`${generadas} declaración${generadas > 1 ? 'es' : ''} generada${generadas > 1 ? 's' : ''}`);

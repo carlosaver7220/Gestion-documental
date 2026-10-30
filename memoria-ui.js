@@ -704,7 +704,7 @@
 
             const guardar = Object.assign({}, f, { cuadro: undefined, unifilar: u, plan: { acom: $('memPmAcom').value, usuario: $('memPmUsuario').value, nivel: $('memPmNivel').value.trim(), seleccion: $('memPmSel').value.trim() } });
             await saveProjectField(est.projectId, 'memoria', guardar);
-            await scan();
+            await refrescarProyecto(est.projectId);
             const pf = projects.find(x => x.id === est.projectId) || p;
             const pendientes = (pf.ingItems || []).filter(i => !i.found && !i.sinValor).map(i => i.id + ' ' + i.label);
             pintarChecklist(pf, `Generado: ${hechos.join(', ')}.${noHechos.length ? ' No se pudo: ' + noHechos.join('; ') + '.' : ''}${pendientes.length ? ' Falta: ' + pendientes.join(', ') + '.' : ' Ingeniería completa.'}`);

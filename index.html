@@ -2642,7 +2642,7 @@
                 await writable.close();
 
                 if (!opts.sinEscaneo) {
-                    await scan();
+                    await refrescarProyecto(projectId);
                     showToast('Acta generada correctamente');
                 }
                 return true;
@@ -3132,7 +3132,7 @@
                 await writable.write(buf);
                 await writable.close();
 
-                await scan();
+                await refrescarProyecto(p.id);
                 showToast('Acta de Visita Técnica generada correctamente');
                 document.getElementById('visitaTecnicaModal').classList.add('hidden');
             } catch (err) {
@@ -3380,7 +3380,7 @@
                 await writable.write(buf);
                 await writable.close();
 
-                await scan();
+                await refrescarProyecto(p.id);
                 showToast('Informe General de Proyecto generado correctamente');
                 document.getElementById('informeModal').classList.add('hidden');
             } catch (err) {
@@ -6527,7 +6527,7 @@
 
                 if (type !== 'ing') {
                     await guardarArchivo(folder, `${item.id} ${item.label}.pdf`, archivos[0]);
-                    await scan();
+                    await refrescarProyecto(pId);
                     return;
                 }
 
@@ -6546,7 +6546,7 @@
                     // No se bloquea la subida, pero el nombre quedó sin esos datos.
                     setTimeout(() => showToast(`El nombre quedó sin: ${faltan.join(', ')}. Complétalo en Datos del Proyecto.`), 2500);
                 }
-                await scan();
+                await refrescarProyecto(pId);
             } catch(e){
                 console.error('Error al subir el archivo:', e);
                 showToast('No se pudo subir el archivo: ' + (e && e.message ? e.message : e));

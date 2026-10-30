@@ -102,7 +102,7 @@
             const nombre = await guardarPdf(d.p, d.info, window.PlanMantenimiento.generar(d));
             $('planMantModal').classList.add('hidden');
             showToast('Plan de mantenimiento generado: ' + nombre);
-            await scan();
+            await refrescarProyecto(d.p.id);
         } catch (e) {
             console.error(e); alert('No se pudo generar el plan de mantenimiento: ' + e.message);
         } finally { btn.disabled = false; btn.textContent = 'Generar Plan PDF'; }
