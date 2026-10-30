@@ -1890,6 +1890,23 @@
             _projectDataCache.set(codigo, current);
         }
 
+        // Guarda varios campos del proyecto en UNA sola escritura (leer + upsert), en vez de
+        // una escritura por campo.
+        async function saveProjectFields(codigo, campos) {
+            if (!supabaseClient || !codigo) return;
+            const current = await getProjectData(codigo, { fresh: true });
+            Object.assign(current, campos);
+            const { error } = await supabaseClient
+                .from('proyectos')
+                .upsert({ codigo, nombre: getProjectName(codigo), datos: current }, { onConflict: 'codigo' });
+            if (error) {
+                console.error('Supabase saveProjectFields error:', error);
+                showToast('No se pudo guardar en Supabase: ' + error.message);
+                return;
+            }
+            _projectDataCache.set(codigo, current);
+        }
+
         // ----------------------------------------------------------
         // (ELIMINADO) LIMPIEZA DE PROYECTOS HUÉRFANOS
         // ----------------------------------------------------------
@@ -4300,6 +4317,32 @@
             }
         }
 
+        // Vuelve a analizar SOLO un proyecto (no los ~80 del árbol, ni Drive, ni toda la tabla de
+        // Supabase como hace scan()). Es lo que hace falta después de guardar un trámite o un comentario.
+        async function refrescarProyecto(id) {
+            const idx = projects.findIndex(x => x.id === id);
+            if (idx < 0 || !projects[idx].handle) return scan();
+            const viejo = projects[idx];
+            try {
+                const nuevo = await analyze(viejo.handle, viejo.year);
+                nuevo.year = viejo.year;
+                projects[idx] = nuevo;
+                _firmaProyectos = JSON.stringify(projects.map(p => [
+                    p.id, p.prog, p.bovedaPct, p.actasPct, p.informePct,
+                    p.orStatusDisplay, p.retieStatusDisplay,
+                    p.req.or, p.req.retie
+                ]));
+                renderSidebar();
+                if (selectedProjectId === id) {
+                    renderDocModule(nuevo);
+                    if (!document.getElementById('developmentView').classList.contains('hidden')) renderDevelopment();
+                }
+            } catch (e) {
+                console.error('No se pudo refrescar el proyecto, se hace el escaneo completo:', e);
+                return scan();
+            }
+        }
+
         async function analyze(handle, year) {
             const legacy = esAnioLegacy(year);
             // Documentos y actas se reconocen por su nombre en TODOS los años (sin importar
@@ -4454,6 +4497,7 @@
 
             return {
                 id: handle.name,
+                handle,
                 name: handle.name.replace(/^\d+\.\s*/, ''),
                 ingItems, ingItemsTodos: ingTodos, actItems, ingFolder, actFolder, budgetFolder, preliminarFolder, contractualFolder,
                 orFolder, retieFolder, dossierFolder,
@@ -6294,7 +6338,9 @@
                 uploadedFiles = await saveTramiteFiles(p, activeTramiteType, selectedFiles);
             }
 
-            const pStates = await getStates(selectedProjectId);
+            // Una sola lectura y una sola escritura (antes eran dos escrituras seguidas)
+            const datosActuales = await getProjectData(selectedProjectId, { fresh: true });
+            const pStates = datosActuales.states || { or: { status: 'NO INSCRITO', date: '' }, retie: { status: 'POR AGENDAR', date: '' } };
             pStates[activeTramiteType] = {
                 status,
                 date,
@@ -6302,15 +6348,11 @@
                 appointmentDate: activeTramiteType === 'retie' ? appointmentDate : previousState.appointmentDate || '',
                 observations: activeTramiteType === 'retie' ? observations : previousState.observations || ''
             };
-            await saveProjectField(selectedProjectId, 'states', pStates);
-
-            const datosActuales = await getProjectData(selectedProjectId, { fresh: true });
             const historyPorTipo = (datosActuales.history && datosActuales.history[activeTramiteType]) || [];
             historyPorTipo.push({ status, comment, date, metadata: { radicado, appointmentDate, observations, uploadedFiles } });
-            const historyCompleto = { ...(datosActuales.history || {}), [activeTramiteType]: historyPorTipo };
-            await saveProjectField(selectedProjectId, 'history', historyCompleto);
+            await saveProjectFields(selectedProjectId, { states: pStates, history: { ...(datosActuales.history || {}), [activeTramiteType]: historyPorTipo } });
 
-            await scan();
+            await refrescarProyecto(selectedProjectId);
             await renderHistory();
             document.getElementById('modalCommentInput').value = '';
             if (document.getElementById('modalRadicadoInput')) document.getElementById('modalRadicadoInput').value = '';
