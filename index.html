@@ -3406,7 +3406,7 @@
         // Estados posibles por tipo de trámite. OR: ciclo real de inscripción ante el Operador de Red.
         // RETIE: proceso de inspección técnica, es un flujo distinto al de OR.
         const TRAMITE_STATES = {
-            or: ['NO INSCRITO', 'INSCRITO', 'CONFORME', 'DE BAJA'],
+            or: ['NO INSCRITO', 'ESTUDIO DE CONEXIÓN', 'INSCRITO', 'CONFORME', 'DE BAJA'],   // ESTUDIO DE CONEXIÓN: pendiente del estudio; solo pide un comentario
             retie: ['POR AGENDAR', 'EN TRÁMITE', 'AGENDADO', 'OBSERVACIONES', 'APROBADO']
         };
 
@@ -3730,7 +3730,7 @@
         // Lectura de avance por estado: NO todos los estados valen igual. "CONFORME"/"APROBADO"
         // es el 100% de esa sección; los estados intermedios dan un avance parcial.
         const ESTADO_PCT = {
-            or: { 'NO INSCRITO': 0, 'INSCRITO': 50, 'CONFORME': 100, 'DE BAJA': 0 },
+            or: { 'NO INSCRITO': 0, 'ESTUDIO DE CONEXIÓN': 0, 'INSCRITO': 50, 'CONFORME': 100, 'DE BAJA': 0 },
             retie: { 'POR AGENDAR': 0, 'EN TRÁMITE': 25, 'AGENDADO': 50, 'OBSERVACIONES': 75, 'APROBADO': 100 }
         };
 
@@ -4521,6 +4521,7 @@
             'EN TRÁMITE': 'bg-blue-100 text-blue-700',
             'OBSERVACIONES': 'bg-orange-100 text-orange-700',
             'DE BAJA':    'bg-red-100 text-red-700',
+            'ESTUDIO DE CONEXIÓN': 'bg-violet-100 text-violet-700',
             'NO APLICA':  'bg-slate-50 text-slate-400'
         };
 
@@ -4563,7 +4564,8 @@
                     // muestra como NO APLICA para no confundirlo con uno atrasado.
                     or: p.orPct === null ? 'NO APLICA' : (p.orStatusDisplay || ''),
                     retie: p.retiePct === null ? 'NO APLICA' : (p.retieStatusDisplay || ''),
-                    medidor: info.referenciaMedidor || ''
+                    medidor: info.referenciaMedidor || '',
+                    sinTramites: p.orPct === null && p.retiePct === null   // no le aplica ni OR ni RETIE
                 });
             }
 
@@ -4597,7 +4599,8 @@
                 <tbody>
                     ${resumenFilas.map(f => `
                         <tr onclick="selectProject('${f.id.replace(/'/g, "\\'")}'); switchDocTab('info');"
-                            class="cursor-pointer hover:bg-blue-50/60 transition-colors">
+                            class="cursor-pointer transition-colors ${f.sinTramites ? 'bg-slate-100/80 opacity-60 hover:bg-slate-200/70' : 'hover:bg-blue-50/60'}"
+                            title="${f.sinTramites ? 'No le aplica OR ni RETIE' : ''}">
                             <td class="${td} font-bold text-slate-800 min-w-[180px]">${escaparHtml(f.nombre)}</td>
                             <td class="${td} font-mono whitespace-nowrap">${escaparHtml(f.nic) || '<span class="text-slate-300">—</span>'}</td>
                             <td class="${td} font-mono whitespace-nowrap">${escaparHtml(f.radicado) || '<span class="text-slate-300">—</span>'}</td>
@@ -5270,9 +5273,13 @@
             cardOr.classList.toggle('bg-amber-50', orStatus === 'INSCRITO');
             cardOr.classList.toggle('text-amber-700', orStatus === 'INSCRITO');
             cardOr.classList.toggle('border-amber-300', orStatus === 'INSCRITO');
-            cardOr.classList.toggle('bg-slate-100', orStatus !== 'CONFORME' && orStatus !== 'INSCRITO');
-            cardOr.classList.toggle('text-slate-700', orStatus !== 'CONFORME' && orStatus !== 'INSCRITO');
-            cardOr.classList.toggle('border-slate-200', orStatus !== 'CONFORME' && orStatus !== 'INSCRITO');
+            cardOr.classList.toggle('bg-violet-50', orStatus === 'ESTUDIO DE CONEXIÓN');
+            cardOr.classList.toggle('text-violet-700', orStatus === 'ESTUDIO DE CONEXIÓN');
+            cardOr.classList.toggle('border-violet-300', orStatus === 'ESTUDIO DE CONEXIÓN');
+            const orNeutro = orStatus !== 'CONFORME' && orStatus !== 'INSCRITO' && orStatus !== 'ESTUDIO DE CONEXIÓN';
+            cardOr.classList.toggle('bg-slate-100', orNeutro);
+            cardOr.classList.toggle('text-slate-700', orNeutro);
+            cardOr.classList.toggle('border-slate-200', orNeutro);
             cardOr.classList.toggle('opacity-50', !orAplica);
             cardOr.innerText = orAplica ? 'OR' : 'OR (N/A)';
             cardOr.title = orAplica
@@ -5340,6 +5347,7 @@
         function textoEstadoOr(status) {
             const map = {
                 'NO INSCRITO': 'aún no se encuentra inscrito ante el Operador de Red (OR)',
+                'ESTUDIO DE CONEXIÓN': 'tiene pendiente el estudio de conexión ante el Operador de Red (OR)',
                 'INSCRITO': 'se encuentra inscrito ante el Operador de Red (OR), pendiente de conformidad',
                 'CONFORME': 'se encuentra conforme ante el Operador de Red (OR)',
                 'DE BAJA': 'figura dado de baja ante el Operador de Red (OR)'

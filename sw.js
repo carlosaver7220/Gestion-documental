@@ -23,7 +23,7 @@
 
 // Subir esta versión al cambiar la lista de archivos: al cambiar el nombre de
 // la caché, la vieja se borra en la activación.
-const CACHE = 'gestion-doc-v5';
+const CACHE = 'gestion-doc-v6';
 
 // El esqueleto de la app: lo mínimo para que abra sin conexión.
 const SHELL = [
